@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "agritech8-metagenomics"
+version = "0.1.0"
+description = "Metagenomics on Agritech Spoke 8"
+authors = ["Paolo Cozzi <bunop@libero.it>"]
+license = "MIT"
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pandas = "^2.2.3"
+ipykernel = "^6.29.5"
+openpyxl = "^3.1.5"
+nbstripout = "^0.7.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
