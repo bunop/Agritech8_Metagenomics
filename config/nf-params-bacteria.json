@@ -1,0 +1,8 @@
+{
+  "input": "data/samplesheet_bacteria.csv",
+  "FW_primer": "CCTACGGGNGGCWGCAG",
+  "RV_primer": "GACTACHVGGGTATCTAATCC",
+  "metadata": "data/metadata_bacteria.csv",
+  "outdir": "results-bacteria",
+  "max_memory": "64.GB"
+}

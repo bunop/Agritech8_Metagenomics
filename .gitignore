@@ -1,6 +1,9 @@
 # project specific files and directories
 .nextflow/
 data/
+work/
+results-*/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

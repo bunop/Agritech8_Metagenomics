@@ -1,0 +1,9 @@
+{
+  "input": "data/samplesheet_fungi.csv",
+  "FW_primer": "CTTGGTCATTTAGAGGAAGTAA",
+  "RV_primer": "GCTGCGTTCTTCATCGATGC",
+  "metadata": "data/metadata_fungi.csv",
+  "outdir": "results-fungi",
+  "dada_ref_taxonomy": "unite-fungi",
+  "max_memory": "64.GB"
+}
