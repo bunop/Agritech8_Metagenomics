@@ -27,13 +27,13 @@ for *bacteria* and *fungi* respectively.
 To launch the pipeline, simply call:
 
 ```bash
-nextflow run nf-core/ampliseq -r 2.11.0 -params-file config/nf-params-bacteria.json
+nextflow run nf-core/ampliseq -r 2.11.0 -params-file config/nf-params-bacteria.json -profile singularity
 ```
 
 for bacteria and
 
 ```bash
-nextflow run nf-core/ampliseq -r 2.11.0 -params-file config/nf-params-fungi.json
+nextflow run nf-core/ampliseq -r 2.11.0 -params-file config/nf-params-fungi.json -profile singularity
 ```
 
 for fungi.
