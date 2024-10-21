@@ -3,6 +3,7 @@
 data/
 work/
 results-*/
+test-*/
 .nextflow.log*
 
 # Byte-compiled / optimized / DLL files
