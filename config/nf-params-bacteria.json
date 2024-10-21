@@ -4,5 +4,9 @@
   "RV_primer": "GACTACHVGGGTATCTAATCC",
   "metadata": "data/metadata_bacteria.tsv",
   "outdir": "results-bacteria",
-  "max_memory": "64.GB"
+  "trunc_qmin": 30,
+  "sample_inference": "pooled",
+  "dada_ref_taxonomy": "silva=138",
+  "max_memory": "64.GB",
+  "max_cpus": 32
 }
