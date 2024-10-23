@@ -5,7 +5,7 @@
   "metadata": "data/metadata_bacteria.tsv",
   "outdir": "results-bacteria",
   "trunclenf": 230,
-  "trunclenr": 220,
+  "trunclenr": 210,
   "trunc_qmin": 25,
   "max_ee": 3,
   "ignore_failed_filtering": true,
