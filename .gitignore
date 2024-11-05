@@ -6,6 +6,10 @@ results-*/
 test-*/
 .nextflow.log*
 
+# quarto output files
+*.html
+*_files/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

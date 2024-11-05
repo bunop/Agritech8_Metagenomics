@@ -8,7 +8,7 @@
   "trunclenf": 230,
   "trunclenr": 210,
   "trunc_qmin": 25,
-  "max_ee": 5,
+  "max_ee": 6,
   "ignore_failed_filtering": true,
   "skip_qiime_downstream": true,
   "sample_inference": "pseudo",
