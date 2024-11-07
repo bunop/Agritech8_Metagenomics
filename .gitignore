@@ -5,6 +5,7 @@ work/
 results-*/
 test-*/
 .nextflow.log*
+archives/
 
 # quarto output files
 *.html
