@@ -1,0 +1,170 @@
+---
+title: "Technical Replicates Analysis"
+author: "Paolo Cozzi"
+date: today
+toc: true
+number-sections: true
+format:
+  html:
+    code-line-numbers: true
+    html-math-method: katex
+    df-print: paged
+    code-fold: true
+editor: visual
+---
+
+```{r setup}
+#| label: setup
+#| output: false
+library(here)
+library(dplyr)
+library(stringr)
+library(phyloseq)
+library(vegan)
+library(Polychrome)
+library(ggplot2)
+```
+
+## Loading the data
+
+Load the metadata file:
+
+```{r load-metadata}
+#| cache: true
+#| label: load-metadata
+metadata <- read.delim(here::here("data", "metadata_bacteria.tsv"))
+```
+
+Now we will group the technical replicates together. We will use the `sample_group`
+column to group the samples. The `sample_group` column is a unique identifier for
+the technical replicates. We will remove the last letter from the `sampleID` column
+to get a new name for the sample.
+
+```{r group-technical-replicates}
+#| cache: true
+#| label: group-technical-replicates
+# get a new name for sample 
+metadata <- metadata %>%
+  dplyr::mutate(sample_name = stringr::str_replace(sampleID, "[a-zA-Z]$", "")) %>%
+  dplyr::group_by(sample_group) %>%
+  dplyr::mutate(sample_name = first(sample_name)) %>%
+  dplyr::ungroup() %>%
+  dplyr::select(sampleID, sample_name, everything())
+metadata
+```
+
+Now read the phyloseq object:
+
+```{r load-phyloseq}
+#| cache: true
+#| label: load-phyloseq
+phyloseq_object <- readRDS(here::here("results-bacteria/phyloseq/dada2_phyloseq.rds"))
+```
+
+## Testing the technical replicates
+
+### Permanova
+
+We will use the `adonis` function from the `vegan` package to test if the technical
+replicates are similar to each other. We will use the `sample_group` column as the
+strata.
+
+```{r permanova}
+#| cache: true
+#| label: permanova
+# calculate a distance matrix
+distance_matrix <- phyloseq::distance(phyloseq_object, method = "bray")
+
+# now doing the permanova
+sample_data(phyloseq_object)$group <- as.factor(sample_data(phyloseq_object)$sample_group)
+adonis_result <- vegan::adonis2(distance_matrix ~ group, data = as(sample_data(phyloseq_object), "data.frame"))
+print(adonis_result)
+```
+
+The **PERMANOVA** (Permutational Multivariate Analysis of Variance) output provides insights into the differences in community composition across the groups in the dataset. Here’s a detailed interpretation of each section of the output:
+
+#### Degrees of Freedom (Df)
+  - **Model (12)**: This indicates that there are 12 levels in the grouping variable `group`
+  (13 groups - 1 = 12).
+  - **Residual (26)**: The remaining 26 degrees of freedom represent the unexplained variance within groups.
+  - **Total (38)**: The total degrees of freedom in the dataset.
+
+#### Sum of Squares (SumOfSqs)
+  - **Model (14.3595)**: This is the sum of squares for the grouping factor, representing the variability explained by `group`.
+  - **Residual (0.3871)**: This is the residual sum of squares, indicating the variability within groups.
+  - **Total (14.7466)**: The total sum of squares for the dataset.
+
+#### R-squared (R2)
+  - **Model (0.97375)**: This value shows that 97.4% of the total variability is explained by differences between the groups, indicating a very high proportion of variation accounted for by the grouping variable.
+  - **Residual (0.02625)**: Only 2.6% of the variability is left unexplained by the model, which suggests that samples within the same group are quite similar.
+
+#### F-statistic (F) and P-value (Pr(>F))
+  - **F (80.378)**: The F-statistic is high, indicating a strong separation between groups relative to within-group variability.
+  - **Pr(>F) (0.001)**: The p-value of 0.001 is highly significant (denoted by `***`), suggesting a statistically significant difference in community composition across the groups.
+
+#### Summary
+The PERMANOVA test reveals that:
+
+  - The `group` variable explains a significant portion of the variation in community composition (97.4%).
+  - The high F-value and low p-value (0.001) indicate that this difference is statistically significant.
+  - The result supports the hypothesis that groups have distinct community compositions, with minimal overlap in terms of their ecological or compositional profiles.
+
+### PCoA plot
+
+Now we will plot a PCoA plot to visualize the technical replicates.
+
+```{r pcoa}
+#| cache: true
+#| label: pcoa
+# Calculate the PCoA
+ordination <- ordinate(phyloseq_object, method = "PCoA", distance = "bray")
+
+# count the number of levels in the group column
+num_levels <- length(unique(sample_data(phyloseq_object)$group))
+
+# Get the color palette
+color_palette <- Polychrome::palette36.colors(num_levels)
+names(color_palette) <- NULL  # Remove any names from the color palette
+
+# Use palette36 from Polychrome, which supports up to 36 colors
+pcoa_plot <- phyloseq::plot_ordination(phyloseq_object, ordination, color = "group") +
+  ggplot2::geom_point(size = 4) +
+  ggplot2::theme_minimal() +
+  ggplot2::ggtitle("PCoA Plot on distance metrics (Bray-Curtis)") +
+  ggplot2::labs(color = "group") +
+  ggplot2::scale_color_manual(values = color_palette) +
+  ggplot2::guides(color = ggplot2::guide_legend(title = "Sample Group"))
+
+print(pcoa_plot)
+```
+
+```{r}
+# Create a new grouping variable with newline characters in long labels
+# Create a new grouping variable using only the last 20 characters of 'condition' and 'date'
+sample_data(phyloseq_object)$group_combined <- with(
+  sample_data(phyloseq_object), 
+  paste0(substr(condition, nchar(condition) - 19, nchar(condition)), "_", date)
+)
+
+# Count the number of unique levels in the new grouping variable
+num_levels <- length(unique(sample_data(phyloseq_object)$group_combined))
+
+# Get the color palette
+color_palette <- Polychrome::palette36.colors(num_levels)
+names(color_palette) <- NULL  # Remove any names from the color palette
+
+# Calculate the PCoA using the new grouping variable for color
+ordination <- ordinate(phyloseq_object, method = "PCoA", distance = "bray")
+
+# Plot the PCoA
+pcoa_plot <- phyloseq::plot_ordination(phyloseq_object, ordination, color = "group_combined") +
+  ggplot2::geom_point(size = 4) +
+  ggplot2::theme_minimal() +
+  ggplot2::ggtitle("PCoA Plot on Distance Metrics (Bray-Curtis)") +
+  ggplot2::labs(color = "Group (Condition_Date)") +
+  ggplot2::scale_color_manual(values = color_palette) +
+  ggplot2::guides(color = ggplot2::guide_legend(title = "Sample Group")) +
+  ggplot2::theme(legend.position = "bottom")  # Move the legend to the bottom
+
+print(pcoa_plot)
+```
