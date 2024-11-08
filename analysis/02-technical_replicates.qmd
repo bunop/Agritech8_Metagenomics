@@ -10,7 +10,8 @@ format:
     html-math-method: katex
     df-print: paged
     code-fold: true
-editor: visual
+    toc-depth: 4
+editor: source
 ---
 
 ```{r setup}
@@ -22,6 +23,7 @@ library(stringr)
 library(phyloseq)
 library(vegan)
 library(Polychrome)
+library(RColorBrewer)
 library(ggplot2)
 ```
 
@@ -35,10 +37,7 @@ Load the metadata file:
 metadata <- read.delim(here::here("data", "metadata_bacteria.tsv"))
 ```
 
-Now we will group the technical replicates together. We will use the `sample_group`
-column to group the samples. The `sample_group` column is a unique identifier for
-the technical replicates. We will remove the last letter from the `sampleID` column
-to get a new name for the sample.
+Now we will group the technical replicates together. We will use the `sample_group` column to group the samples. The `sample_group` column is a unique identifier for the technical replicates. We will remove the last letter from the `sampleID` column to get a new name for the sample.
 
 ```{r group-technical-replicates}
 #| cache: true
@@ -59,15 +58,26 @@ Now read the phyloseq object:
 #| cache: true
 #| label: load-phyloseq
 phyloseq_object <- readRDS(here::here("results-bacteria/phyloseq/dada2_phyloseq.rds"))
+
+# execute some useful grouping on metadata
+sample_data(phyloseq_object)$group <- as.factor(sample_data(phyloseq_object)$sample_group)
+
+# Create a new grouping variable using only the last 20 characters of 'condition' and 'date'
+sample_data(phyloseq_object)$date_condition <- as.factor(with(
+  sample_data(phyloseq_object), 
+  paste0(
+    gsub(" ", "", substr(condition, nchar(condition) - 12, nchar(condition))), 
+    "_", 
+    gsub(" ", "", date)
+  )
+))
 ```
 
 ## Testing the technical replicates
 
 ### Permanova
 
-We will use the `adonis` function from the `vegan` package to test if the technical
-replicates are similar to each other. We will use the `sample_group` column as the
-strata.
+We will use the `adonis` function from the `vegan` package to test if the technical replicates are similar to each other. We will use the `sample_group` column as the strata.
 
 ```{r permanova}
 #| cache: true
@@ -76,7 +86,6 @@ strata.
 distance_matrix <- phyloseq::distance(phyloseq_object, method = "bray")
 
 # now doing the permanova
-sample_data(phyloseq_object)$group <- as.factor(sample_data(phyloseq_object)$sample_group)
 adonis_result <- vegan::adonis2(distance_matrix ~ group, data = as(sample_data(phyloseq_object), "data.frame"))
 print(adonis_result)
 ```
@@ -84,32 +93,57 @@ print(adonis_result)
 The **PERMANOVA** (Permutational Multivariate Analysis of Variance) output provides insights into the differences in community composition across the groups in the dataset. Here’s a detailed interpretation of each section of the output:
 
 #### Degrees of Freedom (Df)
-  - **Model (12)**: This indicates that there are 12 levels in the grouping variable `group`
-  (13 groups - 1 = 12).
-  - **Residual (26)**: The remaining 26 degrees of freedom represent the unexplained variance within groups.
-  - **Total (38)**: The total degrees of freedom in the dataset.
+
+-   **Model (12)**: This indicates that there are 12 levels in the grouping variable `group` (13 groups - 1 = 12).
+-   **Residual (26)**: The remaining 26 degrees of freedom represent the unexplained variance within groups.
+-   **Total (38)**: The total degrees of freedom in the dataset.
 
 #### Sum of Squares (SumOfSqs)
-  - **Model (14.3595)**: This is the sum of squares for the grouping factor, representing the variability explained by `group`.
-  - **Residual (0.3871)**: This is the residual sum of squares, indicating the variability within groups.
-  - **Total (14.7466)**: The total sum of squares for the dataset.
+
+-   **Model (14.3595)**: This is the sum of squares for the grouping factor, representing the variability explained by `group`.
+-   **Residual (0.3871)**: This is the residual sum of squares, indicating the variability within groups.
+-   **Total (14.7466)**: The total sum of squares for the dataset.
 
 #### R-squared (R2)
-  - **Model (0.97375)**: This value shows that 97.4% of the total variability is explained by differences between the groups, indicating a very high proportion of variation accounted for by the grouping variable.
-  - **Residual (0.02625)**: Only 2.6% of the variability is left unexplained by the model, which suggests that samples within the same group are quite similar.
 
-#### F-statistic (F) and P-value (Pr(>F))
-  - **F (80.378)**: The F-statistic is high, indicating a strong separation between groups relative to within-group variability.
-  - **Pr(>F) (0.001)**: The p-value of 0.001 is highly significant (denoted by `***`), suggesting a statistically significant difference in community composition across the groups.
+-   **Model (0.97375)**: This value shows that 97.4% of the total variability is explained by differences between the groups, indicating a very high proportion of variation accounted for by the grouping variable.
+-   **Residual (0.02625)**: Only 2.6% of the variability is left unexplained by the model, which suggests that samples within the same group are quite similar.
+
+#### F-statistic (F) and P-value (Pr(\>F))
+
+-   **F (80.378)**: The F-statistic is high, indicating a strong separation between groups relative to within-group variability.
+-   **Pr(\>F) (0.001)**: The p-value of 0.001 is highly significant (denoted by `***`), suggesting a statistically significant difference in community composition across the groups.
 
 #### Summary
+
 The PERMANOVA test reveals that:
 
-  - The `group` variable explains a significant portion of the variation in community composition (97.4%).
-  - The high F-value and low p-value (0.001) indicate that this difference is statistically significant.
-  - The result supports the hypothesis that groups have distinct community compositions, with minimal overlap in terms of their ecological or compositional profiles.
+-   The `group` variable explains a significant portion of the variation in community composition (97.4%).
+-   The high F-value and low p-value (0.001) indicate that this difference is statistically significant.
+-   The result supports the hypothesis that groups have distinct community compositions, with minimal overlap in terms of their ecological or compositional profiles.
 
 ### PCoA plot
+
+**Principal Coordinates Analysis (PCoA)** is an ordination technique used to visualize patterns in complex, high-dimensional data by projecting samples into a lower-dimensional space based on a distance matrix.
+
+#### Key Points
+
+- **Input**: PCoA takes a **distance or dissimilarity matrix** as input, such as Bray-Curtis, Jaccard, or Euclidean distances.
+- **Goal**: It represents the relative distances between samples in a reduced number of dimensions, typically 2D or 3D, for easy visualization.
+- **Output**: Samples that are closer together in the PCoA plot are more similar, while those farther apart are more dissimilar.
+- **Interpretation**: The axes (principal coordinates) explain portions of the variance in the data, helping reveal clusters, trends, or group separations.
+
+#### Applications
+
+- **Microbiome and Ecology**: Useful for visualizing community composition differences.
+- **Genomics and Transcriptomics**: Reveals patterns in gene expression across conditions.
+
+#### PCoA vs. PCA
+
+- **PCoA** uses a distance matrix, making it ideal for data with non-linear relationships or compositional constraints.
+- **PCA** works directly with raw data and assumes linear relationships.
+
+#### PCoA plot by technical replicates
 
 Now we will plot a PCoA plot to visualize the technical replicates.
 
@@ -117,8 +151,14 @@ Now we will plot a PCoA plot to visualize the technical replicates.
 #| cache: true
 #| label: pcoa
 # Calculate the PCoA
-ordination <- ordinate(phyloseq_object, method = "PCoA", distance = "bray")
+pca_ordination <- phyloseq::ordinate(phyloseq_object, method = "PCoA", distance = "bray")
+```
 
+In the following pictures we are grouping by technical replicates
+
+```{r pcoa-plot}
+#| cache: true
+#| label: pcoa-plot
 # count the number of levels in the group column
 num_levels <- length(unique(sample_data(phyloseq_object)$group))
 
@@ -127,44 +167,139 @@ color_palette <- Polychrome::palette36.colors(num_levels)
 names(color_palette) <- NULL  # Remove any names from the color palette
 
 # Use palette36 from Polychrome, which supports up to 36 colors
-pcoa_plot <- phyloseq::plot_ordination(phyloseq_object, ordination, color = "group") +
-  ggplot2::geom_point(size = 4) +
+pcoa_plot <- phyloseq::plot_ordination(phyloseq_object, pca_ordination, color = "group") +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
   ggplot2::theme_minimal() +
   ggplot2::ggtitle("PCoA Plot on distance metrics (Bray-Curtis)") +
   ggplot2::labs(color = "group") +
   ggplot2::scale_color_manual(values = color_palette) +
-  ggplot2::guides(color = ggplot2::guide_legend(title = "Sample Group"))
+  ggplot2::guides(color = ggplot2::guide_legend(title = "Technical Replicates")) +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+    plot.title = element_text(hjust = 0.5)  # Center the title
+  )
 
 print(pcoa_plot)
 ```
 
-```{r}
-# Create a new grouping variable with newline characters in long labels
-# Create a new grouping variable using only the last 20 characters of 'condition' and 'date'
-sample_data(phyloseq_object)$group_combined <- with(
-  sample_data(phyloseq_object), 
-  paste0(substr(condition, nchar(condition) - 19, nchar(condition)), "_", date)
-)
+#### PCoA plot by date and condition (sample replicates)
 
+Visualize the same plot but grouping with date and condition (which should group sample replicates)
+
+```{r}
+#| cache: true
+#| label: pcoa-date-condition
 # Count the number of unique levels in the new grouping variable
-num_levels <- length(unique(sample_data(phyloseq_object)$group_combined))
+num_levels <- length(unique(sample_data(phyloseq_object)$date_condition))
+
+# Plot the PCoA
+pcoa_plot <- phyloseq::plot_ordination(phyloseq_object, pca_ordination, color = "date_condition") +
+  ggplot2::geom_point(size = 4, alpha = 0.1) +
+  ggplot2::theme_minimal() +
+  ggplot2::ggtitle("PCoA Plot on Distance Metrics (Bray-Curtis)") +
+  ggplot2::labs(color = NULL) +  # Remove the legend title
+  ggplot2::scale_color_brewer(palette = "Set1") +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+    plot.title = element_text(hjust = 0.5)  # Center the title
+  )
+
+print(pcoa_plot)
+```
+
+### NMDS plot
+
+Non-metric Multidimensional Scaling (**NMDS**) is an ordination technique used to visualize the similarity or dissimilarity between samples in complex, multidimensional datasets. Unlike metric methods, NMDS focuses on preserving the rank order of distances rather than the actual distance values, making it particularly useful for ecological and environmental data where relationships may be non-linear.
+
+#### Key Features of NMDS
+
+- **Non-metric Approach**: NMDS emphasizes the rank order of dissimilarities, allowing it to handle data that do not meet the assumptions of linearity or normality.
+
+- **Dimensionality Reduction**: It projects high-dimensional data into a lower-dimensional space (typically 2D or 3D) to facilitate visualization and interpretation.
+
+- **Stress Value**: NMDS iteratively adjusts the configuration of points to minimize a measure called "stress," which quantifies the disparity between the distances in the reduced-dimensional space and the original dissimilarities. Lower stress values indicate a better fit.
+
+#### Interpreting an NMDS Plot
+
+- **Proximity of Points**: Samples plotted closer together are more similar in composition, while those farther apart are more dissimilar.
+
+- **Axes**: The axes in an NMDS plot are arbitrary and do not correspond to specific gradients or variables. The orientation and rotation of the plot can change without affecting the interpretation of the relationships between points.
+
+- **Stress Value**: A stress value below 0.2 is generally considered acceptable, indicating that the plot provides a reasonable representation of the data.
+
+#### Applications of NMDS
+
+- **Ecology**: Visualizing species composition across different sites or conditions.
+
+- **Microbial Community Analysis**: Comparing microbial communities based on sequencing data.
+
+- **Environmental Science**: Assessing the impact of environmental gradients on community structure.
+
+NMDS is a flexible and robust method for exploring complex datasets, especially when the data do not conform to the assumptions required by other ordination techniques. 
+
+```{r nmds}
+#| cache: true
+#| label: nmds
+#| output: false
+# calculate the NMDS
+nmds_ordination <- phyloseq::ordinate(phyloseq_object, method = "NMDS", distance = "bray")
+```
+#### NMDS plot by technical replicates
+
+Let's plot the NMDS plot focusing on the technical replicates
+
+```{r}
+#| cache: true
+#| label: nmds-plot
+# count the number of levels in the group column
+num_levels <- length(unique(sample_data(phyloseq_object)$group))
 
 # Get the color palette
 color_palette <- Polychrome::palette36.colors(num_levels)
 names(color_palette) <- NULL  # Remove any names from the color palette
 
-# Calculate the PCoA using the new grouping variable for color
-ordination <- ordinate(phyloseq_object, method = "PCoA", distance = "bray")
-
-# Plot the PCoA
-pcoa_plot <- phyloseq::plot_ordination(phyloseq_object, ordination, color = "group_combined") +
-  ggplot2::geom_point(size = 4) +
+# Use palette36 from Polychrome, which supports up to 36 colors
+nmds_plot <- phyloseq::plot_ordination(phyloseq_object, nmds_ordination, color = "group") +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
   ggplot2::theme_minimal() +
-  ggplot2::ggtitle("PCoA Plot on Distance Metrics (Bray-Curtis)") +
-  ggplot2::labs(color = "Group (Condition_Date)") +
+  ggplot2::ggtitle("NMDS Plot on distance metrics (Bray-Curtis)") +
+  ggplot2::labs(color = "group") +
   ggplot2::scale_color_manual(values = color_palette) +
-  ggplot2::guides(color = ggplot2::guide_legend(title = "Sample Group")) +
-  ggplot2::theme(legend.position = "bottom")  # Move the legend to the bottom
+  ggplot2::guides(color = ggplot2::guide_legend(title = "Technical Replicates")) +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+    plot.title = element_text(hjust = 0.5)  # Center the title
+  )
 
-print(pcoa_plot)
+print(nmds_plot)
+```
+
+#### NMDS plot by date and condition (sample replicates)
+
+Now, let's visualize the NMDS plot but grouping with date and condition 
+(which should group sample replicates)
+
+```{r}
+#| cache: true
+#| label: nmds-date-condition
+# Count the number of unique levels in the new grouping variable
+num_levels <- length(unique(sample_data(phyloseq_object)$date_condition))
+
+# Plot the NMDS
+nmds_plot <- phyloseq::plot_ordination(phyloseq_object, nmds_ordination, color = "date_condition") +
+  ggplot2::geom_point(size = 4, alpha = 0.1) +
+  ggplot2::theme_minimal() +
+  ggplot2::ggtitle("NMDS Plot on Distance Metrics (Bray-Curtis)") +
+  ggplot2::labs(color = NULL) +  # Remove the legend title
+  ggplot2::scale_color_brewer(palette = "Set1") +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+    plot.title = element_text(hjust = 0.5)  # Center the title
+  )
+
+print(nmds_plot)
 ```
