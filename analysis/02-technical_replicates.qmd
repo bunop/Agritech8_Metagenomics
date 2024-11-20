@@ -120,10 +120,21 @@ We will calculate the distance matrix using the `bray-curtis method:
 ```{r distance-matrix}
 #| cache: true
 #| label: distance-matrix
-# calculate a distance matrix
-distance_matrix <- phyloseq::distance(phyloseq_object, method = "bray")
-```
+otu_table_matrix <- as(otu_table(phyloseq_object), "matrix")
 
+# check if the taxa are rows
+if (taxa_are_rows(phyloseq_object)) {
+  otu_table_matrix <- t(otu_table_matrix)
+}
+
+# calculate the distance matrix
+distance_matrix <- vegan::avgdist(
+  otu_table_matrix, 
+  sample = min(sequencing_depth), 
+  iterations = 1000,
+  dmethod = "bray"
+)
+```
 
 ### Permanova
 
