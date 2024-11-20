@@ -48,7 +48,13 @@ metadata <- metadata %>%
   dplyr::group_by(sample_group) %>%
   dplyr::mutate(sample_name = first(sample_name)) %>%
   dplyr::ungroup() %>%
-  dplyr::select(sampleID, sample_name, everything())
+  dplyr::select(sampleID, sample_name, everything()) %>%
+  as.data.frame()
+
+# set rownames
+rownames(metadata) <- metadata$sampleID
+
+# check the new metadata
 metadata
 ```
 
@@ -58,6 +64,9 @@ Now read the phyloseq object:
 #| cache: true
 #| label: load-phyloseq
 phyloseq_object <- readRDS(here::here("results-bacteria/phyloseq/dada2_phyloseq.rds"))
+
+# replace the metadata
+sample_data(phyloseq_object) <- metadata
 
 # execute some useful grouping on metadata
 sample_data(phyloseq_object)$group <- as.factor(sample_data(phyloseq_object)$sample_group)
@@ -73,7 +82,48 @@ sample_data(phyloseq_object)$date_condition <- as.factor(with(
 ))
 ```
 
-## Testing the technical replicates
+## Checking samples
+
+Try to see sequencing depths and other information about the samples:
+
+```{r sequencing-depth}
+#| cache: true
+#| label: sequencing-depth
+# calculate sequencing depth for each samples
+sequencing_depth <- phyloseq::sample_sums(phyloseq_object)
+
+# get data from samples
+samples_data <- data.frame(sample_data(phyloseq_object))
+
+# add sequencing depth to samples data
+samples_data$sequencing_depth <- sequencing_depth
+
+# Create the bar plot
+depth_plot <- ggplot2::ggplot(
+  samples_data, 
+  aes(x = sampleID, y = sequencing_depth, fill = sample_name)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") +
+  labs(title = "Sequencing Depth per Sample",
+       x = "Sample",
+       y = "Number of Reads") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+# Display the plot
+print(depth_plot)
+```
+
+### Calculate the distance matrix
+
+We will calculate the distance matrix using the `bray-curtis method:
+
+```{r distance-matrix}
+#| cache: true
+#| label: distance-matrix
+# calculate a distance matrix
+distance_matrix <- phyloseq::distance(phyloseq_object, method = "bray")
+```
+
 
 ### Permanova
 
@@ -82,9 +132,6 @@ We will use the `adonis` function from the `vegan` package to test if the techni
 ```{r permanova}
 #| cache: true
 #| label: permanova
-# calculate a distance matrix
-distance_matrix <- phyloseq::distance(phyloseq_object, method = "bray")
-
 # now doing the permanova
 adonis_result <- vegan::adonis2(distance_matrix ~ group, data = as(sample_data(phyloseq_object), "data.frame"))
 print(adonis_result)
