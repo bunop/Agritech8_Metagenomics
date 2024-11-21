@@ -49,18 +49,27 @@ from the `sampleID` column to get a new name for the sample.
 #| label: group-technical-replicates
 # get a new name for sample 
 metadata <- metadata %>%
-  dplyr::mutate(sample_name = stringr::str_replace(sampleID, "[a-zA-Z]$", "")) %>%
-  dplyr::group_by(sample_group) %>%
-  dplyr::mutate(sample_name = dplyr::first(sample_name)) %>%
-  dplyr::ungroup() %>%
-  dplyr::select(sampleID, sample_name, everything()) %>%
+  # Extract the last character of sampleID to create technical_rep
+  mutate(technical_rep = str_sub(sampleID, -1)) %>%
+  # Convert technical_rep to a factor
+  mutate(technical_rep = as.factor(technical_rep)) %>%
+  # Remove the last character from sampleID to create sample_name
+  mutate(sample_name = str_sub(sampleID, 1, -2)) %>%
+  # Ensure sample_group is a factor
+  mutate(sample_group = as.factor(sample_group)) %>%
+  # Group by sample_group
+  group_by(sample_group) %>%
+  # Assign the first sample_name within each group
+  mutate(sample_name = first(sample_name)) %>%
+  # Ungroup the DataFrame
+  ungroup() %>%
+  # Reorder columns to place sampleID and sample_name at the beginning
+  select(sampleID, sample_name, technical_rep, everything()) %>%
+  # Convert to a standard data frame
   as.data.frame()
 
 # set rownames
 rownames(metadata) <- metadata$sampleID
-
-# execute some useful grouping on metadata
-metadata$sample_group <- as.factor(metadata$sample_group)
 
 # Create a new grouping variable using only the last 20 characters of 'condition' and 'date'
 metadata$date_condition <- as.factor(with(
@@ -89,7 +98,9 @@ phyloseq::sample_data(phyloseq_object) <- metadata
 
 ## Checking samples
 
-Try to see sequencing depths and other information about the samples:
+### Display number of samples
+
+Try to see sample depths and other information about the samples:
 
 ```{r sequencing-depth}
 #| cache: true
@@ -144,16 +155,19 @@ distance_matrix <- vegan::avgdist(
 
 ### Permanova
 
-We will use the `adonis` function from the `vegan` package to test if the technical
-replicates are similar to each other. We will use the `sample_group` column as the strata.
+We will use the `adonis2` function from the `vegan` package to test if the technical
+replicates are similar to each other. The formula should include the `sample_group` 
+as a factor to account for biological variability and `technical_rep` to assess 
+technical replicate similarity:
 
 ```{r permanova}
 #| cache: true
 #| label: permanova
 # now doing the permanova
 adonis_result <- vegan::adonis2(
-  distance_matrix ~ sample_group, 
-  data = as(phyloseq::sample_data(phyloseq_object), "data.frame")
+  distance_matrix ~ sample_group + technical_rep,
+  data = as(phyloseq::sample_data(phyloseq_object), "data.frame"),
+  by = "margin"
 )
 print(adonis_result)
 ```
@@ -164,16 +178,16 @@ dataset. Here’s a detailed interpretation of each section of the output:
 
 #### Degrees of Freedom (Df)
 
-- **Model (12)**: This indicates that there are 12 levels in the grouping 
-  variable `sample_group` (13 groups - 1 = 12).
-- **Residual (26)**: The remaining 26 degrees of freedom represent the
+- **Model**: This indicates that there are 12 levels in the grouping 
+  variable `sample_group` (13 groups - 1 = 12) and 2 for technical replicates.
+- **Residual (24)**: The remaining 24 degrees of freedom represent the
   unexplained variance within groups.
 - **Total (38)**: The total degrees of freedom in the dataset.
 
 #### Sum of Squares (SumOfSqs)
 
 - **Model**: This is the sum of squares for the grouping factor, representing 
-  the variability explained by `sample_group`.
+  the variability explained by both variables.
 - **Residual**: This is the residual sum of squares, indicating the variability
   within groups.
 - **Total**: The total sum of squares for the dataset.
@@ -182,28 +196,29 @@ dataset. Here’s a detailed interpretation of each section of the output:
 
 - **Model**: This value shows that the reported percentage of the total 
   variability is explained by differences between the groups, indicating a very 
-  high proportion of variation accounted for by the grouping variable.
+  high proportion of variation accounted for `sample_group`. Vice versa, the
+  `technical_rep` variable explains a very low proportion of the variation.
 - **Residual**: Only this percentage of the variability is left unexplained by 
-  the model, which suggests that samples within the same group are quite similar.
+  the model (i.e., within groups).
 
 #### F-statistic (F) and P-value (Pr(\>F))
 
-- **F**: The F-statistic is high, indicating a strong separation between groups 
-  relative to within-group variability.
-- **Pr(\>F)**: The p-value of 0.001 is highly significant (denoted by `***`), 
-  suggesting a statistically significant difference in community composition across the groups.
+- **F**: The F-statistic is high for `sample_group`, indicating a strong separation 
+  between groups relative to within-group variability. `technical_rep` has a low F-value,
+  suggesting that technical replicates are similar to each other.
+- **Pr(\>F)**: The p-value of 0.001 is highly significant (denoted by `***`) for
+  `sample_group`, indicating that the observed differences are unlikely to have
+  occurred by chance. The p-value for `technical_rep` is not significant.
 
 #### Summary
 
-The PERMANOVA test reveals that:
-
-- The `sample_group` variable explains a significant portion of the variation in community
-  composition.
-- The high F-value and low p-value (0.001) indicate that this difference is 
-  statistically significant.
-- The result supports the hypothesis that groups have distinct community 
-  compositions, with minimal overlap in terms of their ecological or compositional
-  profiles.
+- `sample_group`: The highly significant p-value (0.001) and high R² (99.53%) 
+  indicate that differences between biological samples (sample_name) account 
+  for the majority of the variance in your data.
+- `technical_rep`: The non-significant p-value (0.234) and very low R² (0.044%) 
+  suggest that differences among technical replicates (technical_rep) do not 
+  contribute significantly to the variance. This implies that technical 
+  replicates are consistent with each other, as expected.
 
 ### PCoA plot
 
