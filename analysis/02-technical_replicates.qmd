@@ -25,6 +25,8 @@ library(vegan)
 library(Polychrome)
 library(RColorBrewer)
 library(ggplot2)
+library(ape)
+library(glue)
 ```
 
 ## Loading the data
@@ -234,7 +236,16 @@ Now we will plot a PCoA plot to visualize the technical replicates.
 #| cache: true
 #| label: pcoa
 # Calculate the PCoA
-pca_ordination <- phyloseq::ordinate(phyloseq_object, method = "PCoA", distance = "bray")
+pcoa_result <- ape::pcoa(distance_matrix, correction = "cailliez")
+
+# Create a data frame for plotting
+pcoa_df <- data.frame(pcoa_result$vectors[, 1:2])
+colnames(pcoa_df) <- c("PCoA1", "PCoA2")
+pcoa_df$sampleID <- rownames(pcoa_df)
+pcoa_df <- dplyr::inner_join(pcoa_df, metadata, by = "sampleID")
+
+# Extract the percent explained variance
+percent_explained <- pcoa_result$values$Rel_corr_eig * 100
 ```
 
 In the following pictures we are grouping by technical replicates
@@ -249,14 +260,21 @@ num_levels <- length(unique(sample_data(phyloseq_object)$sample_group))
 color_palette <- Polychrome::palette36.colors(num_levels)
 names(color_palette) <- NULL  # Remove any names from the color palette
 
-# Use palette36 from Polychrome, which supports up to 36 colors
-pcoa_plot <- phyloseq::plot_ordination(phyloseq_object, pca_ordination, color = "sample_group") +
-  ggplot2::geom_point(size = 4, alpha = 0.5) +
-  ggplot2::theme_minimal() +
-  ggplot2::ggtitle("PCoA Plot on distance metrics (Bray-Curtis)") +
-  ggplot2::labs(color = "sample_group") +
+# try to annotate plot
+pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
+labels <- c(glue("PCo Axis 1 ({pretty_pe[1]}%)"),
+            glue("PCo Axis 2 ({pretty_pe[2]}%)"))
+
+# plot the PCoA
+pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = sample_name)) +
+  geom_point(size = 4, alpha = 0.5) +
+  theme_minimal() +
+  ggplot2::ggtitle("PCoA Plot on Distance Metrics (Bray-Curtis)") +
+  labs(title = "PCoA of Bray-Curtis Distance Matrix",
+       color = NULL,
+       x = labels[1],
+       y = labels[2]) +
   ggplot2::scale_color_manual(values = color_palette) +
-  ggplot2::guides(color = ggplot2::guide_legend(title = "Technical Replicates")) +
   ggplot2::theme(
     legend.position = "bottom",       # Position the legend at the bottom
     legend.box = "horizontal",        # Arrange legend items horizontally without a title
@@ -273,15 +291,20 @@ Visualize the same plot but grouping with date and condition (which should group
 ```{r}
 #| cache: true
 #| label: pcoa-date-condition
-# Count the number of unique levels in the new grouping variable
-num_levels <- length(unique(sample_data(phyloseq_object)$date_condition))
+# try to annotate plot
+pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
+labels <- c(glue("PCo Axis 1 ({pretty_pe[1]}%)"),
+            glue("PCo Axis 2 ({pretty_pe[2]}%)"))
 
-# Plot the PCoA
-pcoa_plot <- phyloseq::plot_ordination(phyloseq_object, pca_ordination, color = "date_condition") +
-  ggplot2::geom_point(size = 4, alpha = 0.1) +
-  ggplot2::theme_minimal() +
+# plot the PCoA
+pcoa_plot <- ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = date_condition)) +
+  geom_point(size = 4, alpha = 0.5) +
+  theme_minimal() +
   ggplot2::ggtitle("PCoA Plot on Distance Metrics (Bray-Curtis)") +
-  ggplot2::labs(color = NULL) +  # Remove the legend title
+  labs(title = "PCoA of Bray-Curtis Distance Matrix",
+       color = NULL,
+       x = labels[1],
+       y = labels[2]) +
   ggplot2::scale_color_brewer(palette = "Set1") +
   ggplot2::theme(
     legend.position = "bottom",       # Position the legend at the bottom
@@ -289,7 +312,21 @@ pcoa_plot <- phyloseq::plot_ordination(phyloseq_object, pca_ordination, color = 
     plot.title = element_text(hjust = 0.5)  # Center the title
   )
 
-print(pcoa_plot)
+pcoa_plot
+```
+
+#### Scree plot
+
+The scree plot is a graphical representation of the eigenvalues of the principal 
+components in a PCA or PCoA analysis. It helps visualize the proportion of variance 
+explained by each principal component, allowing you to determine the optimal 
+number of components to retain.
+
+```{r}
+tibble(pe = pcoa_result$values$Cum_corr_eig * 100,
+       axis = 1:length(percent_explained)) %>%
+  ggplot(aes(x = axis, y = pe)) +
+  geom_line()
 ```
 
 ### NMDS plot
