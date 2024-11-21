@@ -37,7 +37,10 @@ Load the metadata file:
 metadata <- read.delim(here::here("data", "metadata_bacteria.tsv"))
 ```
 
-Now we will group the technical replicates together. We will use the `sample_group` column to group the samples. The `sample_group` column is a unique identifier for the technical replicates. We will remove the last letter from the `sampleID` column to get a new name for the sample.
+Now we will group the technical replicates together (the metadata). We will use 
+the `sample_group` column to group the samples. The `sample_group` column is a 
+unique identifier for the technical replicates. We will remove the last letter 
+from the `sampleID` column to get a new name for the sample.
 
 ```{r group-technical-replicates}
 #| cache: true
@@ -46,13 +49,26 @@ Now we will group the technical replicates together. We will use the `sample_gro
 metadata <- metadata %>%
   dplyr::mutate(sample_name = stringr::str_replace(sampleID, "[a-zA-Z]$", "")) %>%
   dplyr::group_by(sample_group) %>%
-  dplyr::mutate(sample_name = first(sample_name)) %>%
+  dplyr::mutate(sample_name = dplyr::first(sample_name)) %>%
   dplyr::ungroup() %>%
   dplyr::select(sampleID, sample_name, everything()) %>%
   as.data.frame()
 
 # set rownames
 rownames(metadata) <- metadata$sampleID
+
+# execute some useful grouping on metadata
+metadata$sample_group <- as.factor(metadata$sample_group)
+
+# Create a new grouping variable using only the last 20 characters of 'condition' and 'date'
+metadata$date_condition <- as.factor(with(
+  metadata, 
+  paste0(
+    gsub(" ", "", substr(condition, nchar(condition) - 12, nchar(condition))), 
+    "_", 
+    gsub(" ", "", date)
+  )
+))
 
 # check the new metadata
 metadata
@@ -66,20 +82,7 @@ Now read the phyloseq object:
 phyloseq_object <- readRDS(here::here("results-bacteria/phyloseq/dada2_phyloseq.rds"))
 
 # replace the metadata
-sample_data(phyloseq_object) <- metadata
-
-# execute some useful grouping on metadata
-sample_data(phyloseq_object)$group <- as.factor(sample_data(phyloseq_object)$sample_group)
-
-# Create a new grouping variable using only the last 20 characters of 'condition' and 'date'
-sample_data(phyloseq_object)$date_condition <- as.factor(with(
-  sample_data(phyloseq_object), 
-  paste0(
-    gsub(" ", "", substr(condition, nchar(condition) - 12, nchar(condition))), 
-    "_", 
-    gsub(" ", "", date)
-  )
-))
+phyloseq::sample_data(phyloseq_object) <- metadata
 ```
 
 ## Checking samples
@@ -93,7 +96,7 @@ Try to see sequencing depths and other information about the samples:
 sequencing_depth <- phyloseq::sample_sums(phyloseq_object)
 
 # get data from samples
-samples_data <- data.frame(sample_data(phyloseq_object))
+samples_data <- data.frame(phyloseq::sample_data(phyloseq_object))
 
 # add sequencing depth to samples data
 samples_data$sequencing_depth <- sequencing_depth
@@ -115,12 +118,13 @@ print(depth_plot)
 
 ### Calculate the distance matrix
 
-We will calculate the distance matrix using the `bray-curtis method:
+We will calculate the distance matrix using the `bray-curtis method using a
+*rarefaction* method as suggested by Patrick D. Schloss:
 
 ```{r distance-matrix}
 #| cache: true
 #| label: distance-matrix
-otu_table_matrix <- as(otu_table(phyloseq_object), "matrix")
+otu_table_matrix <- as(phyloseq::otu_table(phyloseq_object), "matrix")
 
 # check if the taxa are rows
 if (taxa_are_rows(phyloseq_object)) {
@@ -138,47 +142,66 @@ distance_matrix <- vegan::avgdist(
 
 ### Permanova
 
-We will use the `adonis` function from the `vegan` package to test if the technical replicates are similar to each other. We will use the `sample_group` column as the strata.
+We will use the `adonis` function from the `vegan` package to test if the technical
+replicates are similar to each other. We will use the `sample_group` column as the strata.
 
 ```{r permanova}
 #| cache: true
 #| label: permanova
 # now doing the permanova
-adonis_result <- vegan::adonis2(distance_matrix ~ group, data = as(sample_data(phyloseq_object), "data.frame"))
+adonis_result <- vegan::adonis2(
+  distance_matrix ~ sample_group, 
+  data = as(phyloseq::sample_data(phyloseq_object), "data.frame")
+)
 print(adonis_result)
 ```
 
-The **PERMANOVA** (Permutational Multivariate Analysis of Variance) output provides insights into the differences in community composition across the groups in the dataset. Here’s a detailed interpretation of each section of the output:
+The **PERMANOVA** (Permutational Multivariate Analysis of Variance) output provides
+insights into the differences in community composition across the groups in the
+dataset. Here’s a detailed interpretation of each section of the output:
 
 #### Degrees of Freedom (Df)
 
--   **Model (12)**: This indicates that there are 12 levels in the grouping variable `group` (13 groups - 1 = 12).
--   **Residual (26)**: The remaining 26 degrees of freedom represent the unexplained variance within groups.
--   **Total (38)**: The total degrees of freedom in the dataset.
+- **Model (12)**: This indicates that there are 12 levels in the grouping 
+  variable `sample_group` (13 groups - 1 = 12).
+- **Residual (26)**: The remaining 26 degrees of freedom represent the
+  unexplained variance within groups.
+- **Total (38)**: The total degrees of freedom in the dataset.
 
 #### Sum of Squares (SumOfSqs)
 
--   **Model (14.3595)**: This is the sum of squares for the grouping factor, representing the variability explained by `group`.
--   **Residual (0.3871)**: This is the residual sum of squares, indicating the variability within groups.
--   **Total (14.7466)**: The total sum of squares for the dataset.
+- **Model**: This is the sum of squares for the grouping factor, representing 
+  the variability explained by `sample_group`.
+- **Residual**: This is the residual sum of squares, indicating the variability
+  within groups.
+- **Total**: The total sum of squares for the dataset.
 
 #### R-squared (R2)
 
--   **Model (0.97375)**: This value shows that 97.4% of the total variability is explained by differences between the groups, indicating a very high proportion of variation accounted for by the grouping variable.
--   **Residual (0.02625)**: Only 2.6% of the variability is left unexplained by the model, which suggests that samples within the same group are quite similar.
+- **Model**: This value shows that the reported percentage of the total 
+  variability is explained by differences between the groups, indicating a very 
+  high proportion of variation accounted for by the grouping variable.
+- **Residual**: Only this percentage of the variability is left unexplained by 
+  the model, which suggests that samples within the same group are quite similar.
 
 #### F-statistic (F) and P-value (Pr(\>F))
 
--   **F (80.378)**: The F-statistic is high, indicating a strong separation between groups relative to within-group variability.
--   **Pr(\>F) (0.001)**: The p-value of 0.001 is highly significant (denoted by `***`), suggesting a statistically significant difference in community composition across the groups.
+- **F**: The F-statistic is high, indicating a strong separation between groups 
+  relative to within-group variability.
+- **Pr(\>F)**: The p-value of 0.001 is highly significant (denoted by `***`), 
+  suggesting a statistically significant difference in community composition across the groups.
 
 #### Summary
 
 The PERMANOVA test reveals that:
 
--   The `group` variable explains a significant portion of the variation in community composition (97.4%).
--   The high F-value and low p-value (0.001) indicate that this difference is statistically significant.
--   The result supports the hypothesis that groups have distinct community compositions, with minimal overlap in terms of their ecological or compositional profiles.
+- The `sample_group` variable explains a significant portion of the variation in community
+  composition.
+- The high F-value and low p-value (0.001) indicate that this difference is 
+  statistically significant.
+- The result supports the hypothesis that groups have distinct community 
+  compositions, with minimal overlap in terms of their ecological or compositional
+  profiles.
 
 ### PCoA plot
 
@@ -198,8 +221,10 @@ The PERMANOVA test reveals that:
 
 #### PCoA vs. PCA
 
-- **PCoA** uses a distance matrix, making it ideal for data with non-linear relationships or compositional constraints.
-- **PCA** works directly with raw data and assumes linear relationships.
+- **PCoA** uses a distance matrix, making it ideal for data with non-linear 
+  relationships or compositional constraints. Is a dimensional reduction technique
+- **PCA** works directly with raw data and assumes linear relationships. Is not
+  used in microbiome studies since it doesn't deal with 0 (see Pat Schloss YT channel)
 
 #### PCoA plot by technical replicates
 
@@ -218,18 +243,18 @@ In the following pictures we are grouping by technical replicates
 #| cache: true
 #| label: pcoa-plot
 # count the number of levels in the group column
-num_levels <- length(unique(sample_data(phyloseq_object)$group))
+num_levels <- length(unique(sample_data(phyloseq_object)$sample_group))
 
 # Get the color palette
 color_palette <- Polychrome::palette36.colors(num_levels)
 names(color_palette) <- NULL  # Remove any names from the color palette
 
 # Use palette36 from Polychrome, which supports up to 36 colors
-pcoa_plot <- phyloseq::plot_ordination(phyloseq_object, pca_ordination, color = "group") +
+pcoa_plot <- phyloseq::plot_ordination(phyloseq_object, pca_ordination, color = "sample_group") +
   ggplot2::geom_point(size = 4, alpha = 0.5) +
   ggplot2::theme_minimal() +
   ggplot2::ggtitle("PCoA Plot on distance metrics (Bray-Curtis)") +
-  ggplot2::labs(color = "group") +
+  ggplot2::labs(color = "sample_group") +
   ggplot2::scale_color_manual(values = color_palette) +
   ggplot2::guides(color = ggplot2::guide_legend(title = "Technical Replicates")) +
   ggplot2::theme(
@@ -312,18 +337,18 @@ Let's plot the NMDS plot focusing on the technical replicates
 #| cache: true
 #| label: nmds-plot
 # count the number of levels in the group column
-num_levels <- length(unique(sample_data(phyloseq_object)$group))
+num_levels <- length(unique(sample_data(phyloseq_object)$sample_group))
 
 # Get the color palette
 color_palette <- Polychrome::palette36.colors(num_levels)
 names(color_palette) <- NULL  # Remove any names from the color palette
 
 # Use palette36 from Polychrome, which supports up to 36 colors
-nmds_plot <- phyloseq::plot_ordination(phyloseq_object, nmds_ordination, color = "group") +
+nmds_plot <- phyloseq::plot_ordination(phyloseq_object, nmds_ordination, color = "sample_group") +
   ggplot2::geom_point(size = 4, alpha = 0.5) +
   ggplot2::theme_minimal() +
   ggplot2::ggtitle("NMDS Plot on distance metrics (Bray-Curtis)") +
-  ggplot2::labs(color = "group") +
+  ggplot2::labs(color = "sample_group") +
   ggplot2::scale_color_manual(values = color_palette) +
   ggplot2::guides(color = ggplot2::guide_legend(title = "Technical Replicates")) +
   ggplot2::theme(
