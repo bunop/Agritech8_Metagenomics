@@ -277,15 +277,15 @@ names(color_palette) <- NULL  # Remove any names from the color palette
 
 # try to annotate plot
 pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
-labels <- c(glue("PCo Axis 1 ({pretty_pe[1]}%)"),
-            glue("PCo Axis 2 ({pretty_pe[2]}%)"))
+labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
+            glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
 
 # plot the PCoA
-pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = sample_name)) +
-  geom_point(size = 4, alpha = 0.5) +
-  theme_minimal() +
+pcoa_plot_rep <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = sample_name)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
   ggplot2::ggtitle("PCoA Plot on Distance Metrics (Bray-Curtis)") +
-  labs(title = "PCoA of Bray-Curtis Distance Matrix",
+  ggplot2::labs(title = "PCoA of Bray-Curtis Distance Matrix",
        color = NULL,
        x = labels[1],
        y = labels[2]) +
@@ -293,10 +293,9 @@ pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = sample_n
   ggplot2::theme(
     legend.position = "bottom",       # Position the legend at the bottom
     legend.box = "horizontal",        # Arrange legend items horizontally without a title
-    plot.title = element_text(hjust = 0.5)  # Center the title
   )
 
-print(pcoa_plot)
+print(pcoa_plot_rep)
 ```
 
 #### PCoA plot by date and condition (sample replicates)
@@ -308,15 +307,15 @@ Visualize the same plot but grouping with date and condition (which should group
 #| label: pcoa-date-condition
 # try to annotate plot
 pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
-labels <- c(glue("PCo Axis 1 ({pretty_pe[1]}%)"),
-            glue("PCo Axis 2 ({pretty_pe[2]}%)"))
+labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
+            glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
 
 # plot the PCoA
-pcoa_plot <- ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = date_condition)) +
-  geom_point(size = 4, alpha = 0.5) +
-  theme_minimal() +
+pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = date_condition)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
   ggplot2::ggtitle("PCoA Plot on Distance Metrics (Bray-Curtis)") +
-  labs(title = "PCoA of Bray-Curtis Distance Matrix",
+  ggplot2::labs(title = "PCoA of Bray-Curtis Distance Matrix",
        color = NULL,
        x = labels[1],
        y = labels[2]) +
@@ -324,7 +323,6 @@ pcoa_plot <- ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = date_condition)) 
   ggplot2::theme(
     legend.position = "bottom",       # Position the legend at the bottom
     legend.box = "horizontal",        # Arrange legend items horizontally without a title
-    plot.title = element_text(hjust = 0.5)  # Center the title
   )
 
 pcoa_plot
