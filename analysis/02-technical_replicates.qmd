@@ -17,97 +17,39 @@ editor: source
 ```{r setup}
 #| label: setup
 #| output: false
+library(targets)
 library(here)
-library(dplyr)
 library(tidyverse)
-library(stringr)
-library(phyloseq)
 library(vegan)
-library(Polychrome)
-library(RColorBrewer)
 library(ggplot2)
-library(ape)
-library(glue)
+
+store_path <- here::here("_targets")
 ```
 
 ## Loading the data
 
-Load the metadata file:
+Load data from bacteria samples. We have grouped the technical replicates 
+together. We will use the `sample_group` column to group the samples. 
+The `sample_group` column is a unique identifier for the technical replicates. 
+We have removed the last letter from the `sampleID` column to get a new name 
+for the sample:
 
 ```{r load-metadata}
-#| cache: true
 #| label: load-metadata
-metadata <- read.delim(here::here("data", "metadata_bacteria.tsv"))
-```
-
-Now we will group the technical replicates together (the metadata). We will use 
-the `sample_group` column to group the samples. The `sample_group` column is a 
-unique identifier for the technical replicates. We will remove the last letter 
-from the `sampleID` column to get a new name for the sample.
-
-```{r group-technical-replicates}
-#| cache: true
-#| label: group-technical-replicates
-# get a new name for sample 
-metadata <- metadata %>%
-  # Extract the last character of sampleID to create technical_rep
-  mutate(technical_rep = str_sub(sampleID, -1)) %>%
-  # Convert technical_rep to a factor
-  mutate(technical_rep = as.factor(technical_rep)) %>%
-  # Remove the last character from sampleID to create sample_name
-  mutate(sample_name = str_sub(sampleID, 1, -2)) %>%
-  # Ensure sample_group is a factor
-  mutate(sample_group = as.factor(sample_group)) %>%
-  # Group by sample_group
-  group_by(sample_group) %>%
-  # Assign the first sample_name within each group
-  mutate(sample_name = first(sample_name)) %>%
-  # Ungroup the DataFrame
-  ungroup() %>%
-  # Reorder columns to place sampleID and sample_name at the beginning
-  select(sampleID, sample_name, technical_rep, everything()) %>%
-  # Convert to a standard data frame
-  as.data.frame()
-
-# set rownames
-rownames(metadata) <- metadata$sampleID
-
-# Create a new grouping variable using only the last 20 characters of 'condition' and 'date'
-metadata$date_condition <- as.factor(with(
-  metadata, 
-  paste0(
-    gsub(" ", "", substr(condition, nchar(condition) - 12, nchar(condition))), 
-    "_", 
-    gsub(" ", "", date)
-  )
-))
+# load data from targets
+tar_load(metadata, store = store_path)
 
 # check the new metadata
 metadata
 ```
 
-Now read the phyloseq object:
+Load phyloseq object other stuff
 
 ```{r load-phyloseq}
-#| cache: true
 #| label: load-phyloseq
-phyloseq_object <- readRDS(here::here("results-bacteria/phyloseq/dada2_phyloseq.rds"))
-
-# replace the metadata
-phyloseq::sample_data(phyloseq_object) <- metadata
-```
-
-Extract the otu table:
-
-```{r extract-otu-table}
-#| cache: true
-#| label: extract-otu-table
-otu_table_matrix <- as(phyloseq::otu_table(phyloseq_object), "matrix")
-
-# check if the taxa are rows
-if (taxa_are_rows(phyloseq_object)) {
-  otu_table_matrix <- t(otu_table_matrix)
-}
+tar_load(phyloseq_object, store = store_path)
+tar_load(otu_table_matrix, store = store_path)
+tar_load(samples_data, store = store_path)
 ```
 
 ## Checking samples
@@ -119,15 +61,6 @@ Try to see sample depths and other information about the samples:
 ```{r sequencing-depth}
 #| cache: true
 #| label: sequencing-depth
-# calculate sequencing depth for each samples
-sequencing_depth <- phyloseq::sample_sums(phyloseq_object)
-
-# get data from samples
-samples_data <- data.frame(phyloseq::sample_data(phyloseq_object))
-
-# add sequencing depth to samples data
-samples_data$sequencing_depth <- sequencing_depth
-
 # Create the bar plot
 depth_plot <- ggplot2::ggplot(
   samples_data, 
@@ -152,24 +85,12 @@ Try to follow the suggestion of Patrick D. Schloss to estimate the sequencing de
 ```{r estimate-sampling-coverage}
 #| cache: true
 #| label: estimate-sampling-coverage
-# create a shared table to estimate the sequencing depth
-shared <- otu_table_matrix %>%
-  as_tibble(rownames = "Group") %>%
-  pivot_longer(-Group) %>%
-  group_by(Group) %>%
-  mutate(total = sum(value)) %>%
-  group_by(name) %>%
-  mutate(total = sum(value)) %>%
-  filter(total != 0) %>%
-  ungroup() %>%
-  select(-total)
-
-sampling_coverage <- shared %>% 
-  group_by(Group) %>%
-  summarize(n_seqs = sum(value))
-
-sampling_coverage %>%
-  arrange(n_seqs)
+sampling_coverage <- samples_data %>%
+  rownames_to_column(var = "rowname") %>%
+  select(-everything(), sampleID, sequencing_depth) %>%
+  arrange(sequencing_depth) %>%
+  rename(n_seqs = sequencing_depth)
+sampling_coverage
 ```
 
 Plot the sampling coverage: here's the histogram of the number of sequences per sample:
@@ -221,12 +142,7 @@ and $N_T$ is the total number of sequences.
 ```{r goods-coverage}
 #| cache: true
 #| label: goods-coverage
-coverage_stats <- shared %>%
-  group_by(Group) %>%
-  summarize(
-    n_seqs = sum(value),
-    n_sings = sum(value == 1),
-    goods = 100*(1 - n_sings / n_seqs))
+tar_load(coverage_stats, store = store_path)
 
 coverage_stats %>% 
   arrange(goods) %>%
@@ -248,19 +164,12 @@ The three samples with the lowest sampling depth have a Good's coverage above
 
 ### Calculate the distance matrix
 
-We will calculate the distance matrix using the `bray-curtis method using a
+Load the distance matrix using the *bray-curtis* method using a
 *rarefaction* method as suggested by Patrick D. Schloss:
 
 ```{r distance-matrix}
-#| cache: true
 #| label: distance-matrix
-# calculate the distance matrix
-distance_matrix <- vegan::avgdist(
-  otu_table_matrix, 
-  sample = min(sequencing_depth), 
-  iterations = 1000,
-  dmethod = "bray"
-)
+tar_load(distance_matrix, store = store_path)
 ```
 
 ### Permanova

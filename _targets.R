@@ -7,6 +7,7 @@
 library(targets)
 library(tarchetypes) # Load other packages as needed.
 library(crew)
+library(quarto)
 
 # Set target options:
 tar_option_set(
@@ -85,5 +86,10 @@ list(
       otu_table_matrix,
       min_sequencing_depth = min(samples_data$sequencing_depth)
     )
+  ),
+  tar_quarto(
+    technical_replicates,
+    "analysis/02-technical_replicates.qmd",
+    quiet = FALSE
   )
 )

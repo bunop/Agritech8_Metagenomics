@@ -1,5 +1,5 @@
 name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
-.Random.seed|object|9e818c675c56835c|||||||||||||||
+.Random.seed|object|0cde15e1aa36c7a9|||||||||||||||
 calculate_coverage_stats|function|20e7b02e4be58d62|||||||||||||||
 calculate_distance_matrix|function|2768e8cd297a0404|||||||||||||||
 coverage_stats|stem|360b9b69e0013e82|141db50b147be76c|7108e667f0a710cd|-1656669601||t20049.9282658855s|ea0dee4cec7e1835|868|rds|local|vector|||7.351||
@@ -13,3 +13,4 @@ object|object|6c65a2fb02c2ab2f|||||||||||||||
 otu_table_matrix|stem|03449d26dc1d2fe4|4fbe22024f54ec1f|f7a985cecde6aa0d|91645561||t20049.9144718783s|afdece45562d3e76|329071|rds|local|vector|||0.45||
 phyloseq_object|stem|7e13cfaa27e57483|37577fe9064da22a|0ede7eec2a75ddfa|72705609||t20049.9144634985s|7eb36af4ed2fd5e2|1333647|rds|local|vector|||0.619||
 samples_data|stem|7e574383f41ed8b3|bc84f5669dd816e6|aaa910deb849b14e|-350271008||t20049.9144719246s|e70702e56f6d5dab|1594|rds|local|vector|||0.002||
+technical_replicates|stem|b15624b7304808c2|527bdd62c19e2cdc|eca7fe8726e405a1|-1322429749|analysis/02-technical_replicates.html*analysis/02-technical_replicates.qmd|t20049.9472678676s||107457|file|local|vector|||10.779||Error running quarto cli.Caused by error System command quarto failed
