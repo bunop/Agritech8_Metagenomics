@@ -373,11 +373,12 @@ Non-metric Multidimensional Scaling (**NMDS**) is an ordination technique used t
 NMDS is a flexible and robust method for exploring complex datasets, especially when the data do not conform to the assumptions required by other ordination techniques. 
 
 ```{r nmds}
-#| cache: true
-#| label: nmds
-#| output: false
-# calculate the NMDS
-nmds_ordination <- phyloseq::ordinate(phyloseq_object, method = "NMDS", distance = "bray")
+set.seed(42)
+nmds_result <- vegan::metaMDS(distance_matrix, distance = "bray")
+nmds_tb <- scores(nmds_result) %>%
+  # tibbles has not rownames, so we need to add them as a new column
+  as_tibble(rownames = "sampleID") %>%
+  inner_join(metadata, by = "sampleID")
 ```
 #### NMDS plot by technical replicates
 
@@ -394,20 +395,21 @@ color_palette <- Polychrome::palette36.colors(num_levels)
 names(color_palette) <- NULL  # Remove any names from the color palette
 
 # Use palette36 from Polychrome, which supports up to 36 colors
-nmds_plot <- phyloseq::plot_ordination(phyloseq_object, nmds_ordination, color = "sample_group") +
+nmds_plot_rep <- ggplot2::ggplot(
+    nmds_tb,
+    ggplot2::aes(x=NMDS1, y=NMDS2, color = sample_name)) +
   ggplot2::geom_point(size = 4, alpha = 0.5) +
   ggplot2::theme_minimal() +
-  ggplot2::ggtitle("NMDS Plot on distance metrics (Bray-Curtis)") +
-  ggplot2::labs(color = "sample_group") +
+  ggplot2::labs(
+    title = "NMDS Plot on distance metrics (Bray-Curtis)",
+    color = NULL) +
   ggplot2::scale_color_manual(values = color_palette) +
-  ggplot2::guides(color = ggplot2::guide_legend(title = "Technical Replicates")) +
   ggplot2::theme(
     legend.position = "bottom",       # Position the legend at the bottom
     legend.box = "horizontal",        # Arrange legend items horizontally without a title
-    plot.title = element_text(hjust = 0.5)  # Center the title
   )
 
-print(nmds_plot)
+print(nmds_plot_rep)
 ```
 
 #### NMDS plot by date and condition (sample replicates)
@@ -418,20 +420,20 @@ Now, let's visualize the NMDS plot but grouping with date and condition
 ```{r}
 #| cache: true
 #| label: nmds-date-condition
-# Count the number of unique levels in the new grouping variable
-num_levels <- length(unique(sample_data(phyloseq_object)$date_condition))
 
 # Plot the NMDS
-nmds_plot <- phyloseq::plot_ordination(phyloseq_object, nmds_ordination, color = "date_condition") +
-  ggplot2::geom_point(size = 4, alpha = 0.1) +
+nmds_plot <- ggplot2::ggplot(
+    nmds_tb,
+    ggplot2::aes(x=NMDS1, y=NMDS2, color = date_condition)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
   ggplot2::theme_minimal() +
-  ggplot2::ggtitle("NMDS Plot on Distance Metrics (Bray-Curtis)") +
-  ggplot2::labs(color = NULL) +  # Remove the legend title
+  ggplot2::labs(
+    title = "NMDS Plot on distance metrics (Bray-Curtis)",
+    color = NULL) +
   ggplot2::scale_color_brewer(palette = "Set1") +
   ggplot2::theme(
     legend.position = "bottom",       # Position the legend at the bottom
     legend.box = "horizontal",        # Arrange legend items horizontally without a title
-    plot.title = element_text(hjust = 0.5)  # Center the title
   )
 
 print(nmds_plot)
