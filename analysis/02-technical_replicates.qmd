@@ -19,6 +19,7 @@ editor: source
 #| output: false
 library(here)
 library(dplyr)
+library(tidyverse)
 library(stringr)
 library(phyloseq)
 library(vegan)
@@ -96,6 +97,19 @@ phyloseq_object <- readRDS(here::here("results-bacteria/phyloseq/dada2_phyloseq.
 phyloseq::sample_data(phyloseq_object) <- metadata
 ```
 
+Extract the otu table:
+
+```{r extract-otu-table}
+#| cache: true
+#| label: extract-otu-table
+otu_table_matrix <- as(phyloseq::otu_table(phyloseq_object), "matrix")
+
+# check if the taxa are rows
+if (taxa_are_rows(phyloseq_object)) {
+  otu_table_matrix <- t(otu_table_matrix)
+}
+```
+
 ## Checking samples
 
 ### Display number of samples
@@ -129,6 +143,109 @@ depth_plot <- ggplot2::ggplot(
 print(depth_plot)
 ```
 
+### Attempt to estimate the sequencing depth
+
+Try to follow the suggestion of Patrick D. Schloss to estimate the sequencing depth
+(see [How to find the best sampling depth for rarefaction (CC202)](https://youtu.be/c7H8jLjTxSE?si=Wu5JLRCsBJuRyZc7) on
+[Riffomonas Project](https://www.youtube.com/@Riffomonas)).
+
+```{r estimate-sampling-coverage}
+#| cache: true
+#| label: estimate-sampling-coverage
+# create a shared table to estimate the sequencing depth
+shared <- otu_table_matrix %>%
+  as_tibble(rownames = "Group") %>%
+  pivot_longer(-Group) %>%
+  group_by(Group) %>%
+  mutate(total = sum(value)) %>%
+  group_by(name) %>%
+  mutate(total = sum(value)) %>%
+  filter(total != 0) %>%
+  ungroup() %>%
+  select(-total)
+
+sampling_coverage <- shared %>% 
+  group_by(Group) %>%
+  summarize(n_seqs = sum(value))
+
+sampling_coverage %>%
+  arrange(n_seqs)
+```
+
+Plot the sampling coverage: here's the histogram of the number of sequences per sample:
+
+```{r coverage-histogram}
+#| cache: true
+#| label: coverage-histogram
+sampling_coverage %>%
+  ggplot(aes(x=n_seqs)) +
+  geom_histogram(binwidth=10000) +
+  coord_cartesian(xlim=c(0, 100000))
+```
+
+A jitter plot of the number of sequences per sample (plot random x values 
+to avoid overplotting):
+
+```{r coverage-jitter}
+#| cache: true
+#| label: coverage-jitter
+sampling_coverage %>%
+  ggplot(aes(x=1, y=n_seqs)) +
+  geom_jitter() +
+  scale_y_log10()
+```
+
+A lineplot of the number of sequences per sample:
+
+```{r}
+#| cache: true
+#| label: coverage-lineplot
+sampling_coverage %>%
+  arrange(n_seqs) %>%
+  ggplot(aes(x=1:nrow(.), y=n_seqs))+
+  geom_line()
+```
+
+We didn't see a curve like the one we see in the tutorial. If we choose a 
+sequencing depth of 6,000, we will throw away only 3 samples.
+
+Calculate the *good's coverage* as defined by the formula:
+
+$$
+C_{Good's} = 100(1-\frac{n_1}{N_T}) 
+$$
+
+where $n_1$ is the number of OTUs that are observed only once 
+and $N_T$ is the total number of sequences.
+
+```{r goods-coverage}
+#| cache: true
+#| label: goods-coverage
+coverage_stats <- shared %>%
+  group_by(Group) %>%
+  summarize(
+    n_seqs = sum(value),
+    n_sings = sum(value == 1),
+    goods = 100*(1 - n_sings / n_seqs))
+
+coverage_stats %>% 
+  arrange(goods) %>%
+  print(n=10)
+```
+
+Here's the plot of the Good's coverage:
+
+```{r goods-coverage-plot}
+#| cache: true
+#| label: goods-coverage-plot
+coverage_stats %>%
+  ggplot(aes(x=n_seqs, y=goods)) +
+  geom_point()
+```
+
+The three samples with the lowest sampling depth have a Good's coverage above 
+99.6%. We don't see the need of throwing them away.
+
 ### Calculate the distance matrix
 
 We will calculate the distance matrix using the `bray-curtis method using a
@@ -137,13 +254,6 @@ We will calculate the distance matrix using the `bray-curtis method using a
 ```{r distance-matrix}
 #| cache: true
 #| label: distance-matrix
-otu_table_matrix <- as(phyloseq::otu_table(phyloseq_object), "matrix")
-
-# check if the taxa are rows
-if (taxa_are_rows(phyloseq_object)) {
-  otu_table_matrix <- t(otu_table_matrix)
-}
-
 # calculate the distance matrix
 distance_matrix <- vegan::avgdist(
   otu_table_matrix, 
