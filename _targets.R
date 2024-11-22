@@ -14,6 +14,7 @@ tar_option_set(
     "here",
     "readr",
     "dplyr",
+    "tidyr",
     "stringr",
     "phyloseq",
     "vegan"
@@ -73,6 +74,10 @@ list(
   tar_target(
     name = samples_data,
     command = get_samples_data(phyloseq_object)
+  ),
+  tar_target(
+    name = coverage_stats,
+    command = calculate_coverage_stats(otu_table_matrix)
   ),
   tar_target(
     name = distance_matrix,
