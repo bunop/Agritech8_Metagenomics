@@ -36,3 +36,51 @@ calculate_coverage_stats <- function(otu_table_matrix) {
 
   return(coverage_stats)
 }
+
+## calculate anova on a received function
+calculate_anova <- function(phyloseq_object, distance_matrix) {
+  adonis_result <- vegan::adonis2(
+    distance_matrix ~ sample_group + technical_rep,
+    data = methods::as(phyloseq::sample_data(phyloseq_object), "data.frame"),
+    by = "margin"
+  )
+}
+
+## calculate PCoA
+calculate_pcoa <- function(distance_matrix, metadata) {
+  # Calculate the PCoA
+  pcoa_results <- ape::pcoa(distance_matrix, correction = "cailliez")
+
+  # Create a data frame for plotting
+  pcoa_df <- data.frame(pcoa_results$vectors[, 1:2])
+  colnames(pcoa_df) <- c("PCoA1", "PCoA2")
+  pcoa_df$sampleID <- rownames(pcoa_df)
+  pcoa_df <- dplyr::inner_join(pcoa_df, metadata, by = "sampleID")
+
+  # Extract the percent explained variance
+  percent_explained <- pcoa_results$values$Rel_corr_eig * 100
+
+  return(
+    list(
+      pcoa_results=pcoa_results,
+      pcoa_df=pcoa_df,
+      percent_explained=percent_explained
+    )
+  )
+}
+
+calculate_nmds <- function(distance_matrix, metadata, distance = "bray") {
+  nmds_result <- vegan::metaMDS(distance_matrix, distance)
+
+  nmds_tb <- vegan::scores(nmds_result) %>%
+    # tibbles has not rownames, so we need to add them as a new column
+    as_tibble(rownames = "sampleID") %>%
+    inner_join(metadata, by = "sampleID")
+
+  return(
+    list(
+      nmds_result=nmds_result,
+      nmds_tb=nmds_tb
+    )
+  )
+}

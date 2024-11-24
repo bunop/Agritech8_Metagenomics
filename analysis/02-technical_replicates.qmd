@@ -20,8 +20,8 @@ editor: source
 library(targets)
 library(here)
 library(tidyverse)
-library(vegan)
 library(ggplot2)
+library(phyloseq)
 
 store_path <- here::here("_targets")
 ```
@@ -37,7 +37,7 @@ for the sample:
 ```{r load-metadata}
 #| label: load-metadata
 # load data from targets
-tar_load(metadata, store = store_path)
+targets::tar_load(metadata, store = store_path)
 
 # check the new metadata
 metadata
@@ -47,9 +47,9 @@ Load phyloseq object other stuff
 
 ```{r load-phyloseq}
 #| label: load-phyloseq
-tar_load(phyloseq_object, store = store_path)
-tar_load(otu_table_matrix, store = store_path)
-tar_load(samples_data, store = store_path)
+targets::tar_load(phyloseq_object, store = store_path)
+targets::tar_load(otu_table_matrix, store = store_path)
+targets::tar_load(samples_data, store = store_path)
 ```
 
 ## Checking samples
@@ -59,7 +59,6 @@ tar_load(samples_data, store = store_path)
 Try to see sample depths and other information about the samples:
 
 ```{r sequencing-depth}
-#| cache: true
 #| label: sequencing-depth
 # Create the bar plot
 depth_plot <- ggplot2::ggplot(
@@ -83,7 +82,6 @@ Try to follow the suggestion of Patrick D. Schloss to estimate the sequencing de
 [Riffomonas Project](https://www.youtube.com/@Riffomonas)).
 
 ```{r estimate-sampling-coverage}
-#| cache: true
 #| label: estimate-sampling-coverage
 sampling_coverage <- samples_data %>%
   rownames_to_column(var = "rowname") %>%
@@ -96,7 +94,6 @@ sampling_coverage
 Plot the sampling coverage: here's the histogram of the number of sequences per sample:
 
 ```{r coverage-histogram}
-#| cache: true
 #| label: coverage-histogram
 sampling_coverage %>%
   ggplot(aes(x=n_seqs)) +
@@ -108,7 +105,6 @@ A jitter plot of the number of sequences per sample (plot random x values
 to avoid overplotting):
 
 ```{r coverage-jitter}
-#| cache: true
 #| label: coverage-jitter
 sampling_coverage %>%
   ggplot(aes(x=1, y=n_seqs)) +
@@ -119,7 +115,6 @@ sampling_coverage %>%
 A lineplot of the number of sequences per sample:
 
 ```{r}
-#| cache: true
 #| label: coverage-lineplot
 sampling_coverage %>%
   arrange(n_seqs) %>%
@@ -140,9 +135,8 @@ where $n_1$ is the number of OTUs that are observed only once
 and $N_T$ is the total number of sequences.
 
 ```{r goods-coverage}
-#| cache: true
 #| label: goods-coverage
-tar_load(coverage_stats, store = store_path)
+targets::tar_load(coverage_stats, store = store_path)
 
 coverage_stats %>% 
   arrange(goods) %>%
@@ -152,7 +146,6 @@ coverage_stats %>%
 Here's the plot of the Good's coverage:
 
 ```{r goods-coverage-plot}
-#| cache: true
 #| label: goods-coverage-plot
 coverage_stats %>%
   ggplot(aes(x=n_seqs, y=goods)) +
@@ -169,7 +162,7 @@ Load the distance matrix using the *bray-curtis* method using a
 
 ```{r distance-matrix}
 #| label: distance-matrix
-tar_load(distance_matrix, store = store_path)
+targets::tar_load(distance_matrix, store = store_path)
 ```
 
 ### Permanova
@@ -180,14 +173,9 @@ as a factor to account for biological variability and `technical_rep` to assess
 technical replicate similarity:
 
 ```{r permanova}
-#| cache: true
 #| label: permanova
-# now doing the permanova
-adonis_result <- vegan::adonis2(
-  distance_matrix ~ sample_group + technical_rep,
-  data = as(phyloseq::sample_data(phyloseq_object), "data.frame"),
-  by = "margin"
-)
+# load the permanova with targets
+targets::tar_load(adonis_result, store = store_path)
 print(adonis_result)
 ```
 
@@ -267,28 +255,21 @@ dataset. Here’s a detailed interpretation of each section of the output:
 Now we will plot a PCoA plot to visualize the technical replicates.
 
 ```{r pcoa}
-#| cache: true
 #| label: pcoa
-# Calculate the PCoA
-pcoa_result <- ape::pcoa(distance_matrix, correction = "cailliez")
+# retrieve the PCoA object from targets
+targets::tar_load(pcoa_object, store = store_path)
 
-# Create a data frame for plotting
-pcoa_df <- data.frame(pcoa_result$vectors[, 1:2])
-colnames(pcoa_df) <- c("PCoA1", "PCoA2")
-pcoa_df$sampleID <- rownames(pcoa_df)
-pcoa_df <- dplyr::inner_join(pcoa_df, metadata, by = "sampleID")
-
-# Extract the percent explained variance
-percent_explained <- pcoa_result$values$Rel_corr_eig * 100
+pcoa_results <- pcoa_object$pcoa_results
+percent_explained <- pcoa_object$percent_explained
+pcoa_df <- pcoa_object$pcoa_df
 ```
 
 In the following pictures we are grouping by technical replicates
 
 ```{r pcoa-plot}
-#| cache: true
 #| label: pcoa-plot
 # count the number of levels in the group column
-num_levels <- length(unique(sample_data(phyloseq_object)$sample_group))
+num_levels <- length(unique(metadata$sample_group))
 
 # Get the color palette
 color_palette <- Polychrome::palette36.colors(num_levels)
@@ -322,7 +303,6 @@ print(pcoa_plot_rep)
 Visualize the same plot but grouping with date and condition (which should group sample replicates)
 
 ```{r}
-#| cache: true
 #| label: pcoa-date-condition
 # try to annotate plot
 pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
@@ -355,7 +335,7 @@ explained by each principal component, allowing you to determine the optimal
 number of components to retain.
 
 ```{r}
-tibble(pe = pcoa_result$values$Cum_corr_eig * 100,
+tibble(pe = pcoa_results$values$Cum_corr_eig * 100,
        axis = 1:length(percent_explained)) %>%
   ggplot(aes(x = axis, y = pe)) +
   geom_line()
@@ -392,22 +372,18 @@ Non-metric Multidimensional Scaling (**NMDS**) is an ordination technique used t
 NMDS is a flexible and robust method for exploring complex datasets, especially when the data do not conform to the assumptions required by other ordination techniques. 
 
 ```{r nmds}
-set.seed(42)
-nmds_result <- vegan::metaMDS(distance_matrix, distance = "bray")
-nmds_tb <- scores(nmds_result) %>%
-  # tibbles has not rownames, so we need to add them as a new column
-  as_tibble(rownames = "sampleID") %>%
-  inner_join(metadata, by = "sampleID")
+targets::tar_load(nmds_object)
+
+nmds_tb <- nmds_object$nmds_tb
 ```
 #### NMDS plot by technical replicates
 
 Let's plot the NMDS plot focusing on the technical replicates
 
 ```{r}
-#| cache: true
 #| label: nmds-plot
 # count the number of levels in the group column
-num_levels <- length(unique(sample_data(phyloseq_object)$sample_group))
+num_levels <- length(unique(metadata$sample_group))
 
 # Get the color palette
 color_palette <- Polychrome::palette36.colors(num_levels)
@@ -437,7 +413,6 @@ Now, let's visualize the NMDS plot but grouping with date and condition
 (which should group sample replicates)
 
 ```{r}
-#| cache: true
 #| label: nmds-date-condition
 
 # Plot the NMDS

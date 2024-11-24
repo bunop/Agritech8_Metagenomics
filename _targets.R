@@ -18,7 +18,8 @@ tar_option_set(
     "tidyr",
     "stringr",
     "phyloseq",
-    "vegan"
+    "vegan",
+    "ape"
   ), # Packages that your targets need for their tasks.
   # format = "qs", # Optionally set the default storage format. qs is fast.
   #
@@ -31,7 +32,7 @@ tar_option_set(
   # which run as local R processes. Each worker launches when there is work
   # to do and exits if 60 seconds pass with no tasks to run.
   #
-  controller = crew::crew_controller_local(workers = 2, seconds_idle = 60)
+  controller = crew::crew_controller_local(workers = 2, seconds_idle = 60),
   #
   # Alternatively, if you want workers to run on a high-performance computing
   # cluster, select a controller from the {crew.cluster} package.
@@ -52,6 +53,7 @@ tar_option_set(
   #   )
   #
   # Set other options as needed.
+  seed = 42
 )
 
 # Run the R scripts in the R/ folder with your custom functions:
@@ -86,6 +88,21 @@ list(
       otu_table_matrix,
       min_sequencing_depth = min(samples_data$sequencing_depth)
     )
+  ),
+  tar_target(
+    name = adonis_result,
+    command = calculate_anova(
+      phyloseq_object,
+      distance_matrix
+    )
+  ),
+  tar_target(
+    name = pcoa_object,
+    command = calculate_pcoa(distance_matrix, metadata)
+  ),
+  tar_target(
+    name = nmds_object,
+    command = calculate_nmds(distance_matrix, metadata)
   ),
   tar_quarto(
     technical_replicates,
