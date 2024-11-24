@@ -26,9 +26,9 @@ library(phyloseq)
 store_path <- here::here("_targets")
 ```
 
-## Loading the data
+## Loading the data from bacteria samples
 
-Load data from bacteria samples. We have grouped the technical replicates 
+We have grouped the technical replicates 
 together. We will use the `sample_group` column to group the samples. 
 The `sample_group` column is a unique identifier for the technical replicates. 
 We have removed the last letter from the `sampleID` column to get a new name 
@@ -114,7 +114,7 @@ sampling_coverage %>%
 
 A lineplot of the number of sequences per sample:
 
-```{r}
+```{r coverage-lineplot}
 #| label: coverage-lineplot
 sampling_coverage %>%
   arrange(n_seqs) %>%
@@ -302,7 +302,7 @@ print(pcoa_plot_rep)
 
 Visualize the same plot but grouping with date and condition (which should group sample replicates)
 
-```{r}
+```{r pcoa-date-condition}
 #| label: pcoa-date-condition
 # try to annotate plot
 pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
@@ -334,11 +334,14 @@ components in a PCA or PCoA analysis. It helps visualize the proportion of varia
 explained by each principal component, allowing you to determine the optimal 
 number of components to retain.
 
-```{r}
+```{r scree-plot}
+#| label: scree-plot
 tibble(pe = pcoa_results$values$Cum_corr_eig * 100,
        axis = 1:length(percent_explained)) %>%
   ggplot(aes(x = axis, y = pe)) +
-  geom_line()
+  geom_line() +
+  # add a red vertical line at y=2
+  geom_vline(xintercept = 2, color = "red")
 ```
 
 ### NMDS plot
@@ -372,7 +375,8 @@ Non-metric Multidimensional Scaling (**NMDS**) is an ordination technique used t
 NMDS is a flexible and robust method for exploring complex datasets, especially when the data do not conform to the assumptions required by other ordination techniques. 
 
 ```{r nmds}
-targets::tar_load(nmds_object)
+#| label: nmds
+targets::tar_load(nmds_object, store = store_path)
 
 nmds_tb <- nmds_object$nmds_tb
 ```
@@ -380,7 +384,7 @@ nmds_tb <- nmds_object$nmds_tb
 
 Let's plot the NMDS plot focusing on the technical replicates
 
-```{r}
+```{r nmds-plot}
 #| label: nmds-plot
 # count the number of levels in the group column
 num_levels <- length(unique(metadata$sample_group))
@@ -412,7 +416,7 @@ print(nmds_plot_rep)
 Now, let's visualize the NMDS plot but grouping with date and condition 
 (which should group sample replicates)
 
-```{r}
+```{r nmds-date-condition}
 #| label: nmds-date-condition
 
 # Plot the NMDS
