@@ -252,7 +252,8 @@ dataset. Here’s a detailed interpretation of each section of the output:
 
 #### PCoA plot by technical replicates
 
-Now we will plot a PCoA plot to visualize the technical replicates.
+Now we will plot a PCoA plot to visualize the technical replicates. See
+[CC186](https://www.youtube.com/watch?v=G5Qckqq5Erw) for more information.
 
 ```{r pcoa}
 #| label: pcoa
@@ -382,7 +383,9 @@ nmds_tb <- nmds_object$nmds_tb
 ```
 #### NMDS plot by technical replicates
 
-Let's plot the NMDS plot focusing on the technical replicates
+Let's plot the NMDS plot focusing on the technical replicates.
+see [CC187](https://www.youtube.com/watch?v=h7OrVmT7Ja8&ab_channel=RiffomonasProject)
+for more information.
 
 ```{r nmds-plot}
 #| label: nmds-plot
