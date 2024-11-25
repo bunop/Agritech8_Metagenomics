@@ -76,14 +76,14 @@ combine_iNEXT_results <- function(iNEXT_list) {
 
 # test data
 ## iNext
-abundance_list <- list(
-  Campione1 = c(10, 20, 30, 40, 50),
-  Campione2 = c(5, 15, 25, 35, 45),
-  Campione3 = c(8, 18, 28, 38, 48)
-)
+# abundance_list <- list(
+#   Campione1 = c(10, 20, 30, 40, 50),
+#   Campione2 = c(5, 15, 25, 35, 45),
+#   Campione3 = c(8, 18, 28, 38, 48)
+# )
 
 # transform my otu table into abundance list
-# abundance_list <- split(as.data.frame(otu_table_matrix), rownames(otu_table_matrix))
+abundance_list <- split(as.data.frame(otu_table_matrix), rownames(otu_table_matrix))
 
 parallel_iNEXT_results <- future_lapply(abundance_list, function(x) {
   tryCatch({
