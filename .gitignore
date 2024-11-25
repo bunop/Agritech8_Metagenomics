@@ -6,6 +6,8 @@ results-*/
 test-*/
 .nextflow.log*
 archives/
+*.rds
+*.png
 
 # quarto output files
 *.html
