@@ -37,7 +37,7 @@ load the combined graph
 
 ```{r load-combined}
 #| label: load-combined
-combined_iNEXT_result <- readRDS(here::here("combined_iNEXT_result.rds"))
+tar_load(combined_iNEXT_results, store = store_path)
 ```
 
 create a plot 
@@ -48,10 +48,14 @@ create a plot
 #| fig-height: 8
 min_sequences <- min(coverage_stats$n_seqs)
 
-ggplot(combined_iNEXT_result, aes(x = x, y = y, color = Assemblage, linetype = Method)) +
+# Define custom linetypes
+custom_linetypes <- c("Rarefaction" = "solid", "Extrapolation" = "dashed", "Observerd" = "dotdashed")
+
+ggplot(combined_iNEXT_results, aes(x = x, y = y, color = Assemblage, linetype = Method)) +
   geom_line(linewidth = 1) +  # Plot the lines
   geom_ribbon(aes(ymin = y.lwr, ymax = y.upr, fill = Assemblage), alpha = 0.2, color = NA) +  # Add confidence intervals
   geom_vline(xintercept = min_sequences, linetype = "dashed", color = "red") +  # Add vertical line
+  scale_linetype_manual(values = custom_linetypes) +  # Set custom linetypes
   labs(
     title = "Rarefaction and Extrapolation Curves",
     x = "Sample Size",
@@ -66,7 +70,7 @@ Try to extract rarefaction data:
 #| label: extract-rarefaction
 
 # Extract the size_based data frame
-size_based_data <- combined_iNEXT_result$iNextEst$size_based
+size_based_data <- combined_iNEXT_results$iNextEst$size_based
 
 # Filter for interpolated (rarefaction) values
 rarefaction_data <- size_based_data %>%

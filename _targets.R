@@ -19,7 +19,8 @@ tar_option_set(
     "stringr",
     "phyloseq",
     "vegan",
-    "ape"
+    "ape",
+    "iNEXT"
   ), # Packages that your targets need for their tasks.
   # format = "qs", # Optionally set the default storage format. qs is fast.
   #
@@ -32,7 +33,7 @@ tar_option_set(
   # which run as local R processes. Each worker launches when there is work
   # to do and exits if 60 seconds pass with no tasks to run.
   #
-  controller = crew::crew_controller_local(workers = 2, seconds_idle = 60),
+  controller = crew::crew_controller_local(workers = 4, seconds_idle = 60),
   #
   # Alternatively, if you want workers to run on a high-performance computing
   # cluster, select a controller from the {crew.cluster} package.
@@ -104,9 +105,29 @@ list(
     name = nmds_object,
     command = calculate_nmds(distance_matrix, metadata)
   ),
+  tar_target(
+    name = abundance_list,
+    command = split(as.data.frame(otu_table_matrix), rownames(otu_table_matrix))
+  ),
+  tar_target(
+    name = parallel_iNEXT_results,
+    command = list(
+      iNEXT(as.numeric(abundance_list[[1]]), q = 0, datatype = "abundance", nboot = 100)
+    ),
+    pattern = map(abundance_list)
+  ),
+  tar_target(
+    name = combined_iNEXT_results,
+    command = combine_iNEXT_results(parallel_iNEXT_results, abundance_list)
+  ),
   tar_quarto(
     technical_replicates,
     "analysis/02-technical_replicates.qmd",
-    quiet = FALSE
+    quiet = TRUE
+  ),
+  tar_quarto(
+    plot_iNEXT,
+    "analysis/04-plot_iNEXT.qmd",
+    quiet = TRUE
   )
 )

@@ -95,13 +95,13 @@ parallel_iNEXT_results <- future_lapply(abundance_list, function(x) {
 }, future.seed = TRUE)
 
 # merge the results
-combined_iNEXT_result <- combine_iNEXT_results(parallel_iNEXT_results)
+combined_iNEXT_results <- combine_iNEXT_results(parallel_iNEXT_results)
 
 # Save the combined iNEXT object as RDS
-saveRDS(combined_iNEXT_result, file = here("combined_iNEXT_result.rds"))
+saveRDS(combined_iNEXT_results, file = here("combined_iNEXT_results.rds"))
 
 # Create the plot and assign it to a variable
-rarefaction_plot <- ggiNEXT(combined_iNEXT_result, type = 1, se = TRUE) +
+rarefaction_plot <- ggiNEXT(combined_iNEXT_results, type = 1, se = TRUE) +
   labs(title = "Curve di Rarefazione per Tutti i Campioni",
        x = "Numero di Individui",
        y = "Ricchezza delle Specie") +
