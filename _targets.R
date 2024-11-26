@@ -128,6 +128,9 @@ list(
   tar_quarto(
     plot_iNEXT,
     "analysis/04-plot_iNEXT.qmd",
-    quiet = TRUE
+    quiet = TRUE,
+    execute_params = list(
+      combined_iNEXT_results = combined_iNEXT_results
+    )
   )
 )
