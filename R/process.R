@@ -69,6 +69,7 @@ calculate_pcoa <- function(distance_matrix, metadata) {
   )
 }
 
+# do the NMDS
 calculate_nmds <- function(distance_matrix, metadata, distance = "bray") {
   nmds_result <- vegan::metaMDS(distance_matrix, distance)
 
@@ -85,7 +86,8 @@ calculate_nmds <- function(distance_matrix, metadata, distance = "bray") {
   )
 }
 
+# do the rarefaction curve for each samples
 calculate_rarecurve <- function(otu_table_matrix) {
-  rarecurve_df <- rarecurve(otu_table_matrix, step=50, cex=0.5, tidy = TRUE)
+  rarecurve_df <- vegan::rarecurve(otu_table_matrix, step=50, cex=0.5, tidy = TRUE)
   return(rarecurve_df)
 }

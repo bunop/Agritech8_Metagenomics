@@ -439,3 +439,40 @@ nmds_plot <- ggplot2::ggplot(
 
 print(nmds_plot)
 ```
+
+## Samples Rarefaction
+
+Rarefaction is a technique used to estimate species richness or diversity 
+in a community by standardizing the number of samples or reads across different
+samples. It involves subsampling the data to a common depth, allowing for a fair
+comparison of diversity metrics between samples with varying sequencing depths.
+
+```{r rarefaction}
+#| label: rarefaction
+#| description: Perform rarefaction analysis on the OTU table
+#|  and visualize the results.
+#| fig-width: 10
+#| fig-height: 8
+#| fig-caption: "Rarefaction curves with vegan"
+# load calculated rarefaction data
+tar_load(rarecurve_df, store = store_path)
+
+# Add metadata to the rarecurve_df
+rarecurve_df <- metadata %>% 
+  select(sampleID, sample_name) %>% 
+  inner_join(rarecurve_df, by = c("sampleID" = "Site"))
+
+# determine the minimum number of sequences in the samples
+min_sequences <- min(coverage_stats$n_seqs)
+
+# draw the plot
+ggplot(rarecurve_df, aes(x = Sample, y = Species, color = sample_name, group = sampleID)) +
+  geom_line() +
+  geom_vline(xintercept = min_sequences, linetype = "dashed", color = "red") +  # Add vertical line
+  labs(
+    title = "Rarefaction Curves for All Samples",
+    x = "Number of Individuals Sampled",
+    y = "Number of Species Observed"
+  ) +
+  theme_bw()
+```
