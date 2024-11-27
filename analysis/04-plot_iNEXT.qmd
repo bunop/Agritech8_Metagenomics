@@ -100,3 +100,25 @@ ggplot(rarefaction_data, aes(x = m, y = qD, color = Assemblage)) +
   ) +
   theme_bw()
 ```
+
+here's the rarefaction curve made with `vegan`
+
+```{r vegan-rarefaction}
+#| label: vegan-rarefaction
+#| fig-width: 10
+#| fig-height: 8
+#| fig-caption: "Rarefaction curves with vegan"
+tar_load(rarecurve_df, store = store_path)
+
+min_sequences <- min(coverage_stats$n_seqs)
+
+ggplot(rarecurve_df, aes(x = Sample, y = Species, color = Site)) +
+  geom_line() +
+  geom_vline(xintercept = min_sequences, linetype = "dashed", color = "red") +  # Add vertical line
+  labs(
+    title = "Rarefaction Curves for All Samples",
+    x = "Number of Individuals Sampled",
+    y = "Number of Species Observed"
+  ) +
+  theme_bw()
+```

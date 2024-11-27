@@ -134,7 +134,7 @@ list(
     "analysis/04-plot_iNEXT.qmd",
     quiet = TRUE,
     execute_params = list(
-      combined_iNEXT_results = combined_iNEXT_results
+      rarecurve_df = rarecurve_df
     )
   )
 )
