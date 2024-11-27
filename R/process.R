@@ -84,3 +84,8 @@ calculate_nmds <- function(distance_matrix, metadata, distance = "bray") {
     )
   )
 }
+
+calculate_rarecurve <- function(otu_table_matrix) {
+  rarecurve_df <- rarecurve(otu_table_matrix, step=50, cex=0.5, tidy = TRUE)
+  return(rarecurve_df)
+}

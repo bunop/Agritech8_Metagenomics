@@ -120,6 +120,10 @@ list(
     name = combined_iNEXT_results,
     command = combine_iNEXT_results(parallel_iNEXT_results, abundance_list)
   ),
+  tar_target(
+    name = rarecurve_df,
+    command = calculate_rarecurve(otu_table_matrix)
+  ),
   tar_quarto(
     technical_replicates,
     "analysis/02-technical_replicates.qmd",
