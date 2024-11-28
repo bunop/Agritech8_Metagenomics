@@ -118,12 +118,21 @@ list(
     )
   ),
   tar_target(
-    name = observed_features_by_condition,
+    name = shannon_by_sample_name,
     command = load_qiime_rarefaction(
-      rarefaction_csv = "results-bacteria/qiime2/alpha-rarefaction/observed_features.csv",
+      rarefaction_csv = "results-bacteria/qiime2/alpha-rarefaction/shannon.csv",
       metadata = metadata,
-      alpha_metric = "observed_features",
-      column_name = "condition"
+      alpha_metric = "shannon",
+      column_name = "sample_name"
+    )
+  ),
+  tar_target(
+    name = faith_by_sample_name,
+    command = load_qiime_rarefaction(
+      rarefaction_csv = "results-bacteria/qiime2/alpha-rarefaction/faith_pd.csv",
+      metadata = metadata,
+      alpha_metric = "faith_pd",
+      column_name = "sample_name"
     )
   ),
   tar_quarto(

@@ -504,25 +504,53 @@ ggplot(
   )
 ```
 
-### Observed features by condition
+### Shannon diversity by sample_name
 
-```{r observed-condition}
-#| label: observed-condition
-#| description: Analyze the Qiime2 rarafaction plot for observed_features condition
+```{r shannon-sample_name}
+#| label: shannon-sample_name
+#| description: Analyze the Qiime2 rarafaction plot for Shannon sample_name
 #| fig-width: 10
 #| fig-height: 8
-#| fig-caption: "Observed features by condition"
+#| fig-caption: "Shannon by sample name"
 # load the rarefaction data
-tar_load(observed_features_by_condition, store = store_path)
+tar_load(shannon_by_sample_name, store = store_path)
 
-ggplot(observed_features_by_condition, aes(x = depth, y = mean_value, color = condition, fill = condition)) +
+ggplot(
+  shannon_by_sample_name, 
+  aes(x = depth, y = mean_value, color = sample_name, fill = sample_name)) +
   geom_line() +
   geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.2, color = NA) +
   labs(title = "Alpha Rarefaction Plot with Confidence Intervals",
        x = "Depth",
-       y = "Observed Features") +
+       y = "Shannon") +
   theme_minimal() +
   ggplot2::theme(
     legend.position = "bottom"
   )
 ```
+
+### Faith PD by sample_name
+
+```{r faith_sample_name}
+#| label: faith-sample_name
+#| description: Analyze the Qiime2 rarafaction plot for faith pd sample_name
+#| fig-width: 10
+#| fig-height: 8
+#| fig-caption: "Faith PD by sample name"
+# load the rarefaction data
+tar_load(faith_by_sample_name, store = store_path)
+
+ggplot(
+  faith_by_sample_name, 
+  aes(x = depth, y = mean_value, color = sample_name, fill = sample_name)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.2, color = NA) +
+  labs(title = "Alpha Rarefaction Plot with Confidence Intervals",
+       x = "Depth",
+       y = "Faith PD") +
+  theme_minimal() +
+  ggplot2::theme(
+    legend.position = "bottom"
+  )
+```
+

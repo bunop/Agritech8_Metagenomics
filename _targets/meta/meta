@@ -1,5 +1,5 @@
 name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
-.Random.seed|object|dc44bbe81719a68f|||||||||||||||
+.Random.seed|object|054590609c968400|||||||||||||||
 adonis_result|stem|c6d14ea991dfe3cc|7457e1374e404396|26e2d4875dc12f02|667832415||t20054.4455025091s|ce8c49d448376224|18599|rds|local|vector|||0.309||
 alpha_rarefaction_observed_features|stem||cd94d41d50d01104|796a5824b36869e8|-1199258245||t20055.457787455s||0|rds|local|vector|||10.348||Must group by variables found in .data. Column column is not found.
 calculate_anova|function|84adfb8ef5e66cd5|||||||||||||||
@@ -10,6 +10,7 @@ calculate_pcoa|function|132aba45b32b163f|||||||||||||||
 calculate_rarecurve|function|120acccadce6aae0|||||||||||||||
 coverage_stats|stem|360b9b69e0013e82|141db50b147be76c|7108e667f0a710cd|1449498040||t20054.4455025091s|ea0dee4cec7e1835|868|rds|local|vector|||2.326||
 distance_matrix|stem|8458cbf05ba583cc|f9a9f5d40c2c3801|e4af5d3f12a9b770|251875359||t20054.4455025091s|de97dc7d8ca663ed|5929|rds|local|vector|||227.055||
+faith_by_sample_name|stem|b70db0ba43b1b79e|f74359a2cebad49e|1a65d38332aa4783|770284248||t20055.4967923786s|fbdaf77fbfca612a|98678|rds|local|vector|||9.29||
 get_otu_table|function|1e53d1215ac5e181|||||||||||||||
 get_samples_data|function|f60254bee1bb4944|||||||||||||||
 load_metadata|function|419fe299e9e4ae91|||||||||||||||
@@ -25,4 +26,5 @@ pcoa_object|stem|5766a6501bc09563|b8ab61c82c96930f|958008f47a555a7a|-870153720||
 phyloseq_object|stem|7e13cfaa27e57483|37577fe9064da22a|0ede7eec2a75ddfa|-512304128||t20054.4455026017s|7eb36af4ed2fd5e2|1333647|rds|local|vector|||0.342||
 rarecurve_df|stem|daf65e96c1b2c5ea|b8a9a8c37f40485c|37c0f83b1a73ff66|1676499802||t20054.6631179944s|a6d072bf5bc7eba1|544729|rds|local|vector|||39.169||
 samples_data|stem|7e574383f41ed8b3|bc84f5669dd816e6|aaa910deb849b14e|-2115694622||t20054.4455026017s|e70702e56f6d5dab|1594|rds|local|vector|||0.003||
-technical_replicates|stem|b11f5361f69fa603|bd2cc5362f3ca0e8|e43ed7a326f47c3e|-847406250|analysis/02-technical_replicates.html*analysis/02-technical_replicates.qmd|t20055.4872200144s|2f930e06aef36454|119177|file|local|vector|||27.281||
+shannon_by_sample_name|stem|73dee37b3600477a|0155f05538727d84|1a65d38332aa4783|620582285||t20055.496791823s|f481e4fb7503491e|95056|rds|local|vector|||9.23||
+technical_replicates|stem|b8b3f1dc777e0139|7507114f9d37c207|133373f49116212a|-847406250|analysis/02-technical_replicates.html*analysis/02-technical_replicates.qmd|t20055.4971183942s|d1da420c5ff7cf49|123451|file|local|vector|||27.166||
