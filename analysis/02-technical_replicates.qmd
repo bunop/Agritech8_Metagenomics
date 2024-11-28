@@ -476,3 +476,53 @@ ggplot(rarecurve_df, aes(x = Sample, y = Species, color = sample_name, group = s
   ) +
   theme_bw()
 ```
+
+## Qiime2 rarefactions
+
+### Observed features by sample_name
+
+```{r observed-sample_name}
+#| label: observed-sample_name
+#| description: Analyze the Qiime2 rarafaction plot for observed_features sample_name
+#| fig-width: 10
+#| fig-height: 8
+#| fig-caption: "Observed features by sample name"
+# load the rarefaction data
+tar_load(observed_features_by_sample_name, store = store_path)
+
+ggplot(
+  observed_features_by_sample_name, 
+  aes(x = depth, y = mean_value, color = sample_name, fill = sample_name)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.2, color = NA) +
+  labs(title = "Alpha Rarefaction Plot with Confidence Intervals",
+       x = "Depth",
+       y = "Observed Features") +
+  theme_minimal() +
+  ggplot2::theme(
+    legend.position = "bottom"
+  )
+```
+
+### Observed features by condition
+
+```{r observed-condition}
+#| label: observed-condition
+#| description: Analyze the Qiime2 rarafaction plot for observed_features condition
+#| fig-width: 10
+#| fig-height: 8
+#| fig-caption: "Observed features by condition"
+# load the rarefaction data
+tar_load(observed_features_by_condition, store = store_path)
+
+ggplot(observed_features_by_condition, aes(x = depth, y = mean_value, color = condition, fill = condition)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.2, color = NA) +
+  labs(title = "Alpha Rarefaction Plot with Confidence Intervals",
+       x = "Depth",
+       y = "Observed Features") +
+  theme_minimal() +
+  ggplot2::theme(
+    legend.position = "bottom"
+  )
+```

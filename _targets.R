@@ -108,9 +108,27 @@ list(
     name = rarecurve_df,
     command = calculate_rarecurve(otu_table_matrix)
   ),
+  tar_target(
+    name = observed_features_by_sample_name,
+    command = load_qiime_rarefaction(
+      rarefaction_csv = "results-bacteria/qiime2/alpha-rarefaction/observed_features.csv",
+      metadata = metadata,
+      alpha_metric = "observed_features",
+      column_name = "sample_name"
+    )
+  ),
+  tar_target(
+    name = observed_features_by_condition,
+    command = load_qiime_rarefaction(
+      rarefaction_csv = "results-bacteria/qiime2/alpha-rarefaction/observed_features.csv",
+      metadata = metadata,
+      alpha_metric = "observed_features",
+      column_name = "condition"
+    )
+  ),
   tar_quarto(
-    technical_replicates,
-    "analysis/02-technical_replicates.qmd",
+    name = technical_replicates,
+    path = "analysis/02-technical_replicates.qmd",
     quiet = FALSE
   )
 )
