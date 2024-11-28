@@ -63,6 +63,8 @@ get_otu_table <- function(phyloseq_object) {
   if (taxa_are_rows(phyloseq_object)) {
     otu_table_matrix <- t(otu_table_matrix)
   }
+
+  return(otu_table_matrix)
 }
 
 # get information on samples

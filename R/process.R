@@ -91,3 +91,51 @@ calculate_rarecurve <- function(otu_table_matrix) {
   rarecurve_df <- vegan::rarecurve(otu_table_matrix, step=50, cex=0.5, tidy = TRUE)
   return(rarecurve_df)
 }
+
+## merge metadata relying on technical replicates
+merge_metadata <- function(metadata) {
+  metadata %>%
+    dplyr::group_by(sample_group) %>%
+    dplyr::summarize(
+      dplyr::across(c(concentration, `A260-A280`, `A260-A230`), ~ mean(.x, na.rm = TRUE)),
+      dplyr::across(c(sample_name, description, date, condition, replica, target, date_condition), ~ first(.x)),
+      .groups = "drop"
+    ) %>%
+    dplyr::select(sample_name, everything()) %>%
+    as.data.frame()
+  rownames(merged_metadata) <- merged_metadata$sample_name
+
+  return(merged_metadata)
+}
+
+# merge samples by replicate group, summing ASV abundances
+# and divide the ASV abundances by the number of replicates to get the mean
+merge_technical_replicates <- function(phyloseq_object, merged_metadata) {
+  # Merge samples by replicate group, summing ASV abundances
+  merged_phyloseq_object <- merge_samples(phyloseq_object, group = "sample_name")
+
+  # replace the metadata
+  phyloseq::sample_data(merged_phyloseq_object) <- phyloseq::sample_data(merged_metadata)
+
+  # Count the number of replicates in each group
+  replicate_counts <- table(sample_data(phyloseq_object)$sample_name)
+
+  # Divide the ASV abundances by the number of replicates to get the mean
+  otu_mat <- t(phyloseq::otu_table(merged_phyloseq_object))
+  otu_mat <- sweep(otu_mat, 2, replicate_counts, FUN = "/")
+  otu_mat_floored <- floor(otu_mat)
+
+  # Convert the matrix back to an otu_table object
+  phyloseq::otu_table(merged_phyloseq_object) <- otu_table(
+    otu_mat_floored,
+    taxa_are_rows = phyloseq::taxa_are_rows(
+      phyloseq::otu_table(phyloseq_object)
+    )
+  )
+
+  # prune empty taxa
+  merged_phyloseq_object <- phyloseq::prune_taxa(
+    phyloseq::taxa_sums(merged_phyloseq_object) > 0, merged_phyloseq_object)
+
+  return(merged_phyloseq_object)
+}
