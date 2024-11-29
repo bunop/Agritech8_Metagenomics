@@ -64,7 +64,7 @@ tar_source()
 list(
   tar_target(
     name = metadata,
-    command = load_metadata("data", "metadata_bacteria.tsv")
+    command = load_metadata("data", "metadata_bacteria_fix.tsv")
   ),
   tar_target(
     name = phyloseq_object,
