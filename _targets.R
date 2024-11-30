@@ -138,6 +138,15 @@ list(
   tar_quarto(
     name = technical_replicates,
     path = "analysis/02-technical_replicates.qmd",
-    quiet = FALSE
+    quiet = TRUE
+  ),
+  # time to join technical replicates
+  tar_target(
+    name = merged_metadata,
+    command = merge_metadata(metadata)
+  ),
+  tar_target(
+    name = merged_phyloseq_object,
+    command = merge_technical_replicates(phyloseq_object, merged_metadata)
   )
 )
