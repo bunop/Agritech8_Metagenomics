@@ -300,11 +300,6 @@ ggplot2::ggplot(melted_class, ggplot2::aes(x = sampleID, y = Abundance, fill = !
 
 ## Heatmaps
 
-```{r load-ampvis2}
-#| label: load-ampvis2
-tar_load(ampvis2_object, store = store_path)
-```
-
 ### By phylum
 
 Here are the heatmaps of the relative abundance of the top 10 most abundant
@@ -317,12 +312,8 @@ taxa at the Phylum level:
 #| fig-height: 8
 #| fig-caption: "Heatmap of the top 10 most abundant taxa at the Phylum level"
 #| fig-align: center
-
-ampvis2::amp_heatmap(
-  ampvis2_object,
-  group_by = "date_condition",
-  showRemainingTaxa = TRUE
-)
+tar_load(heatmap_phylum, store = store_path)
+print(heatmap_phylum)
 ```
 
 ### By class
@@ -337,14 +328,8 @@ taxa at the Class level:
 #| fig-height: 8
 #| fig-caption: "Heatmap of the top 20 most abundant taxa at the Class level"
 #| fig-align: center
-
-ampvis2::amp_heatmap(
-  ampvis2_object,
-  group_by = "date_condition",
-  showRemainingTaxa = TRUE,
-  tax_add = "Class",
-  tax_show = 20
-)
+tar_load(heatmap_class, store = store_path)
+print(heatmap_class)
 ```
 
 ## Samples Rarefaction

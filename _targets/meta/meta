@@ -1,5 +1,5 @@
 name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
-.Random.seed|object|ba642eb9c1c3797f|||||||||||||||
+.Random.seed|object|f3659826bca5cebc|||||||||||||||
 adonis_result|stem|80af91eb2b267302|7457e1374e404396|4e642c3105e71c2f|667832415||t20057.7595489642s|d93fd217a89030bb|18614|rds|local|vector|||0.174||
 agglomerate_by_taxa|function|44ab39ab7822fe92|||||||||||||||
 ampvis2_object|stem|b8aa6353432b2b1e|7738c40b6685388f|8b5caf167848cf1f|1495111583||t20059.6827685514s|fe5838daa3800fd8|939710|rds|local|vector|||7.175|Could not find a column named one of OTU, ASV, OTU ID in otutable. Using row names as OTU IDs.. Could not find a column named one of OTU, ASV, OTU ID in taxonomy. Using row names as OTU IDs.|
@@ -10,10 +10,13 @@ calculate_nmds|function|139b13a98d48abab|||||||||||||||
 calculate_pcoa|function|132aba45b32b163f|||||||||||||||
 calculate_rarecurve|function|120acccadce6aae0|||||||||||||||
 coverage_stats|stem|2f72c0a61d1ed8f7|141db50b147be76c|35ad18a6628f6414|1449498040||t20057.7572184812s|963aba4f8b1bc3e1|855|rds|local|vector|||0.899||
+custom_heatmap|function|bd1bc374094fcca8|||||||||||||||
 distance_matrix|stem|a2aa100b98d24ab1|f9a9f5d40c2c3801|1399c6c03e52b0e5|251875359||t20057.7595458623s|e37d37322cbbc1f8|5922|rds|local|vector|||187.54||
 faith_by_sample_name|stem|2998b5956624c6e1|f74359a2cebad49e|9406566702c9703c|770284248||t20057.7572055642s|7869759582666761|100016|rds|local|vector|||1.865||
 get_otu_table|function|007ace0903fcc16d|||||||||||||||
 get_samples_data|function|f60254bee1bb4944|||||||||||||||
+heatmap_class|stem|7d87975fd452fe9c|b80cb32254ffa680|de25064931324bd1|-1628994155||t20059.7577720762s|d727210f009b6d2b|2093983|rds|local|vector|||9.49||
+heatmap_phylum|stem|8ef7efec2ce64c41|ad9b8911168d8eb1|de25064931324bd1|1960558418||t20059.7577928637s|d31bb9170c645a07|1902917|rds|local|vector|||10.35||
 load_metadata|function|419fe299e9e4ae91|||||||||||||||
 load_phyloseq|function|b060fe9c9b9ded34|||||||||||||||
 load_qiime_rarefaction|function|d846115beab01ccc|||||||||||||||
@@ -34,4 +37,4 @@ phyloseq_to_ampvis2|function|801e2c649335d705|||||||||||||||
 rarecurve_df|stem|e596fdc552783c3d|b8a9a8c37f40485c|945711a3ada64809|1676499802||t20057.7576242803s|dc35afceecf8ff1a|579862|rds|local|vector|||34.971||
 samples_data|stem|05ca3a9ec8d955a8|bc84f5669dd816e6|321924f56541faa0|-2115694622||t20057.7573745044s|cfe3f36adcf1474a|1639|rds|local|vector|||0.005||
 shannon_by_sample_name|stem|c88601244b25c92b|0155f05538727d84|9406566702c9703c|620582285||t20057.7573501518s|4bf6d5bad8598a58|96276|rds|local|vector|||8.9||
-technical_replicates|stem|95ad37d27e59aacf|d367e47b1b249b42|8b6880560adec0b7|-847406250|analysis/02-technical_replicates.html*analysis/02-technical_replicates.qmd|t20059.6831498093s|4c77817d446b0a84|4778147|file|local|vector|||32.937||
+technical_replicates|stem|96b3ec84530925c1|01745df9bff182d0|49bfc6f8ef127ebd|-847406250|analysis/02-technical_replicates.html*analysis/02-technical_replicates.qmd|t20059.7581775018s|c058802568fc0f53|4773674|file|local|vector|||33.154||

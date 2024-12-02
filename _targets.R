@@ -118,6 +118,24 @@ list(
     command = phyloseq_to_ampvis2(phyloseq_object)
   ),
   tar_target(
+    name = heatmap_phylum,
+    command = custom_heatmap(
+      ampvis2_object,
+      group_by = "date_condition",
+      showRemainingTaxa = TRUE
+    )
+  ),
+  tar_target(
+    name = heatmap_class,
+    command = custom_heatmap(
+      ampvis2_object,
+      group_by = "date_condition",
+      showRemainingTaxa = TRUE,
+      tax_add = "Class",
+      tax_show = 20
+    )
+  ),
+  tar_target(
     name = pcoa_object,
     command = calculate_pcoa(distance_matrix, metadata)
   ),
