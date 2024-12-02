@@ -137,6 +137,10 @@ agglomerate_by_taxa <- function(phyloseq_object, taxrank, sample_order = NULL) {
   return(melted_data)
 }
 
+## convert a phyloseq to ampvis2
+phyloseq_to_ampvis2 <- function(phyloseq_object) {
+  return(ampvis2::amp_load(phyloseq_object))
+}
 
 ## merge metadata relying on technical replicates
 merge_metadata <- function(metadata) {

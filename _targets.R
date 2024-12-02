@@ -19,7 +19,8 @@ tar_option_set(
     "stringr",
     "phyloseq",
     "vegan",
-    "ape"
+    "ape",
+    "ampvis2"
   ), # Packages that your targets need for their tasks.
   # format = "qs", # Optionally set the default storage format. qs is fast.
   #
@@ -111,6 +112,10 @@ list(
       taxrank = "Class",
       sample_order = metadata$sampleID
     )
+  ),
+  tar_target(
+    name = ampvis2_object,
+    command = phyloseq_to_ampvis2(phyloseq_object)
   ),
   tar_target(
     name = pcoa_object,

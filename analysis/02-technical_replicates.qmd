@@ -23,6 +23,7 @@ library(here)
 library(tidyverse)
 library(ggplot2)
 library(phyloseq)
+library(ampvis2)
 
 store_path <- here::here("_targets")
 ```
@@ -297,6 +298,55 @@ ggplot2::ggplot(melted_class, ggplot2::aes(x = sampleID, y = Abundance, fill = !
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
 
+## Heatmaps
+
+```{r load-ampvis2}
+#| label: load-ampvis2
+tar_load(ampvis2_object, store = store_path)
+```
+
+### By phylum
+
+Here are the heatmaps of the relative abundance of the top 10 most abundant
+taxa at the Phylum level:
+
+```{r heatmap-phylum}
+#| label: heatmap-phylum
+#| description: Create a heatmap of the relative abundance of the top 10 most abundant taxa at the Phylum level.
+#| fig-width: 10
+#| fig-height: 8
+#| fig-caption: "Heatmap of the top 10 most abundant taxa at the Phylum level"
+#| fig-align: center
+
+ampvis2::amp_heatmap(
+  ampvis2_object,
+  group_by = "date_condition",
+  showRemainingTaxa = TRUE
+)
+```
+
+### By class
+
+Here are the heatmaps of the relative abundance of the top 20 most abundant
+taxa at the Class level:
+
+```{r heatmap-class}
+#| label: heatmap-class
+#| description: Create a heatmap of the relative abundance of the top 20 most abundant taxa at the Class level.
+#| fig-width: 10
+#| fig-height: 8
+#| fig-caption: "Heatmap of the top 20 most abundant taxa at the Class level"
+#| fig-align: center
+
+ampvis2::amp_heatmap(
+  ampvis2_object,
+  group_by = "date_condition",
+  showRemainingTaxa = TRUE,
+  tax_add = "Class",
+  tax_show = 20
+)
+```
+
 ## Samples Rarefaction
 
 Rarefaction is a technique used to estimate species richness or diversity 
@@ -513,6 +563,12 @@ pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = date_con
 
 pcoa_plot
 ```
+
+In this image there's a clear separation between samples in reactor (pink and brown
+on the left) and the other samples. The default *may24* and *nov23* cluster more or
+less together (yellow and orange). *box_may24* (red) and *box_nov23* (blue) don't
+cluster together and they are more simular to *box+dw_may24* (green) and *box+dw_nov23*
+(purple).
 
 #### Scree plot
 

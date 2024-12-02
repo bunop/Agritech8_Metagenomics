@@ -1,7 +1,8 @@
 name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
-.Random.seed|object|abca0c8e5eecedf2|||||||||||||||
+.Random.seed|object|ba642eb9c1c3797f|||||||||||||||
 adonis_result|stem|80af91eb2b267302|7457e1374e404396|4e642c3105e71c2f|667832415||t20057.7595489642s|d93fd217a89030bb|18614|rds|local|vector|||0.174||
 agglomerate_by_taxa|function|44ab39ab7822fe92|||||||||||||||
+ampvis2_object|stem|b8aa6353432b2b1e|7738c40b6685388f|8b5caf167848cf1f|1495111583||t20059.6827685514s|fe5838daa3800fd8|939710|rds|local|vector|||7.175|Could not find a column named one of OTU, ASV, OTU ID in otutable. Using row names as OTU IDs.. Could not find a column named one of OTU, ASV, OTU ID in taxonomy. Using row names as OTU IDs.|
 calculate_anova|function|84adfb8ef5e66cd5|||||||||||||||
 calculate_coverage_stats|function|20e7b02e4be58d62|||||||||||||||
 calculate_distance_matrix|function|2768e8cd297a0404|||||||||||||||
@@ -29,7 +30,8 @@ observed_features_by_sample_name|stem|0c13877368f81c4b|e4c65aba3baae21d|94065667
 otu_table_matrix|stem|2adff00db94101be|4fbe22024f54ec1f|e32554d451cc94a8|1067928734||t20057.7572076475s|05de280fdfca7fe2|330210|rds|local|vector|||0.01||
 pcoa_object|stem|4b68d5e4b22f98f4|b8ab61c82c96930f|0864556572f9ee84|-870153720||t20057.7595502143s|f8ce60a3d24f9a22|26248|rds|local|vector|||0.008||
 phyloseq_object|stem|eb4048dcf531651d|37577fe9064da22a|280d11e7c523c681|-512304128||t20057.757190147s|d7b96cc74ee11a3e|1336934|rds|local|vector|||0.175||
+phyloseq_to_ampvis2|function|801e2c649335d705|||||||||||||||
 rarecurve_df|stem|e596fdc552783c3d|b8a9a8c37f40485c|945711a3ada64809|1676499802||t20057.7576242803s|dc35afceecf8ff1a|579862|rds|local|vector|||34.971||
 samples_data|stem|05ca3a9ec8d955a8|bc84f5669dd816e6|321924f56541faa0|-2115694622||t20057.7573745044s|cfe3f36adcf1474a|1639|rds|local|vector|||0.005||
 shannon_by_sample_name|stem|c88601244b25c92b|0155f05538727d84|9406566702c9703c|620582285||t20057.7573501518s|4bf6d5bad8598a58|96276|rds|local|vector|||8.9||
-technical_replicates|stem|9a43437b97309fd9|bed2657eb423644c|247cb2be37fed7cd|-847406250|analysis/02-technical_replicates.html*analysis/02-technical_replicates.qmd|t20059.5148329109s|d19ea6b88f176df1|4222812|file|local|vector|||26.262||
+technical_replicates|stem|95ad37d27e59aacf|d367e47b1b249b42|8b6880560adec0b7|-847406250|analysis/02-technical_replicates.html*analysis/02-technical_replicates.qmd|t20059.6831498093s|4c77817d446b0a84|4778147|file|local|vector|||32.937||
