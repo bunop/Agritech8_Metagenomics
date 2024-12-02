@@ -11,6 +11,7 @@ format:
     df-print: paged
     code-fold: true
     toc-depth: 4
+    embed-resources: true  # Embed all resources directly into the HTML file
 editor: source
 ---
 
@@ -48,7 +49,6 @@ Load phyloseq object other stuff
 ```{r load-phyloseq}
 #| label: load-phyloseq
 targets::tar_load(phyloseq_object, store = store_path)
-targets::tar_load(otu_table_matrix, store = store_path)
 targets::tar_load(samples_data, store = store_path)
 ```
 
@@ -101,8 +101,9 @@ sampling_coverage %>%
   coord_cartesian(xlim=c(0, 100000))
 ```
 
-A jitter plot of the number of sequences per sample (plot random x values 
-to avoid overplotting):
+There are 2 samples below 50000 sequences. All the other samples are above such 
+value. This can be shown using a jitter plot of the number of sequences per 
+sample (plot random x values to avoid overplotting):
 
 ```{r coverage-jitter}
 #| label: coverage-jitter
@@ -123,7 +124,7 @@ sampling_coverage %>%
 ```
 
 We didn't see a curve like the one we see in the tutorial. If we choose a 
-sequencing depth of 6,000, we will throw away only 3 samples.
+sequencing depth of 60,000, we will throw away only 2 samples.
 
 Calculate the *good's coverage* as defined by the formula:
 
@@ -227,217 +228,73 @@ dataset. Here’s a detailed interpretation of each section of the output:
   contribute significantly to the variance. This implies that technical 
   replicates are consistent with each other, as expected.
 
-### PCoA plot
+## Barplots
 
-**Principal Coordinates Analysis (PCoA)** is an ordination technique used to visualize patterns in complex, high-dimensional data by projecting samples into a lower-dimensional space based on a distance matrix.
+Let's create some barplots to visualize the relative abundance of taxa in the
+dataset. Here are the available taxonomic ranks in the dataset:
 
-#### Key Points
-
-- **Input**: PCoA takes a **distance or dissimilarity matrix** as input, such as Bray-Curtis, Jaccard, or Euclidean distances.
-- **Goal**: It represents the relative distances between samples in a reduced number of dimensions, typically 2D or 3D, for easy visualization.
-- **Output**: Samples that are closer together in the PCoA plot are more similar, while those farther apart are more dissimilar.
-- **Interpretation**: The axes (principal coordinates) explain portions of the variance in the data, helping reveal clusters, trends, or group separations.
-
-#### Applications
-
-- **Microbiome and Ecology**: Useful for visualizing community composition differences.
-- **Genomics and Transcriptomics**: Reveals patterns in gene expression across conditions.
-
-#### PCoA vs. PCA
-
-- **PCoA** uses a distance matrix, making it ideal for data with non-linear 
-  relationships or compositional constraints. Is a dimensional reduction technique
-- **PCA** works directly with raw data and assumes linear relationships. Is not
-  used in microbiome studies since it doesn't deal with 0 (see Pat Schloss YT channel)
-
-#### PCoA plot by technical replicates
-
-Now we will plot a PCoA plot to visualize the technical replicates. See
-[CC186](https://www.youtube.com/watch?v=G5Qckqq5Erw) for more information.
-
-```{r pcoa}
-#| label: pcoa
-# retrieve the PCoA object from targets
-targets::tar_load(pcoa_object, store = store_path)
-
-pcoa_results <- pcoa_object$pcoa_results
-percent_explained <- pcoa_object$percent_explained
-pcoa_df <- pcoa_object$pcoa_df
+```{r taxonomic-ranks}
+#| label: taxonomic-ranks
+#| description: List the available taxonomic ranks in the dataset.
+phyloseq::rank_names(phyloseq_object)
 ```
 
-In the following pictures we are grouping by technical replicates
+### By Phylum
 
-```{r pcoa-plot}
-#| label: pcoa-plot
-# count the number of levels in the group column
-num_levels <- length(unique(metadata$sample_group))
+Create a barplot of the relative abundance Phylum in the dataset. Sort samples
+by sampleID.
 
-# Get the color palette
-color_palette <- Polychrome::palette36.colors(num_levels)
-names(color_palette) <- NULL  # Remove any names from the color palette
+```{r barplot-phylum}
+#| label: barplot-phylum
+#| description: Create a barplot of the relative abundance of Phylum in the dataset.
+#| fig-width: 10
+#| fig-height: 8
+#| fig-caption: "Barplot of Phylum"
+#| fig-align: center
+# load the melted data
+tar_load(melted_phylum, store = store_path)
+taxrank <- "Phylum"
 
-# try to annotate plot
-pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
-labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
-            glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
-
-# plot the PCoA
-pcoa_plot_rep <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = sample_name)) +
-  ggplot2::geom_point(size = 4, alpha = 0.5) +
-  ggplot2::theme_minimal() +
-  ggplot2::ggtitle("PCoA Plot on Distance Metrics (Bray-Curtis)") +
-  ggplot2::labs(title = "PCoA of Bray-Curtis Distance Matrix",
-       color = NULL,
-       x = labels[1],
-       y = labels[2]) +
-  ggplot2::scale_color_manual(values = color_palette) +
-  ggplot2::theme(
-    legend.position = "bottom",       # Position the legend at the bottom
-    legend.box = "horizontal",        # Arrange legend items horizontally without a title
-  )
-
-print(pcoa_plot_rep)
-```
-
-#### PCoA plot by date and condition (sample replicates)
-
-Visualize the same plot but grouping with date and condition (which should group sample replicates)
-
-```{r pcoa-date-condition}
-#| label: pcoa-date-condition
-# try to annotate plot
-pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
-labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
-            glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
-
-# plot the PCoA
-pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = date_condition)) +
-  ggplot2::geom_point(size = 4, alpha = 0.5) +
-  ggplot2::theme_minimal() +
-  ggplot2::ggtitle("PCoA Plot on Distance Metrics (Bray-Curtis)") +
-  ggplot2::labs(title = "PCoA of Bray-Curtis Distance Matrix",
-       color = NULL,
-       x = labels[1],
-       y = labels[2]) +
-  ggplot2::scale_color_brewer(palette = "Set1") +
-  ggplot2::theme(
-    legend.position = "bottom",       # Position the legend at the bottom
-    legend.box = "horizontal",        # Arrange legend items horizontally without a title
-  )
-
-pcoa_plot
-```
-
-#### Scree plot
-
-The scree plot is a graphical representation of the eigenvalues of the principal 
-components in a PCA or PCoA analysis. It helps visualize the proportion of variance 
-explained by each principal component, allowing you to determine the optimal 
-number of components to retain.
-
-```{r scree-plot}
-#| label: scree-plot
-tibble(pe = pcoa_results$values$Cum_corr_eig * 100,
-       axis = 1:length(percent_explained)) %>%
-  ggplot(aes(x = axis, y = pe)) +
-  geom_line() +
-  # add a red vertical line at y=2
-  geom_vline(xintercept = 2, color = "red")
-```
-
-### NMDS plot
-
-Non-metric Multidimensional Scaling (**NMDS**) is an ordination technique used to visualize the similarity or dissimilarity between samples in complex, multidimensional datasets. Unlike metric methods, NMDS focuses on preserving the rank order of distances rather than the actual distance values, making it particularly useful for ecological and environmental data where relationships may be non-linear.
-
-#### Key Features of NMDS
-
-- **Non-metric Approach**: NMDS emphasizes the rank order of dissimilarities, allowing it to handle data that do not meet the assumptions of linearity or normality.
-
-- **Dimensionality Reduction**: It projects high-dimensional data into a lower-dimensional space (typically 2D or 3D) to facilitate visualization and interpretation.
-
-- **Stress Value**: NMDS iteratively adjusts the configuration of points to minimize a measure called "stress," which quantifies the disparity between the distances in the reduced-dimensional space and the original dissimilarities. Lower stress values indicate a better fit.
-
-#### Interpreting an NMDS Plot
-
-- **Proximity of Points**: Samples plotted closer together are more similar in composition, while those farther apart are more dissimilar.
-
-- **Axes**: The axes in an NMDS plot are arbitrary and do not correspond to specific gradients or variables. The orientation and rotation of the plot can change without affecting the interpretation of the relationships between points.
-
-- **Stress Value**: A stress value below 0.2 is generally considered acceptable, indicating that the plot provides a reasonable representation of the data.
-
-#### Applications of NMDS
-
-- **Ecology**: Visualizing species composition across different sites or conditions.
-
-- **Microbial Community Analysis**: Comparing microbial communities based on sequencing data.
-
-- **Environmental Science**: Assessing the impact of environmental gradients on community structure.
-
-NMDS is a flexible and robust method for exploring complex datasets, especially when the data do not conform to the assumptions required by other ordination techniques. 
-
-```{r nmds}
-#| label: nmds
-targets::tar_load(nmds_object, store = store_path)
-
-nmds_tb <- nmds_object$nmds_tb
-```
-#### NMDS plot by technical replicates
-
-Let's plot the NMDS plot focusing on the technical replicates.
-see [CC187](https://www.youtube.com/watch?v=h7OrVmT7Ja8&ab_channel=RiffomonasProject)
-for more information.
-
-```{r nmds-plot}
-#| label: nmds-plot
-# count the number of levels in the group column
-num_levels <- length(unique(metadata$sample_group))
-
-# Get the color palette
-color_palette <- Polychrome::palette36.colors(num_levels)
-names(color_palette) <- NULL  # Remove any names from the color palette
-
-# Use palette36 from Polychrome, which supports up to 36 colors
-nmds_plot_rep <- ggplot2::ggplot(
-    nmds_tb,
-    ggplot2::aes(x=NMDS1, y=NMDS2, color = sample_name)) +
-  ggplot2::geom_point(size = 4, alpha = 0.5) +
-  ggplot2::theme_minimal() +
+ggplot2::ggplot(melted_phylum, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
+  ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
+  # need a sorted object like the one used in agglomerate_by_taxa
+  ggplot2::scale_x_discrete(labels = metadata$date_condition) +
   ggplot2::labs(
-    title = "NMDS Plot on distance metrics (Bray-Curtis)",
-    color = NULL) +
-  ggplot2::scale_color_manual(values = color_palette) +
-  ggplot2::theme(
-    legend.position = "bottom",       # Position the legend at the bottom
-    legend.box = "horizontal",        # Arrange legend items horizontally without a title
-  )
-
-print(nmds_plot_rep)
+    title = glue::glue("Microbial composition at {taxrank} level"),
+    x = "Sample",
+    y = "Relative Abundance"
+  ) +
+  ggplot2::theme_bw() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
 
-#### NMDS plot by date and condition (sample replicates)
+### By Class
 
-Now, let's visualize the NMDS plot but grouping with date and condition 
-(which should group sample replicates)
+Create a barplot of the relative abundance Class in the dataset. Sort samples
+by sampleID.
 
-```{r nmds-date-condition}
-#| label: nmds-date-condition
+```{r barplot-class}
+#| label: barplot-class
+#| description: Create a barplot of the relative abundance of class in the dataset.
+#| fig-width: 10
+#| fig-height: 8
+#| fig-caption: "Barplot of Class"
+#| fig-align: center
+# load the melted data
+tar_load(melted_class, store = store_path)
+taxrank <- "Class"
 
-# Plot the NMDS
-nmds_plot <- ggplot2::ggplot(
-    nmds_tb,
-    ggplot2::aes(x=NMDS1, y=NMDS2, color = date_condition)) +
-  ggplot2::geom_point(size = 4, alpha = 0.5) +
-  ggplot2::theme_minimal() +
+ggplot2::ggplot(melted_class, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
+  ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
+  # need a sorted object like the one used in agglomerate_by_taxa
+  ggplot2::scale_x_discrete(labels = metadata$date_condition) +
   ggplot2::labs(
-    title = "NMDS Plot on distance metrics (Bray-Curtis)",
-    color = NULL) +
-  ggplot2::scale_color_brewer(palette = "Set1") +
-  ggplot2::theme(
-    legend.position = "bottom",       # Position the legend at the bottom
-    legend.box = "horizontal",        # Arrange legend items horizontally without a title
-  )
-
-print(nmds_plot)
+    title = glue::glue("Microbial composition at {taxrank} level"),
+    x = "Sample",
+    y = "Relative Abundance"
+  ) +
+  ggplot2::theme_bw() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
 
 ## Samples Rarefaction
@@ -554,71 +411,218 @@ ggplot(
   )
 ```
 
-## Barplots
+## Samples Ordination
 
-Let's create some barplots to visualize the relative abundance of taxa in the
-dataset. Here are the available taxonomic ranks in the dataset:
+### PCoA plot
 
-```{r taxonomic-ranks}
-#| label: taxonomic-ranks
-#| description: List the available taxonomic ranks in the dataset.
-phyloseq::rank_names(phyloseq_object)
+**Principal Coordinates Analysis (PCoA)** is an ordination technique used to visualize patterns in complex, high-dimensional data by projecting samples into a lower-dimensional space based on a distance matrix.
+
+#### Key Points
+
+- **Input**: PCoA takes a **distance or dissimilarity matrix** as input, such as Bray-Curtis, Jaccard, or Euclidean distances.
+- **Goal**: It represents the relative distances between samples in a reduced number of dimensions, typically 2D or 3D, for easy visualization.
+- **Output**: Samples that are closer together in the PCoA plot are more similar, while those farther apart are more dissimilar.
+- **Interpretation**: The axes (principal coordinates) explain portions of the variance in the data, helping reveal clusters, trends, or group separations.
+
+#### Applications
+
+- **Microbiome and Ecology**: Useful for visualizing community composition differences.
+- **Genomics and Transcriptomics**: Reveals patterns in gene expression across conditions.
+
+#### PCoA vs. PCA
+
+- **PCoA** uses a distance matrix, making it ideal for data with non-linear 
+  relationships or compositional constraints. Is a dimensional reduction technique
+- **PCA** works directly with raw data and assumes linear relationships. Is not
+  used in microbiome studies since it doesn't deal with 0 (see Pat Schloss YT channel)
+
+#### PCoA plot by technical replicates
+
+Now we will plot a PCoA plot to visualize the technical replicates. See
+[CC186](https://www.youtube.com/watch?v=G5Qckqq5Erw) for more information.
+
+```{r pcoa}
+#| label: pcoa
+# retrieve the PCoA object from targets
+targets::tar_load(pcoa_object, store = store_path)
+
+pcoa_results <- pcoa_object$pcoa_results
+percent_explained <- pcoa_object$percent_explained
+pcoa_df <- pcoa_object$pcoa_df
 ```
 
-### By Phylum
+In the following pictures we are grouping by technical replicates
 
-Create a barplot of the relative abundance Phylum in the dataset. Sort samples
-by sampleID.
+```{r pcoa-plot}
+#| label: pcoa-plot
+# count the number of levels in the group column
+num_levels <- length(unique(metadata$sample_group))
 
-```{r barplot-phylum}
-#| label: barplot-phylum
-#| description: Create a barplot of the relative abundance of Phylum in the dataset.
-#| fig-width: 10
-#| fig-height: 8
-#| fig-caption: "Barplot of Phylum"
-#| fig-align: center
-# load the melted data
-tar_load(melted_phylum, store = store_path)
-taxrank <- "Phylum"
+# Get the color palette
+color_palette <- Polychrome::palette36.colors(num_levels)
+names(color_palette) <- NULL  # Remove any names from the color palette
 
-ggplot2::ggplot(melted_phylum, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
-  ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
-  # need a sorted object like the one used in agglomerate_by_taxa
-  ggplot2::scale_x_discrete(labels = metadata$date_condition) +
-  ggplot2::labs(
-    title = glue::glue("Microbial composition at {taxrank} level"),
-    x = "Sample",
-    y = "Relative Abundance"
-  ) +
-  ggplot2::theme_bw() +
-  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
+# try to annotate plot
+pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
+labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
+            glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
+
+# plot the PCoA
+pcoa_plot_rep <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = sample_name)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
+  ggplot2::ggtitle("PCoA Plot on Distance Metrics (Bray-Curtis)") +
+  ggplot2::labs(title = "PCoA of Bray-Curtis Distance Matrix",
+       color = NULL,
+       x = labels[1],
+       y = labels[2]) +
+  ggplot2::scale_color_manual(values = color_palette) +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+print(pcoa_plot_rep)
 ```
 
-### By Class
+#### PCoA plot by date and condition (sample replicates)
 
-Create a barplot of the relative abundance Class in the dataset. Sort samples
-by sampleID.
+Visualize the same plot but grouping with date and condition (which should group sample replicates)
 
-```{r barplot-class}
-#| label: barplot-class
-#| description: Create a barplot of the relative abundance of class in the dataset.
-#| fig-width: 10
-#| fig-height: 8
-#| fig-caption: "Barplot of Class"
-#| fig-align: center
-# load the melted data
-tar_load(melted_class, store = store_path)
-taxrank <- "Class"
+```{r pcoa-date-condition}
+#| label: pcoa-date-condition
+# try to annotate plot
+pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
+labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
+            glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
 
-ggplot2::ggplot(melted_class, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
-  ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
-  # need a sorted object like the one used in agglomerate_by_taxa
-  ggplot2::scale_x_discrete(labels = metadata$date_condition) +
+# plot the PCoA
+pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = date_condition)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
+  ggplot2::ggtitle("PCoA Plot on Distance Metrics (Bray-Curtis)") +
+  ggplot2::labs(title = "PCoA of Bray-Curtis Distance Matrix",
+       color = NULL,
+       x = labels[1],
+       y = labels[2]) +
+  ggplot2::scale_color_brewer(palette = "Set1") +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+pcoa_plot
+```
+
+#### Scree plot
+
+The scree plot is a graphical representation of the eigenvalues of the principal 
+components in a PCA or PCoA analysis. It helps visualize the proportion of variance 
+explained by each principal component, allowing you to determine the optimal 
+number of components to retain. The red line in the plot is at y=2, which is the
+number of components used when plotting a 2D PCoA plot.
+
+```{r scree-plot}
+#| label: scree-plot
+tibble(pe = pcoa_results$values$Cum_corr_eig * 100,
+       axis = 1:length(percent_explained)) %>%
+  ggplot(aes(x = axis, y = pe)) +
+  geom_line() +
+  # add a red vertical line at y=2
+  geom_vline(xintercept = 2, color = "red")
+```
+
+### NMDS plot
+
+Non-metric Multidimensional Scaling (**NMDS**) is an ordination technique used to visualize the similarity or dissimilarity between samples in complex, multidimensional datasets. Unlike metric methods, NMDS focuses on preserving the rank order of distances rather than the actual distance values, making it particularly useful for ecological and environmental data where relationships may be non-linear.
+
+#### Key Features of NMDS
+
+- **Non-metric Approach**: NMDS emphasizes the rank order of dissimilarities, allowing it to handle data that do not meet the assumptions of linearity or normality.
+
+- **Dimensionality Reduction**: It projects high-dimensional data into a lower-dimensional space (typically 2D or 3D) to facilitate visualization and interpretation.
+
+- **Stress Value**: NMDS iteratively adjusts the configuration of points to minimize a measure called "stress," which quantifies the disparity between the distances in the reduced-dimensional space and the original dissimilarities. Lower stress values indicate a better fit.
+
+#### Interpreting an NMDS Plot
+
+- **Proximity of Points**: Samples plotted closer together are more similar in composition, while those farther apart are more dissimilar.
+
+- **Axes**: The axes in an NMDS plot are arbitrary and do not correspond to specific gradients or variables. The orientation and rotation of the plot can change without affecting the interpretation of the relationships between points.
+
+- **Stress Value**: A stress value below 0.2 is generally considered acceptable, indicating that the plot provides a reasonable representation of the data.
+
+#### Applications of NMDS
+
+- **Ecology**: Visualizing species composition across different sites or conditions.
+
+- **Microbial Community Analysis**: Comparing microbial communities based on sequencing data.
+
+- **Environmental Science**: Assessing the impact of environmental gradients on community structure.
+
+NMDS is a flexible and robust method for exploring complex datasets, especially when the data do not conform to the assumptions required by other ordination techniques. 
+
+```{r nmds}
+#| label: nmds
+targets::tar_load(nmds_object, store = store_path)
+
+nmds_tb <- nmds_object$nmds_tb
+```
+#### NMDS plot by technical replicates
+
+Let's plot the NMDS plot focusing on the technical replicates.
+see [CC187](https://www.youtube.com/watch?v=h7OrVmT7Ja8&ab_channel=RiffomonasProject)
+for more information.
+
+```{r nmds-plot}
+#| label: nmds-plot
+# count the number of levels in the group column
+num_levels <- length(unique(metadata$sample_group))
+
+# Get the color palette
+color_palette <- Polychrome::palette36.colors(num_levels)
+names(color_palette) <- NULL  # Remove any names from the color palette
+
+# Use palette36 from Polychrome, which supports up to 36 colors
+nmds_plot_rep <- ggplot2::ggplot(
+    nmds_tb,
+    ggplot2::aes(x=NMDS1, y=NMDS2, color = sample_name)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
   ggplot2::labs(
-    title = glue::glue("Microbial composition at {taxrank} level"),
-    x = "Sample",
-    y = "Relative Abundance"
-  ) +
-  ggplot2::theme_bw() +
-  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
+    title = "NMDS Plot on distance metrics (Bray-Curtis)",
+    color = NULL) +
+  ggplot2::scale_color_manual(values = color_palette) +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+print(nmds_plot_rep)
+```
+
+#### NMDS plot by date and condition (sample replicates)
+
+Now, let's visualize the NMDS plot but grouping with date and condition 
+(which should group sample replicates)
+
+```{r nmds-date-condition}
+#| label: nmds-date-condition
+
+# Plot the NMDS
+nmds_plot <- ggplot2::ggplot(
+    nmds_tb,
+    ggplot2::aes(x=NMDS1, y=NMDS2, color = date_condition)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
+  ggplot2::labs(
+    title = "NMDS Plot on distance metrics (Bray-Curtis)",
+    color = NULL) +
+  ggplot2::scale_color_brewer(palette = "Set1") +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+print(nmds_plot)
 ```

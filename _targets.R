@@ -97,6 +97,22 @@ list(
     )
   ),
   tar_target(
+    name = melted_phylum,
+    command = agglomerate_by_taxa(
+      phyloseq_object,
+      taxrank = "Phylum",
+      sample_order = metadata$sampleID
+    )
+  ),
+  tar_target(
+    name = melted_class,
+    command = agglomerate_by_taxa(
+      phyloseq_object,
+      taxrank = "Class",
+      sample_order = metadata$sampleID
+    )
+  ),
+  tar_target(
     name = pcoa_object,
     command = calculate_pcoa(distance_matrix, metadata)
   ),
@@ -133,22 +149,6 @@ list(
       metadata = metadata,
       alpha_metric = "faith_pd",
       column_name = "sample_name"
-    )
-  ),
-  tar_target(
-    name = melted_phylum,
-    command = agglomerate_by_taxa(
-      phyloseq_object,
-      taxrank = "Phylum",
-      sample_order = metadata$sampleID
-    )
-  ),
-  tar_target(
-    name = melted_class,
-    command = agglomerate_by_taxa(
-      phyloseq_object,
-      taxrank = "Class",
-      sample_order = metadata$sampleID
     )
   ),
   tar_quarto(
