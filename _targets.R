@@ -135,6 +135,22 @@ list(
       column_name = "sample_name"
     )
   ),
+  tar_target(
+    name = melted_phylum,
+    command = agglomerate_by_taxa(
+      phyloseq_object,
+      taxrank = "Phylum",
+      sample_order = metadata$sampleID
+    )
+  ),
+  tar_target(
+    name = melted_class,
+    command = agglomerate_by_taxa(
+      phyloseq_object,
+      taxrank = "Class",
+      sample_order = metadata$sampleID
+    )
+  ),
   tar_quarto(
     name = technical_replicates,
     path = "analysis/02-technical_replicates.qmd",
