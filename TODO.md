@@ -5,6 +5,8 @@ editor: source
 ---
 
 - Merge samples with [phyloseq](https://joey711.github.io/phyloseq/merge.html)
+  - create a new quarto document for merged samples
+  - read merged data from `_target` folder
 - Explore ampvis2 package
   - see [heatmap](https://kasperskytte.github.io/ampvis2/articles/ampvis2.html#heatmap)
 - Explore [metagMisc](https://github.com/vmikk/metagMisc)

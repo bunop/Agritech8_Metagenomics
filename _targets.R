@@ -87,7 +87,7 @@ list(
     name = distance_matrix,
     command = calculate_distance_matrix(
       otu_table_matrix,
-      min_sequencing_depth = min(samples_data$sequencing_depth)
+      min_sequencing_depth = rarefaction_depth
     )
   ),
   tar_target(
@@ -97,6 +97,7 @@ list(
       distance_matrix
     )
   ),
+  # here are barplots
   tar_target(
     name = melted_phylum,
     command = agglomerate_by_taxa(
@@ -135,13 +136,10 @@ list(
       tax_show = 20
     )
   ),
+  # deal with rarefaction curves
   tar_target(
-    name = pcoa_object,
-    command = calculate_pcoa(distance_matrix, metadata)
-  ),
-  tar_target(
-    name = nmds_object,
-    command = calculate_nmds(distance_matrix, metadata)
+    rarefaction_depth,
+    min(sample_sums(phyloseq_object))
   ),
   tar_target(
     name = rarecurve_df,
@@ -174,6 +172,16 @@ list(
       column_name = "sample_name"
     )
   ),
+  # ordinations
+  tar_target(
+    name = pcoa_object,
+    command = calculate_pcoa(distance_matrix, metadata)
+  ),
+  tar_target(
+    name = nmds_object,
+    command = calculate_nmds(distance_matrix, metadata)
+  ),
+  # render technical replicates quarto document
   tar_quarto(
     name = technical_replicates,
     path = "analysis/02-technical_replicates.qmd",

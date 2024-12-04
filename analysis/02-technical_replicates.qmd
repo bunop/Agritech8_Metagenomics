@@ -348,19 +348,17 @@ comparison of diversity metrics between samples with varying sequencing depths.
 #| fig-caption: "Rarefaction curves with vegan"
 # load calculated rarefaction data
 tar_load(rarecurve_df, store = store_path)
+tar_load(rarefaction_depth, store = store_path)
 
 # Add metadata to the rarecurve_df
 rarecurve_df <- metadata %>% 
   select(sampleID, sample_name) %>% 
   inner_join(rarecurve_df, by = c("sampleID" = "Site"))
 
-# determine the minimum number of sequences in the samples
-min_sequences <- min(coverage_stats$n_seqs)
-
 # draw the plot
 ggplot(rarecurve_df, aes(x = Sample, y = Species, color = sample_name, group = sampleID)) +
   geom_line() +
-  geom_vline(xintercept = min_sequences, linetype = "dashed", color = "red") +  # Add vertical line
+  geom_vline(xintercept = rarefaction_depth, linetype = "dashed", color = "red") +  # Add vertical line
   labs(
     title = "Rarefaction Curves for All Samples",
     x = "Number of Individuals Sampled",
