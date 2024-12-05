@@ -22,3 +22,7 @@ editor: source
     verbose = TRUE
   )
   ```
+- Explore [qiime2R](https://github.com/jbisanz/qiime2R)
+  - see [tutorial](https://forum.qiime2.org/t/tutorial-integrating-qiime2-and-r-for-data-visualization-and-analysis-using-qiime2r/4121)
+- See [Alpha Diversity Tutorial](https://rstudio-pubs-static.s3.amazonaws.com/1071936_6115f873acbc4dc4a30b1380cc3885fb.html)
+  - Run the Kruskall-Wallis test
