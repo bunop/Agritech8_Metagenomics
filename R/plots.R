@@ -31,3 +31,25 @@ custom_heatmap <- function(ampvis2_object, ...) {
 
   return(heatmap_plot)
 }
+
+plot_alpha_diversity <- function(data, x, y, fill, facet, title, xlab, ylab) {
+  # Create the faceting formula
+  facet_formula <- as.formula(paste("~", facet))
+
+  plot <- ggplot2::ggplot(data, ggplot2::aes(x = !!sym(x), y = !!sym(y), fill = !!sym(fill))) +
+    ggplot2::geom_boxplot(alpha = 0.7) +
+    ggplot2::geom_jitter(width = 0.2, size = 1, alpha = 0.5) +
+    ggplot2::facet_wrap(facet_formula, scales = "free_y") +
+    ggplot2::theme_minimal() +
+    ggplot2::labs(
+      title = title,
+      x = xlab,
+      y = ylab
+    ) +
+    ggplot2::theme(
+      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1),
+      legend.position = "none"
+    )
+
+  return(plot)
+}

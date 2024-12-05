@@ -1,7 +1,8 @@
 name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
-.Random.seed|object|69ddde97e5ce3915|||||||||||||||
+.Random.seed|object|30abd0c0df359da5|||||||||||||||
 adonis_result|stem|80af91eb2b267302|7457e1374e404396|4e642c3105e71c2f|667832415||t20057.7595489642s|d93fd217a89030bb|18614|rds|local|vector|||0.174||
 agglomerate_by_taxa|function|44ab39ab7822fe92|||||||||||||||
+alpha_diversity_by_sample_name|stem|49c47fecc01774c9|b6bf617cfc2c9bbb|b512aabd79710673|969736287||t20062.5915155105s|7703d4d07e36175a|403993|rds|local|vector|||5.88||
 ampvis2_object|stem|b8aa6353432b2b1e|7738c40b6685388f|8b5caf167848cf1f|1495111583||t20059.6827685514s|fe5838daa3800fd8|939710|rds|local|vector|||7.175|Could not find a column named one of OTU, ASV, OTU ID in otutable. Using row names as OTU IDs.. Could not find a column named one of OTU, ASV, OTU ID in taxonomy. Using row names as OTU IDs.|
 calculate_anova|function|84adfb8ef5e66cd5|||||||||||||||
 calculate_coverage_stats|function|20e7b02e4be58d62|||||||||||||||
@@ -28,14 +29,32 @@ merged_metadata|stem|8af3bfd393fcccf6|00d2f46fd0832b65|c3252f778ee5d8d6|-1640380
 merged_phyloseq_object|stem|59c6a389203af6ae|07afa9bdd01ede5a|d1a8933dfbde0e99|1542912993||t20057.7576305768s|c653752c9071fc88|536329|rds|local|vector|||0.201|NAs introduced by coercion. NAs introduced by coercion. NAs introduced by coercion. NAs introduced by coercion. NAs introduced by coercion. NAs introduced by coercion. NAs introduced by coercion. NAs introduced by coercion|
 metadata|stem|2a3ea6a8f0a364d9|59dcb9dd37497804|6f4c60d07dc1c973|-1204988447||t20057.7571800078s|00af1f101fa25ffd|1437|rds|local|vector|||6.304||
 nmds_object|stem|ec9b2584887d11ae|b90e6aaf8f531160|467dfa1c67685121|1812068040||t20057.7595499828s|7a2179d6be608576|16437|rds|local|vector|||0.083||
-object|object|56309831bdd8211e|||||||||||||||
+object|object|b69141dd727d51e2|||||||||||||||
 observed_features_by_sample_name|stem|0c13877368f81c4b|e4c65aba3baae21d|9406566702c9703c|-2025424482||t20057.7573636244s|0462e23a43ebef72|85429|rds|local|vector|||1.137||
 otu_table_matrix|stem|2adff00db94101be|4fbe22024f54ec1f|e32554d451cc94a8|1067928734||t20057.7572076475s|05de280fdfca7fe2|330210|rds|local|vector|||0.01||
 pcoa_object|stem|4b68d5e4b22f98f4|b8ab61c82c96930f|0864556572f9ee84|-870153720||t20057.7595502143s|f8ce60a3d24f9a22|26248|rds|local|vector|||0.008||
 phyloseq_object|stem|eb4048dcf531651d|37577fe9064da22a|280d11e7c523c681|-512304128||t20057.757190147s|d7b96cc74ee11a3e|1336934|rds|local|vector|||0.175||
 phyloseq_to_ampvis2|function|801e2c649335d705|||||||||||||||
+plot_alpha_diversity|function|b66d3a3ab877f051|||||||||||||||
 rarecurve_df|stem|e596fdc552783c3d|b8a9a8c37f40485c|945711a3ada64809|1676499802||t20057.7576242803s|dc35afceecf8ff1a|579862|rds|local|vector|||34.971||
+rarefaction_by_sample_name|stem|27451f8cc8b757db|244ddcc194cf0986|dda7dcf53238e89f|202751208||t20062.5832076052s|1b82389966ad3138|3438|rds|local|vector|||5.455||
 rarefaction_depth|stem|e89c7cb6fa722581|f7ffa6f264de9e3a|ad63e20ee1d74fb5|-319696460||t20061.6815457356s|d0ec9a5a63f98b43|53|rds|local|vector|||6.196||
+rarefaction_results|stem|b2b6f3458c9c99d6|d50c7822fee58341|7e4097355858383f|2056008308||t20062.5752015509s|e5d5e94ed057282c|4579|rds|local|vector|||8.625||
+rarefy_alpha|function|96312602b69a14d1|||||||||||||||
+reshape_rarefaction_data|function|73c69b3451a7f839|||||||||||||||
 samples_data|stem|05ca3a9ec8d955a8|bc84f5669dd816e6|321924f56541faa0|-2115694622||t20057.7573745044s|cfe3f36adcf1474a|1639|rds|local|vector|||0.005||
+samples_rarefaction|pattern|856da9c9302b31da|7b874aa159e865f1||2119422377||||16854|rds|local|vector||samples_rarefaction_a9b80f1072a4bb82*samples_rarefaction_1e826e1f40e95777*samples_rarefaction_f629451486b91b87*samples_rarefaction_7f47417780e16e0f*samples_rarefaction_e14862bc542795a4*samples_rarefaction_bc1243450a4b1cf6*samples_rarefaction_315b2a65122f0150*samples_rarefaction_7e2f30006c0ab963*samples_rarefaction_f9fd635d1c4de985*samples_rarefaction_d8d86ea2570d3be6|109.936||
+samples_rarefaction_1e826e1f40e95777|branch|0f8eed6e31493337|7b874aa159e865f1|40cf68c4482b4ca1|-1287398397||t20062.5730407204s|24509fcb22ef979c|1685|rds|local|vector|samples_rarefaction||14.799||
+samples_rarefaction_315b2a65122f0150|branch|afde88bef91bc5cd|7b874aa159e865f1|40cf68c4482b4ca1|131535555||t20062.57308035s|60f5992ba1e7a4ec|1692|rds|local|vector|samples_rarefaction||15.062||
+samples_rarefaction_7e2f30006c0ab963|branch|e607df6c6b191be4|7b874aa159e865f1|40cf68c4482b4ca1|-355140712||t20062.5730624333s|7002b7fb2d4ff000|1684|rds|local|vector|samples_rarefaction||1.61||
+samples_rarefaction_7f47417780e16e0f|branch|6b7e16c87699db62|7b874aa159e865f1|40cf68c4482b4ca1|-284392836||t20062.5730534982s|8ca48a8272febcc5|1695|rds|local|vector|samples_rarefaction||14.848||
+samples_rarefaction_a9b80f1072a4bb82|branch|65449cca3baa4163|7b874aa159e865f1|40cf68c4482b4ca1|512495973||t20062.5730455352s|88a9843117ba220e|1674|rds|local|vector|samples_rarefaction||15.214||
+samples_rarefaction_bc1243450a4b1cf6|branch|465bd409dcdb6c05|7b874aa159e865f1|40cf68c4482b4ca1|-1826863002||t20062.5730697944s|90fc0e9d41e85b61|1679|rds|local|vector|samples_rarefaction||14.923||
+samples_rarefaction_d8d86ea2570d3be6|branch|ee065f5cc48312e5|7b874aa159e865f1|40cf68c4482b4ca1|277085180||t20062.5730741s|6a12db4a125a0252|1683|rds|local|vector|samples_rarefaction||2.089||
+samples_rarefaction_e14862bc542795a4|branch|37c6981162736027|7b874aa159e865f1|40cf68c4482b4ca1|-1958270618||t20062.5730593778s|b05f7f8a22f60f83|1687|rds|local|vector|samples_rarefaction||14.393||
+samples_rarefaction_f629451486b91b87|branch|f7853282cadc9037|7b874aa159e865f1|40cf68c4482b4ca1|-1120600133||t20062.5730484056s|60f5992ba1e7a4ec|1692|rds|local|vector|samples_rarefaction||14.801||
+samples_rarefaction_f9fd635d1c4de985|branch|86222d500c36a920|7b874aa159e865f1|40cf68c4482b4ca1|-496048888||t20062.5730726648s|6a12db4a125a0252|1683|rds|local|vector|samples_rarefaction||2.197||
 shannon_by_sample_name|stem|c88601244b25c92b|0155f05538727d84|9406566702c9703c|620582285||t20057.7573501518s|4bf6d5bad8598a58|96276|rds|local|vector|||8.9||
+summarize_rarefactions|function|36e3bd768c840e19|||||||||||||||
 technical_replicates|stem|560d5557cb5bf8ef|d7a729be3aabd611|d5bb5ff48daec477|-847406250|analysis/02-technical_replicates.html*analysis/02-technical_replicates.qmd|t20061.6846496936s|85d9b745aa101d17|4772253|file|local|vector|||32.343||
+thousand_iterations|stem|5236ee250ed0f160|add52dde664c003d|2c530c1562a7fbd1|727117544||t20062.5715862315s|271db55f47f9100d|99|rds|local|vector||thousand_iterations_6e95f3b2b5476d92*thousand_iterations_b3a2147ad240fae3*thousand_iterations_f5968f8186dadba0*thousand_iterations_50003b5d5254d75e*thousand_iterations_5105e1ee401f4beb*thousand_iterations_943cd151fa74649e*thousand_iterations_a7098e9b959e7c27*thousand_iterations_3a45cb041330bd5a*thousand_iterations_0c0522beb9e90953*thousand_iterations_4b8caeb2425c3113|5.582||

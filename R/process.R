@@ -141,3 +141,53 @@ agglomerate_by_taxa <- function(phyloseq_object, taxrank, sample_order = NULL) {
 phyloseq_to_ampvis2 <- function(phyloseq_object) {
   return(ampvis2::amp_load(phyloseq_object))
 }
+
+# Function to rarefy and calculate alpha diversity metrics
+# This function is a wrapper around the rarefy_even_depth and estimate_richness functions
+# from the phyloseq package. It make a single sub sampling like Schloss means
+rarefy_alpha <- function(physeq_obj, depth, measures = NULL, rngseed = FALSE) {
+  # Rarefy the phyloseq object
+  physeq_rarefied <- phyloseq::rarefy_even_depth(
+    physeq_obj,
+    sample.size = depth,
+    rngseed = rngseed,
+    verbose = FALSE
+  )
+
+  # Calculate alpha diversity metrics
+  alpha_div <- phyloseq::estimate_richness(physeq_rarefied, measures = measures)
+  alpha_div <- tibble::rownames_to_column(
+    alpha_div,
+    var = "sampleID"
+  )
+  return(alpha_div)
+}
+
+summarize_rarefactions <- function(samples_rarefaction, metadata, by_column = "sampleID") {
+  summary_results <- samples_rarefaction %>%
+    group_by(!!sym(by_column)) %>%
+    summarise(across(everything(), list(mean = mean, sd = sd)))
+
+  # Merge with summary results
+  samples_rarefaction <- left_join(summary_results, metadata, by = by_column)
+  return(samples_rarefaction)
+}
+
+reshape_rarefaction_data <- function(data, by_column) {
+  # Reshape data to long format
+  data_long <- data %>%
+    # Select relevant columns: sampleID, by_column, and those ending with '_mean' or '_sd'
+    dplyr::select(sampleID, !!sym(by_column), ends_with("_mean"), ends_with("_sd")) %>%
+    tidyr::pivot_longer(
+      cols = ends_with("_mean") | ends_with("_sd"),
+      names_to = c("Metric", "Measure"),
+      names_pattern = "(.*)_(mean|sd)$",
+      values_to = "Value"
+    ) %>%
+    tidyr::pivot_wider(
+      names_from = Measure,
+      values_from = Value
+    )
+
+  return(data_long)
+}

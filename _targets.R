@@ -6,6 +6,7 @@
 # Load packages required to define the pipeline:
 library(targets)
 library(tarchetypes) # Load other packages as needed.
+library(parallel)
 library(crew)
 library(quarto)
 
@@ -33,7 +34,7 @@ tar_option_set(
   # which run as local R processes. Each worker launches when there is work
   # to do and exits if 60 seconds pass with no tasks to run.
   #
-  controller = crew::crew_controller_local(workers = 2, seconds_idle = 60),
+  controller = crew::crew_controller_local(workers = detectCores() - 1, seconds_idle = 60),
   #
   # Alternatively, if you want workers to run on a high-performance computing
   # cluster, select a controller from the {crew.cluster} package.
@@ -170,6 +171,45 @@ list(
       metadata = metadata,
       alpha_metric = "faith_pd",
       column_name = "sample_name"
+    )
+  ),
+  # alpha diversity steps
+  # Generate a sequence of iterations
+  tar_target(
+    name = thousand_iterations,
+    command = seq_len(1000)
+  ),
+  # Perform rarefaction across multiple iterations
+  tar_target(
+    name = samples_rarefaction,
+    command = rarefy_alpha(
+      phyloseq_object,
+      rarefaction_depth,
+      measures = c("Observed", "Shannon", "Simpson", "InvSimpson", "Fisher")),
+    pattern = map(thousand_iterations)
+  ),
+  # now transform rarefaction in a summary table
+  tar_target(
+    name = rarefaction_results,
+    command = summarize_rarefactions(samples_rarefaction, metadata)
+  ),
+  # pivot data and group by sample name
+  tar_target(
+    name = rarefaction_by_sample_name,
+    command = reshape_rarefaction_data(rarefaction_results, by_column = "sample_name")
+  ),
+  # make plots
+  tar_target(
+    name = alpha_diversity_by_sample_name,
+    command = plot_alpha_diversity(
+      data = rarefaction_by_sample_name,
+      x = "sample_name",
+      y = "mean",
+      fill = "sample_name",
+      facet = "Metric",
+      title = "Alpha Diversity Metrics Across Groups",
+      xlab = "Sample Name",
+      ylab = "Alpha Diversity Measure"
     )
   ),
   # ordinations
