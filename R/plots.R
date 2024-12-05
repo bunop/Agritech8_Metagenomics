@@ -53,3 +53,33 @@ plot_alpha_diversity <- function(data, x, y, fill, facet, title, xlab, ylab) {
 
   return(plot)
 }
+
+# like the function above, but plot histograms with sd bars
+plot_alpha_diversity_with_stddev <- function(data, x, y, fill, facet, title, xlab, ylab) {
+  # Ensure the data has columns for mean, SD, and Metric
+  data <- data %>%
+    mutate(
+      ymin = mean - sd,
+      ymax = mean + sd
+    )
+
+  # Create the faceting formula
+  facet_formula <- as.formula(paste("~", facet))
+
+  # Generate the plot
+  plot <- ggplot(data, aes(x = !!sym(x), y = !!sym(y), fill = !!sym(fill))) +
+    geom_bar(stat = "identity", position = position_dodge(), alpha = 0.7) +
+    geom_errorbar(aes(ymin = ymin, ymax = ymax), width = 0.2, position = position_dodge(0.9)) +
+    facet_wrap(facet_formula, scales = "free_y") +
+    theme_minimal() +
+    labs(
+      title = title,
+      x = xlab,
+      y = ylab
+    ) +
+    theme(
+      axis.text.x = element_text(angle = 45, hjust = 1)
+    )
+
+  return(plot)
+}

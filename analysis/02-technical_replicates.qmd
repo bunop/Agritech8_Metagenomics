@@ -444,6 +444,36 @@ ggplot(
   )
 ```
 
+## Alpha diversity
+
+Alpha diversity measures the diversity within a single sample or community.
+It provides insights into the richness and evenness of species in a sample,
+helping to compare diversity between samples or track changes over time.
+
+### By sample_name
+
+```{r alpha-diversity_sample_name}
+#| label: alpha-diversity_sample_name
+#| description: Calculate and visualize alpha diversity metrics for the samples.
+#| fig-width: 10
+#| fig-height: 8
+#| fig-caption: "Alpha diversity metrics for the samples"
+tar_load(alpha_diversity_by_sample_name, store = store_path)
+print(alpha_diversity_by_sample_name)
+```
+
+### By date_condition
+
+```{r alpha-diversity_date_condition}
+#| label: alpha-diversity_date_condition
+#| description: Calculate and visualize alpha diversity metrics for date-condition.
+#| fig-width: 10
+#| fig-height: 8
+#| fig-caption: "Alpha diversity metrics for date-condition"
+tar_load(alpha_diversity_by_date_condition, store = store_path)
+print(alpha_diversity_by_date_condition)
+```
+
 ## Samples Ordination
 
 ### PCoA plot

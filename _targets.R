@@ -212,6 +212,25 @@ list(
       ylab = "Alpha Diversity Measure"
     )
   ),
+  # pivot data and group by date_condition
+  tar_target(
+    name = rarefaction_by_date_condition,
+    command = reshape_rarefaction_data(rarefaction_results, by_column = "date_condition")
+  ),
+  # make plots
+  tar_target(
+    name = alpha_diversity_by_date_condition,
+    command = plot_alpha_diversity(
+      data = rarefaction_by_date_condition,
+      x = "date_condition",
+      y = "mean",
+      fill = "date_condition",
+      facet = "Metric",
+      title = "Alpha Diversity Metrics Across Groups",
+      xlab = "Sample Name",
+      ylab = "Alpha Diversity Measure"
+    )
+  ),
   # ordinations
   tar_target(
     name = pcoa_object,
