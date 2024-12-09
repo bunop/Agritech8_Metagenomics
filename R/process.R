@@ -16,20 +16,20 @@ calculate_distance_matrix <- function(
 calculate_coverage_stats <- function(otu_table_matrix) {
   # create a shared table to estimate the sequencing depth
   shared <- otu_table_matrix %>%
-    as_tibble(rownames = "Group") %>%
-    pivot_longer(-Group) %>%
-    group_by(Group) %>%
-    mutate(total = sum(value)) %>%
-    group_by(name) %>%
-    mutate(total = sum(value)) %>%
-    filter(total != 0) %>%
-    ungroup() %>%
-    select(-total)
+    tidyr::as_tibble(rownames = "Group") %>%
+    tidyr::pivot_longer(-Group) %>%
+    dplyr::group_by(Group) %>%
+    dplyr::mutate(total = sum(value)) %>%
+    dplyr::group_by(name) %>%
+    dplyr::mutate(total = sum(value)) %>%
+    dplyr::filter(total != 0) %>%
+    dplyr::ungroup() %>%
+    dplyr::select(-total)
 
   # calculate good's coverage
   coverage_stats <- shared %>%
-    group_by(Group) %>%
-    summarize(
+    dplyr::group_by(Group) %>%
+    dplyr::summarize(
       n_seqs = sum(value),
       n_sings = sum(value == 1),
       goods = 100*(1 - n_sings / n_seqs))
@@ -190,4 +190,33 @@ reshape_rarefaction_data <- function(data, by_column) {
     )
 
   return(data_long)
+}
+
+# Calculate the Kruskall-Wallis test
+calculate_kruskal_wallis <- function(rarefaction_results, alpha_metric, column_name) {
+  # define a new formula
+  kw_formula <- as.formula(paste(alpha_metric, "~", column_name))
+
+  # Perform the Kruskal-Wallis test
+  kruskal_results <- stats::kruskal.test(
+    formula = kw_formula,
+    data = rarefaction_results
+  )
+
+  return(kruskal_results)
+}
+
+# Dunn's Kruskal-Wallis Multiple Comparisons
+calculate_dunn_test <- function(rarefaction_results, alpha_metric, column_name, method = "bh") {
+  # define a new formula
+  dunn_formula <- as.formula(paste(alpha_metric, "~", column_name))
+
+  # Perform the Dunn's test
+  dunn_results <- FSA::dunnTest(
+    x = dunn_formula,
+    data = rarefaction_results,
+    method = method
+  )
+
+  return(dunn_results)
 }

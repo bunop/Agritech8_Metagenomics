@@ -462,6 +462,27 @@ tar_load(alpha_diversity_by_sample_name, store = store_path)
 print(alpha_diversity_by_sample_name)
 ```
 
+Perform Kruskal-Wallis tests to determine if the alpha diversity metrics are 
+significantly different between the groups. Run on shannon metric:
+
+```{r kruscal_shannon_sample_name}
+#| label: kruscal_shannon_sample_name
+#| description: Perform Kruskal-Wallis tests on the Shannon ~ sample_name
+tar_load(kruscal_shannon_sample_name, store = store_path)
+print(kruscal_shannon_sample_name)
+```
+
+This means that *at least* one group is significantly different in terms of 
+Shannon diversity. Let's do a post-hoc test with Dunn's test:
+
+```{r dunn_shannon_sample_name}
+#| label: dunn_shannon_sample_name
+tar_load(dunn_shannon_sample_name, store = store_path)
+dunn_shannon_sample_name$res %>% 
+  dplyr::filter(P.adj < 0.05) %>%
+  dplyr::arrange(P.adj)
+```
+
 ### By date_condition
 
 ```{r alpha-diversity_date_condition}
@@ -472,6 +493,27 @@ print(alpha_diversity_by_sample_name)
 #| fig-caption: "Alpha diversity metrics for date-condition"
 tar_load(alpha_diversity_by_date_condition, store = store_path)
 print(alpha_diversity_by_date_condition)
+```
+
+Perform Kruskal-Wallis tests to determine if the alpha diversity metrics are 
+significantly different between the groups. Run on shannon metric:
+
+```{r kruscal_shannon_date_condition}
+#| label: kruscal_shannon_date_condition
+#| description: Perform Kruskal-Wallis tests on the Shannon ~ date_condition
+tar_load(kruscal_shannon_date_condition, store = store_path)
+print(kruscal_shannon_date_condition)
+```
+
+This means that *at least* one group is significantly different in terms of 
+Shannon diversity. Let's do a post-hoc test with Dunn's test:
+
+```{r dunn_shannon_date_condition}
+#| label: dunn_shannon_date_condition
+tar_load(dunn_shannon_date_condition, store = store_path)
+dunn_shannon_date_condition$res %>%
+  dplyr::filter(P.adj < 0.05) %>%
+  dplyr::arrange(P.adj)
 ```
 
 ## Samples Ordination

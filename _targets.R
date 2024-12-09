@@ -21,7 +21,8 @@ tar_option_set(
     "phyloseq",
     "vegan",
     "ape",
-    "ampvis2"
+    "ampvis2",
+    "FSA"
   ), # Packages that your targets need for their tasks.
   # format = "qs", # Optionally set the default storage format. qs is fast.
   #
@@ -212,6 +213,16 @@ list(
       ylab = "Alpha Diversity Measure"
     )
   ),
+  # do the Kruskall-Wallis test
+  tar_target(
+    name = kruscal_shannon_sample_name,
+    command = calculate_kruskal_wallis(rarefaction_results, "Shannon_mean", "sample_name")
+  ),
+  # do the post-hoc tests
+  tar_target(
+    name = dunn_shannon_sample_name,
+    command = calculate_dunn_test(rarefaction_results, "Shannon_mean", "sample_name")
+  ),
   # pivot data and group by date_condition
   tar_target(
     name = rarefaction_by_date_condition,
@@ -230,6 +241,16 @@ list(
       xlab = "Sample Name",
       ylab = "Alpha Diversity Measure"
     )
+  ),
+  # do the Kruskall-Wallis test
+  tar_target(
+    name = kruscal_shannon_date_condition,
+    command = calculate_kruskal_wallis(rarefaction_results, "Shannon_mean", "date_condition")
+  ),
+  # do the post-hoc tests
+  tar_target(
+    name = dunn_shannon_date_condition,
+    command = calculate_dunn_test(rarefaction_results, "Shannon_mean", "date_condition")
   ),
   # ordinations
   tar_target(
