@@ -38,12 +38,14 @@ calculate_coverage_stats <- function(otu_table_matrix) {
 }
 
 ## calculate anova on a received function
-calculate_anova <- function(phyloseq_object, distance_matrix) {
+calculate_permanova <- function(distance_matrix, metadata, columns, by = "term") {
+  permanova_formula <- as.formula(paste0("distance_matrix ~ ", paste(columns, collapse = " + ")))
   adonis_result <- vegan::adonis2(
-    distance_matrix ~ sample_group + technical_rep,
-    data = methods::as(phyloseq::sample_data(phyloseq_object), "data.frame"),
-    by = "margin"
+    permanova_formula,
+    data = metadata,
+    by = by
   )
+  return(adonis_result)
 }
 
 ## calculate PCoA

@@ -86,17 +86,19 @@ list(
     command = calculate_coverage_stats(otu_table_matrix)
   ),
   tar_target(
-    name = distance_matrix,
+    name = bray_distance_matrix,
     command = calculate_distance_matrix(
       otu_table_matrix,
-      min_sequencing_depth = rarefaction_depth
+      min_sequencing_depth = rarefaction_depth,
+      dmethod = "bray"
     )
   ),
   tar_target(
-    name = adonis_result,
-    command = calculate_anova(
-      phyloseq_object,
-      distance_matrix
+    name = tech_rep_permanova,
+    command = calculate_permanova(
+      bray_distance_matrix,
+      metadata,
+      columns = c("sample_group", "technical_rep")
     )
   ),
   # here are barplots
@@ -255,11 +257,11 @@ list(
   # ordinations
   tar_target(
     name = pcoa_object,
-    command = calculate_pcoa(distance_matrix, metadata)
+    command = calculate_pcoa(bray_distance_matrix, metadata)
   ),
   tar_target(
     name = nmds_object,
-    command = calculate_nmds(distance_matrix, metadata)
+    command = calculate_nmds(bray_distance_matrix, metadata)
   ),
   # render technical replicates quarto document
   tar_quarto(
