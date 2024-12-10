@@ -53,7 +53,8 @@ nextflow run nf-core/ampliseq -r 2.11.0 -params-file config/nf-params-bacteria.j
 for bacteria and
 
 ```bash
-nextflow run nf-core/ampliseq -r 2.11.0 -params-file config/nf-params-fungi.json -profile singularity
+nextflow run nf-core/ampliseq -r 2.11.0 -params-file config/nf-params-fungi.json \
+    -profile singularity -resume -c config/custom.config
 ```
 
 for fungi.
