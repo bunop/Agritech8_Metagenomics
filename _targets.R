@@ -22,7 +22,8 @@ tar_option_set(
     "vegan",
     "ape",
     "ampvis2",
-    "FSA"
+    "FSA",
+    "pairwiseAdonis"
   ), # Packages that your targets need for their tasks.
   # format = "qs", # Optionally set the default storage format. qs is fast.
   #
@@ -262,6 +263,39 @@ list(
   tar_target(
     name = nmds_object,
     command = calculate_nmds(bray_distance_matrix, metadata)
+  ),
+  # permanova on distance matrix
+  tar_target(
+    name = sample_name_permanova,
+    command = calculate_permanova(
+      bray_distance_matrix,
+      metadata,
+      columns = c("sample_name")
+    )
+  ),
+  tar_target(
+    name = pairwise_sample_name_permanova,
+    command = calculate_pairwise_permanova(
+      bray_distance_matrix,
+      metadata,
+      columns = c("sample_name")
+    )
+  ),
+  tar_target(
+    name = date_condition_permanova,
+    command = calculate_permanova(
+      bray_distance_matrix,
+      metadata,
+      columns = c("date_condition")
+    )
+  ),
+  tar_target(
+    name = pairwise_date_condition_permanova,
+    command = calculate_pairwise_permanova(
+      bray_distance_matrix,
+      metadata,
+      columns = c("date_condition")
+    )
   ),
   # render technical replicates quarto document
   tar_quarto(

@@ -38,14 +38,56 @@ calculate_coverage_stats <- function(otu_table_matrix) {
 }
 
 ## calculate anova on a received function
-calculate_permanova <- function(distance_matrix, metadata, columns, by = "term") {
+calculate_permanova <- function(distance_matrix, metadata, columns, method = "bray", by = "term") {
   permanova_formula <- as.formula(paste0("distance_matrix ~ ", paste(columns, collapse = " + ")))
   adonis_result <- vegan::adonis2(
     permanova_formula,
     data = metadata,
+    method = method,
     by = by
   )
   return(adonis_result)
+}
+
+## Pairwise permanova
+calculate_pairwise_permanova <- function(distance_matrix, metadata, columns, method = "bray", by = "term") {
+  permanova_formula <- as.formula(paste0("distance_matrix ~ ", paste(columns, collapse = " + ")))
+
+  # do the pairwise permanova
+  pairwise_results <- pairwise.adonis2(
+    permanova_formula,
+    data = metadata,
+    method = method,
+    by = by
+  )
+
+  # Initialize an empty list to store summaries
+  summary_list <- list()
+
+  # Loop through each pairwise comparison result
+  for (comparison in names(pairwise_results)) {
+    if (comparison != "parent_call") {
+      # Extract the result for the current comparison
+      result <- pairwise_results[[comparison]]
+
+      # Add a column for the comparison name
+      result$Comparison <- comparison
+
+      # Append to the summary list
+      summary_list[[comparison]] <- result
+    }
+  }
+
+  # Combine all summaries into a single data frame
+  summary_df <- do.call(rbind, summary_list)
+
+  # Reset row names
+  rownames(summary_df) <- NULL
+
+  # Adjust p-values
+  summary_df$P.adj <- p.adjust(summary_df$`Pr(>F)`, method = "BH")
+
+  return(summary_df)
 }
 
 ## calculate PCoA

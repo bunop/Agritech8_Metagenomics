@@ -2058,6 +2058,26 @@
       ],
       "Hash": "d413e0fef796c9401a4419485f709ca1"
     },
+    "pairwiseAdonis": {
+      "Package": "pairwiseAdonis",
+      "Version": "0.4.1",
+      "Source": "GitHub",
+      "RemoteType": "github",
+      "RemoteHost": "api.github.com",
+      "RemoteUsername": "pmartinezarbizu",
+      "RemoteRepo": "pairwiseAdonis",
+      "RemoteSubdir": "pairwiseAdonis",
+      "RemoteRef": "master",
+      "RemoteSha": "cb190f7668a0c82c0b0853927db239e7b9ec3e83",
+      "Requirements": [
+        "R",
+        "cluster",
+        "permute",
+        "stats",
+        "vegan"
+      ],
+      "Hash": "83490a1eb36a3d29633e2d25dcbb1103"
+    },
     "pbdZMQ": {
       "Package": "pbdZMQ",
       "Version": "0.3-13",
