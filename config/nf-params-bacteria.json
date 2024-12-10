@@ -12,6 +12,7 @@
   "sample_inference": "pseudo",
   "dada_ref_taxonomy": "silva=138",
   "exclude_taxa": "mitochondria",
+  "save_intermediates": true,
   "max_memory": "64.GB",
   "max_cpus": 32
 }
