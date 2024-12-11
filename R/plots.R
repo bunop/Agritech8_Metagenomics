@@ -83,3 +83,24 @@ plot_alpha_diversity_with_stddev <- function(data, x, y, fill, facet, title, xla
 
   return(plot)
 }
+
+plot_distances <- function(distance_df, column) {
+  # define column names
+  column.1 <- sym(paste0(column, ".1"))
+  column.2 <- sym(paste0(column, ".2"))
+  facet_formula <- as.formula(paste("~", column.1))
+
+  ggplot2::ggplot(distance_df, ggplot2::aes(x = !!column.2, y = Distance, fill = !!column.2)) +
+    ggplot2::geom_boxplot() +
+    ggplot2::facet_wrap(facet_formula, scales = "free_y") +
+    ggplot2::labs(title = "Between-Group Distances",
+         x = column,
+         y = "Distance") +
+    ggplot2::theme_bw() +
+    ggplot2::labs(
+      x = column,
+      fill = column
+    ) +
+    ggplot2::theme(
+      axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
+    )}

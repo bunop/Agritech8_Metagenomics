@@ -104,3 +104,22 @@ calculate_nmds <- function(distance_matrix, metadata, distance = "bray") {
     )
   )
 }
+
+get_distances <- function(distance_matrix, metadata, column) {
+  # Convert distance matrix to a data frame
+  distance_df <- as.data.frame(as.table(as.matrix(distance_matrix)))
+  colnames(distance_df) <- c("Sample1", "Sample2", "Distance")
+
+  # Merge metadata to get group information for each sample
+  distance_df <- merge(distance_df, metadata, by.x = "Sample1", by.y = "sampleID")
+  distance_df <- merge(distance_df, metadata, by.x = "Sample2", by.y = "sampleID", suffixes = c(".1", ".2"))
+
+  # filter the column I need
+  column.1 <- sym(paste0(column, ".1"))
+  column.2 <- sym(paste0(column, ".2"))
+
+  distance_df <- distance_df %>%
+    dplyr::select(Sample1, Sample2, !!column.1, !!column.2, Distance)
+
+  return(distance_df)
+}
