@@ -12,6 +12,28 @@ calculate_distance_matrix <- function(
   return(distance_matrix)
 }
 
+# work on beta dispersion
+calculate_beta_dispersion <- function(distance_matrix, metadata, column) {
+  # calculate beta dispersion
+  beta_disp <- vegan::betadisper(distance_matrix, metadata[[column]])
+
+  # Perform ANOVA on dispersion
+  anova_result <- anova(beta_disp)
+
+  # organize results for plotting
+  beta_disp_df <- data.frame(
+    Sample = names(beta_disp$distances),
+    Distance = beta_disp$distances,
+    Group = metadata[[column]]
+  )
+
+  return(list(
+    beta_disp = beta_disp,
+    anova_result = anova_result,
+    beta_disp_df = beta_disp_df)
+  )
+}
+
 ## calculate anova on a received function
 calculate_permanova <- function(distance_matrix, metadata, columns, method = "bray", by = "term") {
   permanova_formula <- as.formula(paste0("distance_matrix ~ ", paste(columns, collapse = " + ")))

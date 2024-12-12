@@ -766,6 +766,41 @@ print(bray_distance_by_date_condition_plot)
 
 #### sample_name permanova
 
+Calculate beta dispersion for *sample_name* column:
+
+```{r sample_name_beta_dispersion}
+#| label: sample_name_beta_dispersion
+#| title: Beta dispersion by sample names
+#| description: Calculate beta dispersion by sample names
+tar_load(sample_name_beta_dispersion, store = store_path)
+print(sample_name_beta_dispersion$anova_result)
+```
+
+Since we don't see any significant differences in dispersion, we can proceed
+with the PERMANOVA analysis. Plot beta dispersion:
+
+```{r sample_name_beta_dispersion_plot}
+#| label: sample_name_beta_dispersion_plot
+#| title: Beta dispersion plot by sample names
+#| description: Plot beta dispersion by sample names
+#| fig.width: 10
+#| fig.height: 8
+#| fig.align: center
+# Create the boxplot
+ggplot(sample_name_beta_dispersion$beta_disp_df, aes(x = Group, y = Distance, fill = Group)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.2, alpha = 0.5) +  # Adds individual data points
+  labs(
+    title = "Beta Dispersion by Group",
+    x = "Group",
+    y = "Distance to Centroid"
+  ) +
+  theme_minimal() +
+  ggplot2::theme(
+    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
+  )
+```
+
 Do permanova with *bray-curtis* on *sample_name* column:
 
 ```{r sample_name_permanova}
@@ -792,6 +827,42 @@ pairwise_sample_name_permanova %>%
 No comparison has been filtered for *sample_name* column
 
 #### date_condition permanova
+
+Calculate beta dispersion for *date_condition* column:
+
+```{r date_condition_beta_dispersion}
+#| label: date_condition_beta_dispersion
+#| title: Beta dispersion by sample names
+#| description: Calculate beta dispersion by sample names
+tar_load(date_condition_beta_dispersion, store = store_path)
+print(date_condition_beta_dispersion$anova_result)
+```
+
+I see significant differences in dispersions: should I trust the `date_condition`
+permanova? Plot beta dispersion:
+
+```{r date_condition_beta_dispersion_plot}
+#| label: date_condition_beta_dispersion_plot
+#| title: Beta dispersion plot by sample names
+#| description: Plot beta dispersion by sample names
+#| fig.width: 10
+#| fig.height: 8
+#| fig.align: center
+# Create the boxplot
+ggplot(date_condition_beta_dispersion$beta_disp_df, aes(x = Group, y = Distance, fill = Group)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.2, alpha = 0.5) +  # Adds individual data points
+  labs(
+    title = "Beta Dispersion by Group",
+    x = "Group",
+    y = "Distance to Centroid"
+  ) +
+  theme_minimal() +
+  ggplot2::theme(
+    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
+  )
+```
+
 
 Do permanova with *bray-curtis* on *date_condition* column:
 

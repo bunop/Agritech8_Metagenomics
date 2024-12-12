@@ -289,6 +289,23 @@ list(
     name = bray_distance_by_date_condition_plot,
     command = plot_distances(bray_distance_by_date_condition, column = "date_condition")
   ),
+  # calculate beta dispersion
+  tar_target(
+    name = sample_name_beta_dispersion,
+    command = calculate_beta_dispersion(
+      bray_distance_matrix,
+      metadata,
+      column = "sample_name"
+    )
+  ),
+  tar_target(
+    name = date_condition_beta_dispersion,
+    command = calculate_beta_dispersion(
+      bray_distance_matrix,
+      metadata,
+      column = "date_condition"
+    )
+  ),
   # permanova on distance matrix
   tar_target(
     name = sample_name_permanova,
