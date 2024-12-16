@@ -30,7 +30,7 @@ source(here::here("R", "misc.R"))
 source(here::here("R", "alpha.R"))
 source(here::here("R", "plots.R"))
 
-store_path <- here::here("stores", "technical_replicates")
+store_path <- here::here("stores", "reactor_vs_algae")
 ```
 
 ## Load and select data
@@ -40,37 +40,8 @@ Load data and select only the stuff I need:
 ```{r load_data}
 #| label: load_data
 # load objects from targets
-targets::tar_load(phyloseq_object, store = store_path)
-targets::tar_load(metadata, store = store_path)
-
-# select samples
-samples_to_keep <- metadata %>% 
-  dplyr::filter(date_condition %in% c("default_nov23", "reactor_nov23", "reactor+cs_nov23")) %>%
-  select(sampleID)
-
-# Subset the phyloseq object to include only the specified samples
-phyloseq_subset <- phyloseq::prune_samples(sample_names(phyloseq_object) %in% t(samples_to_keep), phyloseq_object)
-
-# Identify taxa with non-zero total abundance
-non_zero_taxa <- taxa_sums(phyloseq_subset) > 0
-
-# Prune taxa with zero abundance
-phyloseq_pruned <- prune_taxa(non_zero_taxa, phyloseq_subset)
-
-# Get otu table and rarefaction depth
-otu_table_matrix <- get_otu_table(phyloseq_pruned)
-rarefaction_depth <- min(sample_sums(phyloseq_pruned))
-
-# get samples data
-samples_data <- get_samples_data(phyloseq_pruned)
-
-# get rid of unused objects
-rm(phyloseq_object, phyloseq_subset, metadata, non_zero_taxa, samples_to_keep)
-
-# get new metadata
-metadata <- phyloseq::sample_data(phyloseq_pruned) %>%
-  as_tibble() %>%
-  dplyr::arrange(sample_number)
+targets::tar_load(phyloseq_subset, store = store_path)
+targets::tar_load(metadata_subset, store = store_path)
 ```
 
 ## Display number of samples
@@ -79,6 +50,10 @@ Try to see sample depths and other information about the samples:
 
 ```{r sequencing-depth}
 #| label: sequencing-depth
+#| description: Display the sequencing depth of each sample.
+# load stuff from store directory
+tar_load(samples_data, store = store_path)
+
 # Create the bar plot
 depth_plot <- ggplot2::ggplot(
   samples_data,
@@ -102,7 +77,7 @@ dataset. Here are the available taxonomic ranks in the dataset:
 ```{r taxonomic-ranks}
 #| label: taxonomic-ranks
 #| description: List the available taxonomic ranks in the dataset.
-phyloseq::rank_names(phyloseq_pruned)
+phyloseq::rank_names(phyloseq_subset)
 ```
 
 ### By Phylum
@@ -118,18 +93,14 @@ by sampleID.
 #| fig-caption: "Barplot of Phylum"
 #| fig-align: center
 # melt by phylum
-melted_phylum <- agglomerate_by_taxa(
-  phyloseq_pruned,
-  taxrank = "Phylum",
-  sample_order = metadata$sampleID
-)
+targets::tar_load(melted_phylum, store = store_path)
 
 # make plot
 taxrank <- "Phylum"
 ggplot2::ggplot(melted_phylum, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
   ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
   # need a sorted object like the one used in agglomerate_by_taxa
-  ggplot2::scale_x_discrete(labels = metadata$date_condition) +
+  ggplot2::scale_x_discrete(labels = metadata_subset$date_condition) +
   ggplot2::labs(
     title = glue::glue("Microbial composition at {taxrank} level"),
     x = "Sample",
@@ -152,18 +123,14 @@ by sampleID.
 #| fig-caption: "Barplot of Class"
 #| fig-align: center
 # melt by class
-melted_class <- agglomerate_by_taxa(
-  phyloseq_pruned,
-  taxrank = "Class",
-  sample_order = metadata$sampleID
-)
+targets::tar_load(melted_class, store = store_path)
 
 # make plot
 taxrank <- "Class"
 ggplot2::ggplot(melted_class, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
   ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
   # need a sorted object like the one used in agglomerate_by_taxa
-  ggplot2::scale_x_discrete(labels = metadata$date_condition) +
+  ggplot2::scale_x_discrete(labels = metadata_subset$date_condition) +
   ggplot2::labs(
     title = glue::glue("Microbial composition at {taxrank} level"),
     x = "Sample",
@@ -174,10 +141,6 @@ ggplot2::ggplot(melted_class, ggplot2::aes(x = sampleID, y = Abundance, fill = !
 ```
 
 ## Heatmaps
-
-```{r}
-ampvis2_object <- phyloseq_to_ampvis2(phyloseq_pruned)
-```
 
 ### By phylum
 
@@ -191,11 +154,7 @@ taxa at the Phylum level:
 #| fig-height: 8
 #| fig-caption: "Heatmap of the top 10 most abundant taxa at the Phylum level"
 #| fig-align: center
-heatmap_phylum <- custom_heatmap(
-  ampvis2_object,
-  group_by = "date_condition",
-  showRemainingTaxa = TRUE
-)
+targets::tar_load(heatmap_phylum, store = store_path)
 print(heatmap_phylum)
 ```
 
@@ -211,13 +170,7 @@ taxa at the Class level:
 #| fig-height: 8
 #| fig-caption: "Heatmap of the top 20 most abundant taxa at the Class level"
 #| fig-align: center
-heatmap_class <- custom_heatmap(
-  ampvis2_object,
-  group_by = "date_condition",
-  showRemainingTaxa = TRUE,
-  tax_add = "Class",
-  tax_show = 20
-)
+targets::tar_load(heatmap_class, store = store_path)
 print(heatmap_class)
 ```
 
@@ -236,11 +189,11 @@ comparison of diversity metrics between samples with varying sequencing depths.
 #| fig-height: 8
 #| fig-caption: "Rarefaction curves with vegan"
 # deal with rarefaction data
-rarecurve_df <- calculate_rarecurve(otu_table_matrix)
-rarefaction_depth <- min(sample_sums(phyloseq_pruned))
+targets::tar_load(rarecurve_df, store = store_path)
+targets::tar_load(rarefaction_depth, store = store_path)
 
 # Add metadata to the rarecurve_df
-rarecurve_df <- metadata %>%
+rarecurve_df <- metadata_subset %>%
   select(sampleID, sample_name) %>%
   inner_join(rarecurve_df, by = c("sampleID" = "Site"))
 

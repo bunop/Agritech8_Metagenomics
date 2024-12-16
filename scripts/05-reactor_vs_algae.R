@@ -70,9 +70,100 @@ tar_source()
 
 # Replace the target list below with your own:
 list(
+  # load data from files
+  tar_target(
+    name = metadata_path,
+    command = here::here("data", "metadata_bacteria_fix.tsv"),
+    format = "file"
+  ),
+  tar_target(
+    name = metadata,
+    command = load_metadata(metadata_path)
+  ),
+  tar_target(
+    name = phyloseq_path,
+    command = here::here("results-bacteria", "phyloseq", "dada2_phyloseq.rds"),
+    format = "file"
+  ),
+  tar_target(
+    name = phyloseq_object,
+    command = load_phyloseq(metadata, phyloseq_path)
+  ),
+  tar_target(
+    name = samples_to_keep,
+    command = select_samples(
+      metadata,
+      values = c("default_nov23", "reactor_nov23", "reactor+cs_nov23"),
+      column_name = "date_condition"
+    )
+  ),
+  tar_target(
+    name = phyloseq_subset,
+    command = subset_phyloseq(phyloseq_object, samples_to_keep)
+  ),
+  tar_target(
+    name = otu_table_matrix,
+    command = get_otu_table(phyloseq_subset)
+  ),
+  tar_target(
+    name = samples_data,
+    command = get_samples_data(phyloseq_subset)
+  ),
+  tar_target(
+    name = metadata_subset,
+    command = get_metadata(phyloseq_subset, order_by = "sample_number")
+  ),
+  # here are barplots
+  tar_target(
+    name = melted_phylum,
+    command = agglomerate_by_taxa(
+      phyloseq_subset,
+      taxrank = "Phylum",
+      sample_order = metadata_subset$sampleID
+    )
+  ),
+  tar_target(
+    name = melted_class,
+    command = agglomerate_by_taxa(
+      phyloseq_subset,
+      taxrank = "Class",
+      sample_order = metadata_subset$sampleID
+    )
+  ),
+  tar_target(
+    name = ampvis2_object,
+    command = phyloseq_to_ampvis2(phyloseq_subset)
+  ),
+  tar_target(
+    name = heatmap_phylum,
+    command = custom_heatmap(
+      ampvis2_object,
+      group_by = "date_condition",
+      showRemainingTaxa = TRUE
+    )
+  ),
+  tar_target(
+    name = heatmap_class,
+    command = custom_heatmap(
+      ampvis2_object,
+      group_by = "date_condition",
+      showRemainingTaxa = TRUE,
+      tax_add = "Class",
+      tax_show = 20
+    )
+  ),
+  # raferaction curve
+  tar_target(
+    rarefaction_depth,
+    min(sample_sums(phyloseq_subset))
+  ),
+  tar_target(
+    name = rarecurve_df,
+    command = calculate_rarecurve(otu_table_matrix)
+  ),
   # render technical replicates quarto document
   tar_quarto(
-    name = technical_replicates,
+    name = reactor_vs_algae,
     path = "analysis/05-reactor_vs_algae.qmd",
     quiet = TRUE
   )
