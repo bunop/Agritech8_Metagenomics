@@ -161,6 +161,177 @@ list(
     name = rarecurve_df,
     command = calculate_rarecurve(otu_table_matrix)
   ),
+  # alpha diversity steps
+  # Generate a sequence of iterations
+  tar_target(
+    name = thousand_iterations,
+    command = seq_len(1000)
+  ),
+  # Perform rarefaction across multiple iterations
+  tar_target(
+    name = samples_rarefaction,
+    command = rarefy_alpha(
+      phyloseq_subset,
+      rarefaction_depth,
+      measures = c("Observed", "Shannon", "Simpson", "InvSimpson", "Fisher")),
+    pattern = map(thousand_iterations)
+  ),
+  # now transform rarefaction in a summary table
+  tar_target(
+    name = rarefaction_results,
+    command = summarize_rarefactions(samples_rarefaction, metadata_subset)
+  ),
+  # pivot data and group by sample name
+  tar_target(
+    name = rarefaction_by_sample_name,
+    command = reshape_rarefaction_data(rarefaction_results, by_column = "sample_name")
+  ),
+  # make plots
+  tar_target(
+    name = alpha_diversity_by_sample_name,
+    command = plot_alpha_diversity(
+      data = rarefaction_by_sample_name,
+      x = "sample_name",
+      y = "mean",
+      fill = "sample_name",
+      facet = "Metric",
+      title = "Alpha Diversity Metrics Across Groups",
+      xlab = "Sample Name",
+      ylab = "Alpha Diversity Measure"
+    )
+  ),
+  # do the Kruskall-Wallis test
+  tar_target(
+    name = kruscal_shannon_sample_name,
+    command = calculate_kruskal_wallis(rarefaction_results, "Shannon_mean", "sample_name")
+  ),
+  # do the post-hoc tests
+  tar_target(
+    name = dunn_shannon_sample_name,
+    command = calculate_dunn_test(rarefaction_results, "Shannon_mean", "sample_name")
+  ),
+  # pivot data and group by date_condition
+  tar_target(
+    name = rarefaction_by_date_condition,
+    command = reshape_rarefaction_data(rarefaction_results, by_column = "date_condition")
+  ),
+  # make plots
+  tar_target(
+    name = alpha_diversity_by_date_condition,
+    command = plot_alpha_diversity(
+      data = rarefaction_by_date_condition,
+      x = "date_condition",
+      y = "mean",
+      fill = "date_condition",
+      facet = "Metric",
+      title = "Alpha Diversity Metrics Across Groups",
+      xlab = "Sample Name",
+      ylab = "Alpha Diversity Measure"
+    )
+  ),
+  # do the Kruskall-Wallis test
+  tar_target(
+    name = kruscal_shannon_date_condition,
+    command = calculate_kruskal_wallis(rarefaction_results, "Shannon_mean", "date_condition")
+  ),
+  # do the post-hoc tests
+  tar_target(
+    name = dunn_shannon_date_condition,
+    command = calculate_dunn_test(rarefaction_results, "Shannon_mean", "date_condition")
+  ),
+  # calculate distance metrics
+  tar_target(
+    name = bray_distance_matrix,
+    command = calculate_distance_matrix(
+      otu_table_matrix,
+      min_sequencing_depth = rarefaction_depth,
+      dmethod = "bray"
+    )
+  ),
+  # ordinations
+  tar_target(
+    name = pcoa_object,
+    command = calculate_pcoa(bray_distance_matrix, metadata_subset)
+  ),
+  tar_target(
+    name = nmds_object,
+    command = calculate_nmds(bray_distance_matrix, metadata_subset)
+  ),
+  # calculate distances with and between groups
+  tar_target(
+    name = bray_distance_by_sample_name,
+    command = get_distances(
+      bray_distance_matrix,
+      metadata_subset,
+      column = "sample_name"
+    )
+  ),
+  tar_target(
+    name = bray_distance_by_sample_name_plot,
+    command = plot_distances(bray_distance_by_sample_name, column = "sample_name")
+  ),
+  tar_target(
+    name = bray_distance_by_date_condition,
+    command = get_distances(
+      bray_distance_matrix,
+      metadata_subset,
+      column = "date_condition"
+    )
+  ),
+  tar_target(
+    name = bray_distance_by_date_condition_plot,
+    command = plot_distances(bray_distance_by_date_condition, column = "date_condition")
+  ),
+  # calculate beta dispersion
+  tar_target(
+    name = sample_name_beta_dispersion,
+    command = calculate_beta_dispersion(
+      bray_distance_matrix,
+      metadata_subset,
+      column = "sample_name"
+    )
+  ),
+  tar_target(
+    name = date_condition_beta_dispersion,
+    command = calculate_beta_dispersion(
+      bray_distance_matrix,
+      metadata_subset,
+      column = "date_condition"
+    )
+  ),
+  # permanova on distance matrix
+  tar_target(
+    name = sample_name_permanova,
+    command = calculate_permanova(
+      bray_distance_matrix,
+      metadata_subset,
+      columns = c("sample_name")
+    )
+  ),
+  tar_target(
+    name = pairwise_sample_name_permanova,
+    command = calculate_pairwise_permanova(
+      bray_distance_matrix,
+      metadata_subset,
+      columns = c("sample_name")
+    )
+  ),
+  tar_target(
+    name = date_condition_permanova,
+    command = calculate_permanova(
+      bray_distance_matrix,
+      metadata_subset,
+      columns = c("date_condition")
+    )
+  ),
+  tar_target(
+    name = pairwise_date_condition_permanova,
+    command = calculate_pairwise_permanova(
+      bray_distance_matrix,
+      metadata_subset,
+      columns = c("date_condition")
+    )
+  ),
   # render technical replicates quarto document
   tar_quarto(
     name = reactor_vs_algae,
