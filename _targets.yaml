@@ -1,3 +1,9 @@
 technical_replicates:
-  script: 02-technical_replicates.R
+  script: scripts/02-technical_replicates.R
   store: stores/technical_replicates
+reactor_vs_algae:
+  script: scripts/05-reactor_vs_algae.R
+  store: stores/reactor_vs_algae
+duckweed_and_box:
+  script: scripts/06-duckweed_and_box.R
+  store: stores/duckweed_and_box

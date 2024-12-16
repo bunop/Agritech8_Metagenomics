@@ -30,7 +30,7 @@ source(here::here("R", "misc.R"))
 source(here::here("R", "alpha.R"))
 source(here::here("R", "plots.R"))
 
-store_path <- here::here("_targets")
+store_path <- here::here("stores", "technical_replicates")
 ```
 
 ## Load and select data
