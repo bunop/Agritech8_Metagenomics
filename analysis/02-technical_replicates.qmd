@@ -25,7 +25,7 @@ library(ggplot2)
 library(phyloseq)
 library(ampvis2)
 
-store_path <- here::here("_targets")
+store_path <- here::here("stores", "technical_replicates")
 ```
 
 ## Loading the data from bacteria samples

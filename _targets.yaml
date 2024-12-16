@@ -1,0 +1,3 @@
+technical_replicates:
+  script: 02-technical_replicates.R
+  store: stores/technical_replicates
