@@ -67,12 +67,22 @@ tar_source()
 # Replace the target list below with your own:
 list(
   tar_target(
+    name = metadata_path,
+    command = here::here("data", "metadata_bacteria_fix.tsv"),
+    format = "file"
+  ),
+  tar_target(
     name = metadata,
-    command = load_metadata("data", "metadata_bacteria_fix.tsv")
+    command = load_metadata(metadata_path)
+  ),
+  tar_target(
+    name = phyloseq_path,
+    command = here::here("results-bacteria", "phyloseq", "dada2_phyloseq.rds"),
+    format = "file"
   ),
   tar_target(
     name = phyloseq_object,
-    command = load_phyloseq(metadata, "results-bacteria/phyloseq/dada2_phyloseq.rds")
+    command = load_phyloseq(metadata, phyloseq_path)
   ),
   tar_target(
     name = otu_table_matrix,
@@ -151,27 +161,42 @@ list(
     command = calculate_rarecurve(otu_table_matrix)
   ),
   tar_target(
+    name = observed_features_by_sample_name_path,
+    command = here::here("results-bacteria", "qiime2", "alpha-rarefaction", "observed_features.csv"),
+    format = "file"
+  ),
+  tar_target(
     name = observed_features_by_sample_name,
     command = load_qiime_rarefaction(
-      rarefaction_csv = "results-bacteria/qiime2/alpha-rarefaction/observed_features.csv",
+      rarefaction_csv = observed_features_by_sample_name_path,
       metadata = metadata,
       alpha_metric = "observed_features",
       column_name = "sample_name"
     )
   ),
   tar_target(
+    name = shannon_by_sample_name_path,
+    command = here::here("results-bacteria", "qiime2", "alpha-rarefaction", "shannon.csv"),
+    format = "file"
+  ),
+  tar_target(
     name = shannon_by_sample_name,
     command = load_qiime_rarefaction(
-      rarefaction_csv = "results-bacteria/qiime2/alpha-rarefaction/shannon.csv",
+      rarefaction_csv = shannon_by_sample_name_path,
       metadata = metadata,
       alpha_metric = "shannon",
       column_name = "sample_name"
     )
   ),
   tar_target(
+    name = faith_by_sample_name_path,
+    command = here::here("results-bacteria", "qiime2", "alpha-rarefaction", "faith_pd.csv"),
+    format = "file"
+  ),
+  tar_target(
     name = faith_by_sample_name,
     command = load_qiime_rarefaction(
-      rarefaction_csv = "results-bacteria/qiime2/alpha-rarefaction/faith_pd.csv",
+      rarefaction_csv = faith_by_sample_name_path,
       metadata = metadata,
       alpha_metric = "faith_pd",
       column_name = "sample_name"

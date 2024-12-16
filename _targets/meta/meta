@@ -1,5 +1,5 @@
 name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
-.Random.seed|object|edd325d6f35567ab|||||||||||||||
+.Random.seed|object|326de4b03f8ae476|||||||||||||||
 agglomerate_by_taxa|function|44ab39ab7822fe92|||||||||||||||
 alpha_diversity_by_date_condition|stem|024bc66e580cb920|e1222eda0ff68801|95cb37332461932f|162458656||t20062.6662896343s|917e79edbd868ce4|415019|rds|local|vector|||0.666||
 alpha_diversity_by_sample_name|stem|fa6fe9c7bf24d97a|b6bf617cfc2c9bbb|09f184748e5e5e09|969736287||t20062.6626334816s|01e730d8fa1a30a7|485293|rds|local|vector|||0.103||
@@ -25,7 +25,8 @@ date_condition_beta_dispersion|stem|20bbceae0b9a2c67|82f57e2b0acb657b|131f28a94d
 date_condition_permanova|stem|1e3b87ae3bb87c34|e03370492903f7b4|344fe4d4b4b28b29|-822564001||t20067.5683437712s|2fca0b8cd4d35f06|10964|rds|local|vector|||9.621||
 dunn_shannon_date_condition|stem|dc139d625f312e3f|b260737cb5d1ad52|24f3c2ba9a726ab1|-1148404350||t20066.4653493386s|d514a73b9bb0676e|1665|rds|local|vector|||7.83||
 dunn_shannon_sample_name|stem|d916e2087af081f9|9b3c41a91171c099|24f3c2ba9a726ab1|986380960||t20066.4514260703s|2bae03ca89073bb3|3065|rds|local|vector|||6.428|sample_name was coerced to a factor.|
-faith_by_sample_name|stem|2998b5956624c6e1|f74359a2cebad49e|9406566702c9703c|770284248||t20057.7572055642s|7869759582666761|100016|rds|local|vector|||1.865||
+faith_by_sample_name|stem|2998b5956624c6e1|8d93af2b523de2d6|8440ef1c63ac93b9|770284248||t20073.4658455902s|7869759582666761|100016|rds|local|vector|||4.711||
+faith_by_sample_name_path|stem|e137fe8463e5e26f|2e9d694b1aab53d6|2c530c1562a7fbd1|-1573535239|/home/paolo/Projects/Agritech8_Metagenomics/results-bacteria/qiime2/alpha-rarefaction/faith_pd.csv|t20057.7514195481s|1842e890e20b5344|1747053|file|local|vector|||9.691||
 get_distances|function|ef33c785bf0d9dd2|||||||||||||||
 get_krona_cmd|function|7158daef736edaf8|||||||||||||||
 get_otu_table|function|007ace0903fcc16d|||||||||||||||
@@ -43,15 +44,18 @@ merge_metadata|function|2b1e227f6ef12c09|||||||||||||||
 merge_technical_replicates|function|878f303d0ceaee51|||||||||||||||
 merged_metadata|stem|8af3bfd393fcccf6|00d2f46fd0832b65|c3252f778ee5d8d6|-1640380266||t20057.7572077401s|f0d92f59e4f4f215|1074|rds|local|vector|||0.034||
 merged_phyloseq_object|stem|59c6a389203af6ae|07afa9bdd01ede5a|d1a8933dfbde0e99|1542912993||t20057.7576305768s|c653752c9071fc88|536329|rds|local|vector|||0.201|NAs introduced by coercion. NAs introduced by coercion. NAs introduced by coercion. NAs introduced by coercion. NAs introduced by coercion. NAs introduced by coercion. NAs introduced by coercion. NAs introduced by coercion|
-metadata|stem|2a3ea6a8f0a364d9|59dcb9dd37497804|6f4c60d07dc1c973|-1204988447||t20057.7571800078s|00af1f101fa25ffd|1437|rds|local|vector|||6.304||
+metadata|stem|2a3ea6a8f0a364d9|68d74dab361444a6|9539da6e9fb2fce0|-1204988447||t20073.4631686112s|00af1f101fa25ffd|1437|rds|local|vector|||0.907||
+metadata_path|stem|88151cb444d0705c|66a41174dc2d47b2|2c530c1562a7fbd1|-1761454659|/home/paolo/Projects/Agritech8_Metagenomics/data/metadata_bacteria_fix.tsv|t20057.7232387354s|dfcc40f65ef32e48|5765|file|local|vector|||6.423||
 nmds_object|stem|3c95e5d978e9352f|94d25a38fc4621dd|fa8bc3fa0da9ece2|1812068040||t20067.4109442798s|935da56090735421|16430|rds|local|vector|||0.182||
 object|object|1d30b0889f47a3ce|||||||||||||||
-observed_features_by_sample_name|stem|0c13877368f81c4b|e4c65aba3baae21d|9406566702c9703c|-2025424482||t20057.7573636244s|0462e23a43ebef72|85429|rds|local|vector|||1.137||
+observed_features_by_sample_name|stem|0c13877368f81c4b|9dd0191c0a93449d|b1244690d3fc76c2|-2025424482||t20073.4658452661s|0462e23a43ebef72|85429|rds|local|vector|||4.651||
+observed_features_by_sample_name_path|stem|9873569bcf67fe79|7606bc37fe9ccd26|2c530c1562a7fbd1|-165477207|/home/paolo/Projects/Agritech8_Metagenomics/results-bacteria/qiime2/alpha-rarefaction/observed_features.csv|t20057.7514198258s|6978bb3534add9ef|522799|file|local|vector|||8.746||
 otu_table_matrix|stem|2adff00db94101be|4fbe22024f54ec1f|e32554d451cc94a8|1067928734||t20057.7572076475s|05de280fdfca7fe2|330210|rds|local|vector|||0.01||
 pairwise_date_condition_permanova|stem|bd5403a662683ac3|c79f53bd0db34c23|8029443a3019219c|-1688808087||t20067.5683383083s|c1f702cd71aa60ba|2103|rds|local|vector|||9.486||
 pairwise_sample_name_permanova|stem|dbd9702d95b29073|a56426b29635c4db|8029443a3019219c|-557304184||t20067.5683788635s|68f8b16df50d02ed|4465|rds|local|vector|||11.888||
 pcoa_object|stem|5c2d20bcf620f381|3137e187fe2ef2c8|5d33b59fd1c0f184|-870153720||t20067.4109427057s|67fe1d3b59612359|26238|rds|local|vector|||0.155||
-phyloseq_object|stem|eb4048dcf531651d|37577fe9064da22a|280d11e7c523c681|-512304128||t20057.757190147s|d7b96cc74ee11a3e|1336934|rds|local|vector|||0.175||
+phyloseq_object|stem|eb4048dcf531651d|36fbfaa7c9af935b|07ebbd34dc61abc8|-512304128||t20073.4631869444s|d7b96cc74ee11a3e|1336934|rds|local|vector|||0.226||
+phyloseq_path|stem|48bc5a5f2d332798|315e3d642ae25b92|2c530c1562a7fbd1|-776385659|/home/paolo/Projects/Agritech8_Metagenomics/results-bacteria/phyloseq/dada2_phyloseq.rds|t20057.7259542294s|3bded0e7014f7ac0|1336510|file|local|vector|||6.544||
 phyloseq_to_ampvis2|function|801e2c649335d705|||||||||||||||
 plot_alpha_diversity|function|b66d3a3ab877f051|||||||||||||||
 plot_alpha_diversity_with_stddev|function|847c6b63366b908b|||||||||||||||
@@ -1067,7 +1071,8 @@ samples_rarefaction_fef09394848384be|branch|a14851d2e290a5bf|7b874aa159e865f1|40
 samples_rarefaction_ff6b795913d67b90|branch|181f77d3b83a3d56|7b874aa159e865f1|40cf68c4482b4ca1|-1296688597||t20062.6609905207s|d8dc8c00ea1493f3|1667|rds|local|vector|samples_rarefaction||1.896||
 samples_rarefaction_ff7a0acfadb291cc|branch|6f28116bcacda655|7b874aa159e865f1|40cf68c4482b4ca1|1017273592||t20062.6603468178s|de9bc5a0b643d1c0|1666|rds|local|vector|samples_rarefaction||3.045||
 samples_rarefaction_ffbed3f2c17c35eb|branch|edcedb76bf14d4ae|7b874aa159e865f1|40cf68c4482b4ca1|-1291246041||t20062.6603055678s|df4111bb5a5c3b61|1673|rds|local|vector|samples_rarefaction||1.682||
-shannon_by_sample_name|stem|c88601244b25c92b|0155f05538727d84|9406566702c9703c|620582285||t20057.7573501518s|4bf6d5bad8598a58|96276|rds|local|vector|||8.9||
+shannon_by_sample_name|stem|c88601244b25c92b|af69b237d5af6a6c|722aa17bca9fda13|620582285||t20073.4658458217s|4bf6d5bad8598a58|96276|rds|local|vector|||4.767||
+shannon_by_sample_name_path|stem|914af6385dc552d5|e27fcca1162e16d6|2c530c1562a7fbd1|-357015127|/home/paolo/Projects/Agritech8_Metagenomics/results-bacteria/qiime2/alpha-rarefaction/shannon.csv|t20057.7514205203s|0001bebb65e6e5ab|1750421|file|local|vector|||9.474||
 summarize_rarefactions|function|36e3bd768c840e19|||||||||||||||
 tech_rep_permanova|stem|d1fb34eacf0a29a4|48bcd9f256f19740|344fe4d4b4b28b29|-1576787780||t20067.5683343268s|b967c6520650aacd|18567|rds|local|vector|||7.824||
 technical_replicates|stem|d8a612d7fb26a410|838eadb086c56701|ea3095226d9ad4ea|-847406250|analysis/02-technical_replicates.html*analysis/02-technical_replicates.qmd|t20069.6280759467s|2a7706cd85a9ac66|6011607|file|local|vector|||52.212||
