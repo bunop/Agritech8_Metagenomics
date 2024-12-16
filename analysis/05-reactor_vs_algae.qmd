@@ -1,0 +1,171 @@
+---
+title: "Reactor vs Algae"
+author: "Paolo Cozzi"
+date: today
+toc: true
+number-sections: true
+format:
+  html:
+    code-line-numbers: true
+    html-math-method: katex
+    df-print: paged
+    code-fold: true
+    toc-depth: 4
+    embed-resources: true  # Embed all resources directly into the HTML file
+editor: source
+---
+
+```{r setup}
+#| label: setup
+#| output: false
+library(targets)
+library(here)
+library(tidyverse)
+library(ggplot2)
+library(phyloseq)
+
+source(here::here("R", "load_stuff.R"))
+source(here::here("R", "misc.R"))
+
+store_path <- here::here("_targets")
+```
+
+## load and select data
+
+Load data and select only the stuff I need:
+
+```{r load_data}
+#| label: load_data
+# load objects from targets
+targets::tar_load(phyloseq_object, store = store_path)
+targets::tar_load(metadata, store = store_path)
+
+# select samples
+samples_to_keep <- metadata %>% 
+  dplyr::filter(date_condition %in% c("default_nov23", "reactor_nov23", "reactor+cs_nov23")) %>%
+  select(sampleID)
+
+# Subset the phyloseq object to include only the specified samples
+phyloseq_subset <- phyloseq::prune_samples(sample_names(phyloseq_object) %in% t(samples_to_keep), phyloseq_object)
+
+# Identify taxa with non-zero total abundance
+non_zero_taxa <- taxa_sums(phyloseq_subset) > 0
+
+# Prune taxa with zero abundance
+phyloseq_pruned <- prune_taxa(non_zero_taxa, phyloseq_subset)
+
+# Get otu table and rarefaction depth
+otu_table_matrix <- get_otu_table(phyloseq_pruned)
+rarefaction_depth <- min(sample_sums(phyloseq_pruned))
+
+# get samples data
+samples_data <- get_samples_data(phyloseq_pruned)
+
+# get rid of unused objects
+rm(phyloseq_object, phyloseq_subset, metadata, non_zero_taxa, samples_to_keep)
+
+# get new metadata
+metadata <- phyloseq::sample_data(phyloseq_pruned) %>%
+  as_tibble() %>%
+  dplyr::arrange(sample_number)
+```
+
+## Display number of samples
+
+Try to see sample depths and other information about the samples:
+
+```{r sequencing-depth}
+#| label: sequencing-depth
+# Create the bar plot
+depth_plot <- ggplot2::ggplot(
+  samples_data,
+  aes(x = sampleID, y = sequencing_depth, fill = sample_name)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") +
+  labs(title = "Sequencing Depth per Sample",
+       x = "Sample",
+       y = "Number of Reads") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+# Display the plot
+print(depth_plot)
+```
+
+## Barplots
+
+Let's create some barplots to visualize the relative abundance of taxa in the
+dataset. Here are the available taxonomic ranks in the dataset:
+
+```{r taxonomic-ranks}
+#| label: taxonomic-ranks
+#| description: List the available taxonomic ranks in the dataset.
+phyloseq::rank_names(phyloseq_pruned)
+```
+
+### By Phylum
+
+Create a barplot of the relative abundance Phylum in the dataset. Sort samples
+by sampleID.
+
+```{r barplot-phylum}
+#| label: barplot-phylum
+#| description: Create a barplot of the relative abundance of Phylum in the dataset.
+#| fig-width: 10
+#| fig-height: 8
+#| fig-caption: "Barplot of Phylum"
+#| fig-align: center
+# melt by phylum
+melted_phylum <- agglomerate_by_taxa(
+  phyloseq_pruned,
+  taxrank = "Phylum",
+  sample_order = metadata$sampleID
+)
+
+# make plot
+taxrank <- "Phylum"
+ggplot2::ggplot(melted_phylum, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
+  ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
+  # need a sorted object like the one used in agglomerate_by_taxa
+  ggplot2::scale_x_discrete(labels = metadata$date_condition) +
+  ggplot2::labs(
+    title = glue::glue("Microbial composition at {taxrank} level"),
+    x = "Sample",
+    y = "Relative Abundance"
+  ) +
+  ggplot2::theme_bw() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
+
+### By Class
+
+Create a barplot of the relative abundance Class in the dataset. Sort samples
+by sampleID.
+
+```{r barplot-class}
+#| label: barplot-class
+#| description: Create a barplot of the relative abundance of class in the dataset.
+#| fig-width: 10
+#| fig-height: 8
+#| fig-caption: "Barplot of Class"
+#| fig-align: center
+# melt by class
+melted_class <- agglomerate_by_taxa(
+  phyloseq_pruned,
+  taxrank = "Class",
+  sample_order = metadata$sampleID
+)
+
+# make plot
+taxrank <- "Class"
+ggplot2::ggplot(melted_class, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
+  ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
+  # need a sorted object like the one used in agglomerate_by_taxa
+  ggplot2::scale_x_discrete(labels = metadata$date_condition) +
+  ggplot2::labs(
+    title = glue::glue("Microbial composition at {taxrank} level"),
+    x = "Sample",
+    y = "Relative Abundance"
+  ) +
+  ggplot2::theme_bw() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
