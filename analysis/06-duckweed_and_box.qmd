@@ -1,5 +1,5 @@
 ---
-title: "Reactor vs Algae"
+title: "Duckweed and box"
 author: "Paolo Cozzi"
 date: today
 toc: true
@@ -45,7 +45,8 @@ targets::tar_load(metadata, store = store_path)
 
 # select samples
 samples_to_keep <- metadata %>% 
-  dplyr::filter(date_condition %in% c("default_nov23", "reactor_nov23", "reactor+cs_nov23")) %>%
+  dplyr::filter(date_condition %in% c(
+    "default_nov23", "box_nov23", "default_may24", "box_may24", "box+dw_may24")) %>%
   select(sampleID)
 
 # Subset the phyloseq object to include only the specified samples
