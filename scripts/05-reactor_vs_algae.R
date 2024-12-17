@@ -36,7 +36,11 @@ tar_option_set(
   # which run as local R processes. Each worker launches when there is work
   # to do and exits if 60 seconds pass with no tasks to run.
   #
-  controller = crew::crew_controller_local(workers = detectCores() - 1, seconds_idle = 60),
+  controller = crew::crew_controller_local(
+    workers = detectCores() - 1,
+    seconds_idle = 60,
+    tasks_max = 50
+  ),
   #
   # Alternatively, if you want workers to run on a high-performance computing
   # cluster, select a controller from the {crew.cluster} package.
@@ -66,6 +70,7 @@ tar_source()
 
 # Replace the target list below with your own:
 list(
+  # load data from files
   tar_target(
     name = metadata_path,
     command = here::here("data", "metadata_bacteria_fix.tsv"),
@@ -85,53 +90,49 @@ list(
     command = load_phyloseq(metadata, phyloseq_path)
   ),
   tar_target(
+    name = samples_to_keep,
+    command = select_samples(
+      metadata,
+      values = c("default_nov23", "reactor_nov23", "reactor+cs_nov23"),
+      column_name = "date_condition"
+    )
+  ),
+  tar_target(
+    name = phyloseq_subset,
+    command = subset_phyloseq(phyloseq_object, samples_to_keep)
+  ),
+  tar_target(
     name = otu_table_matrix,
-    command = get_otu_table(phyloseq_object)
+    command = get_otu_table(phyloseq_subset)
   ),
   tar_target(
     name = samples_data,
-    command = get_samples_data(phyloseq_object)
+    command = get_samples_data(phyloseq_subset)
   ),
   tar_target(
-    name = coverage_stats,
-    command = calculate_coverage_stats(otu_table_matrix)
-  ),
-  tar_target(
-    name = bray_distance_matrix,
-    command = calculate_distance_matrix(
-      otu_table_matrix,
-      min_sequencing_depth = rarefaction_depth,
-      dmethod = "bray"
-    )
-  ),
-  tar_target(
-    name = tech_rep_permanova,
-    command = calculate_permanova(
-      bray_distance_matrix,
-      metadata,
-      columns = c("sample_group", "technical_rep")
-    )
+    name = metadata_subset,
+    command = get_metadata(phyloseq_subset, order_by = "sample_number")
   ),
   # here are barplots
   tar_target(
     name = melted_phylum,
     command = agglomerate_by_taxa(
-      phyloseq_object,
+      phyloseq_subset,
       taxrank = "Phylum",
-      sample_order = metadata$sampleID
+      sample_order = metadata_subset$sampleID
     )
   ),
   tar_target(
     name = melted_class,
     command = agglomerate_by_taxa(
-      phyloseq_object,
+      phyloseq_subset,
       taxrank = "Class",
-      sample_order = metadata$sampleID
+      sample_order = metadata_subset$sampleID
     )
   ),
   tar_target(
     name = ampvis2_object,
-    command = phyloseq_to_ampvis2(phyloseq_object)
+    command = phyloseq_to_ampvis2(phyloseq_subset)
   ),
   tar_target(
     name = heatmap_phylum,
@@ -151,56 +152,14 @@ list(
       tax_show = 20
     )
   ),
-  # deal with rarefaction curves
+  # raferaction curve
   tar_target(
     rarefaction_depth,
-    min(sample_sums(phyloseq_object))
+    min(sample_sums(phyloseq_subset))
   ),
   tar_target(
     name = rarecurve_df,
     command = calculate_rarecurve(otu_table_matrix)
-  ),
-  tar_target(
-    name = observed_features_by_sample_name_path,
-    command = here::here("results-bacteria", "qiime2", "alpha-rarefaction", "observed_features.csv"),
-    format = "file"
-  ),
-  tar_target(
-    name = observed_features_by_sample_name,
-    command = load_qiime_rarefaction(
-      rarefaction_csv = observed_features_by_sample_name_path,
-      metadata = metadata,
-      alpha_metric = "observed_features",
-      column_name = "sample_name"
-    )
-  ),
-  tar_target(
-    name = shannon_by_sample_name_path,
-    command = here::here("results-bacteria", "qiime2", "alpha-rarefaction", "shannon.csv"),
-    format = "file"
-  ),
-  tar_target(
-    name = shannon_by_sample_name,
-    command = load_qiime_rarefaction(
-      rarefaction_csv = shannon_by_sample_name_path,
-      metadata = metadata,
-      alpha_metric = "shannon",
-      column_name = "sample_name"
-    )
-  ),
-  tar_target(
-    name = faith_by_sample_name_path,
-    command = here::here("results-bacteria", "qiime2", "alpha-rarefaction", "faith_pd.csv"),
-    format = "file"
-  ),
-  tar_target(
-    name = faith_by_sample_name,
-    command = load_qiime_rarefaction(
-      rarefaction_csv = faith_by_sample_name_path,
-      metadata = metadata,
-      alpha_metric = "faith_pd",
-      column_name = "sample_name"
-    )
   ),
   # alpha diversity steps
   # Generate a sequence of iterations
@@ -212,7 +171,7 @@ list(
   tar_target(
     name = samples_rarefaction,
     command = rarefy_alpha(
-      phyloseq_object,
+      phyloseq_subset,
       rarefaction_depth,
       measures = c("Observed", "Shannon", "Simpson", "InvSimpson", "Fisher")),
     pattern = map(thousand_iterations)
@@ -220,7 +179,7 @@ list(
   # now transform rarefaction in a summary table
   tar_target(
     name = rarefaction_results,
-    command = summarize_rarefactions(samples_rarefaction, metadata)
+    command = summarize_rarefactions(samples_rarefaction, metadata_subset)
   ),
   # pivot data and group by sample name
   tar_target(
@@ -280,21 +239,30 @@ list(
     name = dunn_shannon_date_condition,
     command = calculate_dunn_test(rarefaction_results, "Shannon_mean", "date_condition")
   ),
+  # calculate distance metrics
+  tar_target(
+    name = bray_distance_matrix,
+    command = calculate_distance_matrix(
+      otu_table_matrix,
+      min_sequencing_depth = rarefaction_depth,
+      dmethod = "bray"
+    )
+  ),
   # ordinations
   tar_target(
     name = pcoa_object,
-    command = calculate_pcoa(bray_distance_matrix, metadata)
+    command = calculate_pcoa(bray_distance_matrix, metadata_subset)
   ),
   tar_target(
     name = nmds_object,
-    command = calculate_nmds(bray_distance_matrix, metadata)
+    command = calculate_nmds(bray_distance_matrix, metadata_subset)
   ),
   # calculate distances with and between groups
   tar_target(
     name = bray_distance_by_sample_name,
     command = get_distances(
       bray_distance_matrix,
-      metadata,
+      metadata_subset,
       column = "sample_name"
     )
   ),
@@ -306,7 +274,7 @@ list(
     name = bray_distance_by_date_condition,
     command = get_distances(
       bray_distance_matrix,
-      metadata,
+      metadata_subset,
       column = "date_condition"
     )
   ),
@@ -319,7 +287,7 @@ list(
     name = sample_name_beta_dispersion,
     command = calculate_beta_dispersion(
       bray_distance_matrix,
-      metadata,
+      metadata_subset,
       column = "sample_name"
     )
   ),
@@ -327,7 +295,7 @@ list(
     name = date_condition_beta_dispersion,
     command = calculate_beta_dispersion(
       bray_distance_matrix,
-      metadata,
+      metadata_subset,
       column = "date_condition"
     )
   ),
@@ -336,7 +304,7 @@ list(
     name = sample_name_permanova,
     command = calculate_permanova(
       bray_distance_matrix,
-      metadata,
+      metadata_subset,
       columns = c("sample_name")
     )
   ),
@@ -344,7 +312,7 @@ list(
     name = pairwise_sample_name_permanova,
     command = calculate_pairwise_permanova(
       bray_distance_matrix,
-      metadata,
+      metadata_subset,
       columns = c("sample_name")
     )
   ),
@@ -352,7 +320,7 @@ list(
     name = date_condition_permanova,
     command = calculate_permanova(
       bray_distance_matrix,
-      metadata,
+      metadata_subset,
       columns = c("date_condition")
     )
   ),
@@ -360,23 +328,14 @@ list(
     name = pairwise_date_condition_permanova,
     command = calculate_pairwise_permanova(
       bray_distance_matrix,
-      metadata,
+      metadata_subset,
       columns = c("date_condition")
     )
   ),
   # render technical replicates quarto document
   tar_quarto(
-    name = technical_replicates,
-    path = "analysis/02-technical_replicates.qmd",
+    name = reactor_vs_algae,
+    path = "analysis/05-reactor_vs_algae.qmd",
     quiet = TRUE
-  ),
-  # time to join technical replicates
-  tar_target(
-    name = merged_metadata,
-    command = merge_metadata(metadata)
-  ),
-  tar_target(
-    name = merged_phyloseq_object,
-    command = merge_technical_replicates(phyloseq_object, merged_metadata)
   )
 )

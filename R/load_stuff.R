@@ -126,3 +126,33 @@ load_qiime_rarefaction <- function(rarefaction_csv, metadata, alpha_metric, colu
   return(summary_data)
 }
 
+# select samples based on a column in metadata table
+select_samples <- function(metadata, values, column_name="date_condition") {
+  samples_to_keep <- metadata %>%
+    dplyr::filter(!!sym(column_name) %in% values) %>%
+    dplyr::select(sampleID)
+
+  return(samples_to_keep)
+}
+
+# subsetting phyloseq object
+subset_phyloseq <- function(phyloseq_object, samples_to_keep) {
+  phyloseq_subset <- phyloseq::prune_samples(
+    sample_names(phyloseq_object) %in% t(samples_to_keep), phyloseq_object)
+
+  # Identify taxa with non-zero total abundance
+  non_zero_taxa <- phyloseq::taxa_sums(phyloseq_subset) > 0
+
+  # Prune taxa with zero abundance
+  phyloseq_pruned <- phyloseq::prune_taxa(non_zero_taxa, phyloseq_subset)
+
+  return(phyloseq_pruned)
+}
+
+# get metadata from a phyloseq object
+get_metadata <- function(phyloseq_object, order_by="sample_number") {
+  metadata <- phyloseq::sample_data(phyloseq_object) %>%
+    as_tibble() %>%
+    dplyr::arrange(!!sym(order_by))
+  return(metadata)
+}

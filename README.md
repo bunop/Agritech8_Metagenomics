@@ -79,6 +79,15 @@ Opening the `Agritech8_Metagenomics.Rproj` with Rstudio should initialize the
 renv::restore()
 ```
 
+Next, since targets is managed by projects, you need to declare which project
+you want to compile, for example
+
+```r
+Sys.setenv(TAR_PROJECT = "technical_replicates")
+```
+
+`technical_replicates` is the name of the project you want to compile (inspect
+`_targets.yaml` for the list of projects already configured).
 You can check for pipeline errors using `targets` (a dependency installed with
 `renv`):
 

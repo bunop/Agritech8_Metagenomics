@@ -98,8 +98,12 @@ calculate_pcoa <- function(distance_matrix, metadata) {
   pcoa_df$sampleID <- rownames(pcoa_df)
   pcoa_df <- dplyr::inner_join(pcoa_df, metadata, by = "sampleID")
 
-  # Extract the percent explained variance
-  percent_explained <- pcoa_results$values$Rel_corr_eig * 100
+  # Determine which relative eigenvalues to use
+  if ("Rel_corr_eig" %in% names(pcoa_results$values)) {
+    percent_explained <- pcoa_results$values$Rel_corr_eig * 100
+  } else {
+    percent_explained <- pcoa_results$values$Relative_eig * 100
+  }
 
   return(
     list(

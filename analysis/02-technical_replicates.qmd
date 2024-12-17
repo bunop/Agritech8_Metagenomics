@@ -25,7 +25,7 @@ library(ggplot2)
 library(phyloseq)
 library(ampvis2)
 
-store_path <- here::here("_targets")
+store_path <- here::here("stores", "technical_replicates")
 ```
 
 ## Loading the data from bacteria samples
@@ -627,12 +627,29 @@ number of components used when plotting a 2D PCoA plot.
 
 ```{r scree-plot}
 #| label: scree-plot
-tibble(pe = pcoa_results$values$Cum_corr_eig * 100,
-       axis = 1:length(percent_explained)) %>%
-  ggplot(aes(x = axis, y = pe)) +
+# Determine which cumulative eigenvalues to use
+if ("Cum_corr_eig" %in% colnames(pcoa_results$values)) {
+  cumulative_eig <- pcoa_results$values$Cum_corr_eig * 100
+} else {
+  cumulative_eig <- pcoa_results$values$Cumul_eig * 100
+}
+
+# Create a tibble for plotting
+plot_data <- tibble(
+  pe = cumulative_eig,
+  axis = seq_along(cumulative_eig)
+)
+
+# Generate the plot
+ggplot(plot_data, aes(x = axis, y = pe)) +
   geom_line() +
-  # add a red vertical line at y=2
-  geom_vline(xintercept = 2, color = "red")
+  geom_vline(xintercept = 2, color = "red") +
+  labs(
+    x = "Principal Coordinate Axis",
+    y = "Cumulative Percentage of Variance Explained",
+    title = "Scree Plot of PCoA"
+  ) +
+  theme_minimal()
 ```
 
 ### NMDS plot

@@ -25,12 +25,7 @@ library(ggplot2)
 library(phyloseq)
 library(ampvis2)
 
-source(here::here("R", "load_stuff.R"))
-source(here::here("R", "misc.R"))
-source(here::here("R", "alpha.R"))
-source(here::here("R", "plots.R"))
-
-store_path <- here::here("_targets")
+store_path <- here::here("stores", "duckweed_and_box")
 ```
 
 ## Load and select data
@@ -40,38 +35,8 @@ Load data and select only the stuff I need:
 ```{r load_data}
 #| label: load_data
 # load objects from targets
-targets::tar_load(phyloseq_object, store = store_path)
-targets::tar_load(metadata, store = store_path)
-
-# select samples
-samples_to_keep <- metadata %>% 
-  dplyr::filter(date_condition %in% c(
-    "default_nov23", "box_nov23", "default_may24", "box_may24", "box+dw_may24")) %>%
-  select(sampleID)
-
-# Subset the phyloseq object to include only the specified samples
-phyloseq_subset <- phyloseq::prune_samples(sample_names(phyloseq_object) %in% t(samples_to_keep), phyloseq_object)
-
-# Identify taxa with non-zero total abundance
-non_zero_taxa <- taxa_sums(phyloseq_subset) > 0
-
-# Prune taxa with zero abundance
-phyloseq_pruned <- prune_taxa(non_zero_taxa, phyloseq_subset)
-
-# Get otu table and rarefaction depth
-otu_table_matrix <- get_otu_table(phyloseq_pruned)
-rarefaction_depth <- min(sample_sums(phyloseq_pruned))
-
-# get samples data
-samples_data <- get_samples_data(phyloseq_pruned)
-
-# get rid of unused objects
-rm(phyloseq_object, phyloseq_subset, metadata, non_zero_taxa, samples_to_keep)
-
-# get new metadata
-metadata <- phyloseq::sample_data(phyloseq_pruned) %>%
-  as_tibble() %>%
-  dplyr::arrange(sample_number)
+targets::tar_load(phyloseq_subset, store = store_path)
+targets::tar_load(metadata_subset, store = store_path)
 ```
 
 ## Display number of samples
@@ -80,6 +45,10 @@ Try to see sample depths and other information about the samples:
 
 ```{r sequencing-depth}
 #| label: sequencing-depth
+#| description: Display the sequencing depth of each sample.
+# load stuff from store directory
+tar_load(samples_data, store = store_path)
+
 # Create the bar plot
 depth_plot <- ggplot2::ggplot(
   samples_data,
@@ -103,7 +72,7 @@ dataset. Here are the available taxonomic ranks in the dataset:
 ```{r taxonomic-ranks}
 #| label: taxonomic-ranks
 #| description: List the available taxonomic ranks in the dataset.
-phyloseq::rank_names(phyloseq_pruned)
+phyloseq::rank_names(phyloseq_subset)
 ```
 
 ### By Phylum
@@ -119,18 +88,14 @@ by sampleID.
 #| fig-caption: "Barplot of Phylum"
 #| fig-align: center
 # melt by phylum
-melted_phylum <- agglomerate_by_taxa(
-  phyloseq_pruned,
-  taxrank = "Phylum",
-  sample_order = metadata$sampleID
-)
+targets::tar_load(melted_phylum, store = store_path)
 
 # make plot
 taxrank <- "Phylum"
 ggplot2::ggplot(melted_phylum, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
   ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
   # need a sorted object like the one used in agglomerate_by_taxa
-  ggplot2::scale_x_discrete(labels = metadata$date_condition) +
+  ggplot2::scale_x_discrete(labels = metadata_subset$date_condition) +
   ggplot2::labs(
     title = glue::glue("Microbial composition at {taxrank} level"),
     x = "Sample",
@@ -153,18 +118,14 @@ by sampleID.
 #| fig-caption: "Barplot of Class"
 #| fig-align: center
 # melt by class
-melted_class <- agglomerate_by_taxa(
-  phyloseq_pruned,
-  taxrank = "Class",
-  sample_order = metadata$sampleID
-)
+targets::tar_load(melted_class, store = store_path)
 
 # make plot
 taxrank <- "Class"
 ggplot2::ggplot(melted_class, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
   ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
   # need a sorted object like the one used in agglomerate_by_taxa
-  ggplot2::scale_x_discrete(labels = metadata$date_condition) +
+  ggplot2::scale_x_discrete(labels = metadata_subset$date_condition) +
   ggplot2::labs(
     title = glue::glue("Microbial composition at {taxrank} level"),
     x = "Sample",
@@ -175,10 +136,6 @@ ggplot2::ggplot(melted_class, ggplot2::aes(x = sampleID, y = Abundance, fill = !
 ```
 
 ## Heatmaps
-
-```{r}
-ampvis2_object <- phyloseq_to_ampvis2(phyloseq_pruned)
-```
 
 ### By phylum
 
@@ -192,11 +149,7 @@ taxa at the Phylum level:
 #| fig-height: 8
 #| fig-caption: "Heatmap of the top 10 most abundant taxa at the Phylum level"
 #| fig-align: center
-heatmap_phylum <- custom_heatmap(
-  ampvis2_object,
-  group_by = "date_condition",
-  showRemainingTaxa = TRUE
-)
+targets::tar_load(heatmap_phylum, store = store_path)
 print(heatmap_phylum)
 ```
 
@@ -212,13 +165,7 @@ taxa at the Class level:
 #| fig-height: 8
 #| fig-caption: "Heatmap of the top 20 most abundant taxa at the Class level"
 #| fig-align: center
-heatmap_class <- custom_heatmap(
-  ampvis2_object,
-  group_by = "date_condition",
-  showRemainingTaxa = TRUE,
-  tax_add = "Class",
-  tax_show = 20
-)
+targets::tar_load(heatmap_class, store = store_path)
 print(heatmap_class)
 ```
 
@@ -237,11 +184,11 @@ comparison of diversity metrics between samples with varying sequencing depths.
 #| fig-height: 8
 #| fig-caption: "Rarefaction curves with vegan"
 # deal with rarefaction data
-rarecurve_df <- calculate_rarecurve(otu_table_matrix)
-rarefaction_depth <- min(sample_sums(phyloseq_pruned))
+targets::tar_load(rarecurve_df, store = store_path)
+targets::tar_load(rarefaction_depth, store = store_path)
 
 # Add metadata to the rarecurve_df
-rarecurve_df <- metadata %>%
+rarecurve_df <- metadata_subset %>%
   select(sampleID, sample_name) %>%
   inner_join(rarecurve_df, by = c("sampleID" = "Site"))
 
@@ -255,4 +202,422 @@ ggplot(rarecurve_df, aes(x = Sample, y = Species, color = sample_name, group = s
     y = "Number of Species Observed"
   ) +
   theme_bw()
+```
+
+## Alpha diversity
+
+Alpha diversity measures the diversity within a single sample or community.
+It provides insights into the richness and evenness of species in a sample,
+helping to compare diversity between samples or track changes over time.
+
+### By sample_name
+
+```{r alpha-diversity_sample_name}
+#| label: alpha-diversity_sample_name
+#| description: Calculate and visualize alpha diversity metrics for the samples.
+#| fig-width: 10
+#| fig-height: 8
+#| fig-caption: "Alpha diversity metrics for the samples"
+tar_load(alpha_diversity_by_sample_name, store = store_path)
+print(alpha_diversity_by_sample_name)
+```
+
+Perform Kruskal-Wallis tests to determine if the alpha diversity metrics are
+significantly different between the groups. Run on shannon metric:
+
+```{r kruscal_shannon_sample_name}
+#| label: kruscal_shannon_sample_name
+#| description: Perform Kruskal-Wallis tests on the Shannon ~ sample_name
+tar_load(kruscal_shannon_sample_name, store = store_path)
+print(kruscal_shannon_sample_name)
+```
+
+This means that *at least* one group is significantly different in terms of
+Shannon diversity. Let's do a post-hoc test with Dunn's test:
+
+```{r dunn_shannon_sample_name}
+#| label: dunn_shannon_sample_name
+tar_load(dunn_shannon_sample_name, store = store_path)
+dunn_shannon_sample_name$res %>%
+  dplyr::filter(P.adj < 0.05) %>%
+  dplyr::arrange(P.adj)
+```
+
+### By date_condition
+
+```{r alpha-diversity_date_condition}
+#| label: alpha-diversity_date_condition
+#| description: Calculate and visualize alpha diversity metrics for date-condition.
+#| fig-width: 10
+#| fig-height: 8
+#| fig-caption: "Alpha diversity metrics for date-condition"
+tar_load(alpha_diversity_by_date_condition, store = store_path)
+print(alpha_diversity_by_date_condition)
+```
+
+Perform Kruskal-Wallis tests to determine if the alpha diversity metrics are
+significantly different between the groups. Run on shannon metric:
+
+```{r kruscal_shannon_date_condition}
+#| label: kruscal_shannon_date_condition
+#| description: Perform Kruskal-Wallis tests on the Shannon ~ date_condition
+tar_load(kruscal_shannon_date_condition, store = store_path)
+print(kruscal_shannon_date_condition)
+```
+
+This means that *at least* one group is significantly different in terms of
+Shannon diversity. Let's do a post-hoc test with Dunn's test:
+
+```{r dunn_shannon_date_condition}
+#| label: dunn_shannon_date_condition
+tar_load(dunn_shannon_date_condition, store = store_path)
+dunn_shannon_date_condition$res %>%
+  dplyr::filter(P.adj < 0.05) %>%
+  dplyr::arrange(P.adj)
+```
+
+## Beta diversity
+
+### PCoA plot
+
+#### PCoA plot by sample names
+
+Now we will plot a PCoA plot to visualize the technical replicates. See
+[CC186](https://www.youtube.com/watch?v=G5Qckqq5Erw) for more information.
+
+```{r pcoa}
+#| label: pcoa
+# retrieve the PCoA object from targets
+targets::tar_load(pcoa_object, store = store_path)
+
+pcoa_results <- pcoa_object$pcoa_results
+percent_explained <- pcoa_object$percent_explained
+pcoa_df <- pcoa_object$pcoa_df
+```
+
+In the following pictures we are grouping by technical replicates
+
+```{r pcoa-plot}
+#| label: pcoa-plot
+# count the number of levels in the group column
+num_levels <- length(unique(metadata_subset$sample_group))
+
+# Get the color palette
+color_palette <- Polychrome::palette36.colors(num_levels)
+names(color_palette) <- NULL  # Remove any names from the color palette
+
+# try to annotate plot
+pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
+labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
+            glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
+
+# plot the PCoA
+pcoa_plot_rep <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = sample_name)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
+  ggplot2::ggtitle("PCoA Plot on Distance Metrics (Bray-Curtis)") +
+  ggplot2::labs(title = "PCoA of Bray-Curtis Distance Matrix",
+       color = NULL,
+       x = labels[1],
+       y = labels[2]) +
+  ggplot2::scale_color_manual(values = color_palette) +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+print(pcoa_plot_rep)
+```
+
+#### PCoA plot by date and condition (sample replicates)
+
+Visualize the same plot but grouping with date and condition (which should group sample replicates)
+
+```{r pcoa-date-condition}
+#| label: pcoa-date-condition
+# try to annotate plot
+pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
+labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
+            glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
+
+# plot the PCoA
+pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = date_condition)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
+  ggplot2::ggtitle("PCoA Plot on Distance Metrics (Bray-Curtis)") +
+  ggplot2::labs(title = "PCoA of Bray-Curtis Distance Matrix",
+       color = NULL,
+       x = labels[1],
+       y = labels[2]) +
+  ggplot2::scale_color_brewer(palette = "Set1") +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+pcoa_plot
+```
+
+In this image there's a clear separation between samples in reactor (pink and brown
+on the left) and the other samples. The default *may24* and *nov23* cluster more or
+less together (yellow and orange). *box_may24* (red) and *box_nov23* (blue) don't
+cluster together and they are more simular to *box+dw_may24* (green) and *box+dw_nov23*
+(purple).
+
+#### Scree plot
+
+The scree plot is a graphical representation of the eigenvalues of the principal
+components in a PCA or PCoA analysis. It helps visualize the proportion of variance
+explained by each principal component, allowing you to determine the optimal
+number of components to retain. The red line in the plot is at y=2, which is the
+number of components used when plotting a 2D PCoA plot.
+
+```{r scree-plot}
+#| label: scree-plot
+# Determine which cumulative eigenvalues to use
+if ("Cum_corr_eig" %in% colnames(pcoa_results$values)) {
+  cumulative_eig <- pcoa_results$values$Cum_corr_eig * 100
+} else {
+  cumulative_eig <- pcoa_results$values$Cumul_eig * 100
+}
+
+# Create a tibble for plotting
+plot_data <- tibble(
+  pe = cumulative_eig,
+  axis = seq_along(cumulative_eig)
+)
+
+# Generate the plot
+ggplot(plot_data, aes(x = axis, y = pe)) +
+  geom_line() +
+  geom_vline(xintercept = 2, color = "red") +
+  labs(
+    x = "Principal Coordinate Axis",
+    y = "Cumulative Percentage of Variance Explained",
+    title = "Scree Plot of PCoA"
+  ) +
+  theme_minimal()
+```
+
+### NMDS plot
+
+```{r nmds}
+#| label: nmds
+targets::tar_load(nmds_object, store = store_path)
+
+nmds_tb <- nmds_object$nmds_tb
+```
+#### NMDS plot by sample names
+
+Let's plot the NMDS plot focusing on the technical replicates.
+see [CC187](https://www.youtube.com/watch?v=h7OrVmT7Ja8&ab_channel=RiffomonasProject)
+for more information.
+
+```{r nmds-plot}
+#| label: nmds-plot
+# count the number of levels in the group column
+num_levels <- length(unique(metadata_subset$sample_group))
+
+# Get the color palette
+color_palette <- Polychrome::palette36.colors(num_levels)
+names(color_palette) <- NULL  # Remove any names from the color palette
+
+# Use palette36 from Polychrome, which supports up to 36 colors
+nmds_plot_rep <- ggplot2::ggplot(
+    nmds_tb,
+    ggplot2::aes(x=NMDS1, y=NMDS2, color = sample_name)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
+  ggplot2::labs(
+    title = "NMDS Plot on distance metrics (Bray-Curtis)",
+    color = NULL) +
+  ggplot2::scale_color_manual(values = color_palette) +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+print(nmds_plot_rep)
+```
+
+#### NMDS plot by date and condition (sample replicates)
+
+Now, let's visualize the NMDS plot but grouping with date and condition
+(which should group sample replicates)
+
+```{r nmds-date-condition}
+#| label: nmds-date-condition
+
+# Plot the NMDS
+nmds_plot <- ggplot2::ggplot(
+    nmds_tb,
+    ggplot2::aes(x=NMDS1, y=NMDS2, color = date_condition)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
+  ggplot2::labs(
+    title = "NMDS Plot on distance metrics (Bray-Curtis)",
+    color = NULL) +
+  ggplot2::scale_color_brewer(palette = "Set1") +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+print(nmds_plot)
+```
+
+### Between group distances
+
+#### sample_name distances
+
+Plot distances by sample names:
+
+```{r sample_name_distances}
+#| label: sample_name_distances
+#| title: Distance matrix by sample names
+#| description: Plot the distance matrix by sample names
+#| fig.width: 10
+#| fig.height: 8
+#| fig.align: center
+tar_load(bray_distance_by_sample_name_plot, store = store_path)
+print(bray_distance_by_sample_name_plot)
+```
+
+#### date_condition distances
+
+Plot distances by date_condition:
+
+```{r date_condition_distances}
+#| label: date_condition_distances
+#| title: Distance matrix by date_condition
+#| description: Plot the distance matrix by date_condition
+#| fig.width: 10
+#| fig.height: 8
+#| fig.align: center
+tar_load(bray_distance_by_date_condition_plot, store = store_path)
+print(bray_distance_by_date_condition_plot)
+```
+
+### Permanova
+
+#### sample_name permanova
+
+Calculate beta dispersion for *sample_name* column:
+
+```{r sample_name_beta_dispersion}
+#| label: sample_name_beta_dispersion
+#| title: Beta dispersion by sample names
+#| description: Calculate beta dispersion by sample names
+tar_load(sample_name_beta_dispersion, store = store_path)
+print(sample_name_beta_dispersion$anova_result)
+```
+
+Since we don't see any significant differences in dispersion, we can proceed
+with the PERMANOVA analysis. Plot beta dispersion:
+
+```{r sample_name_beta_dispersion_plot}
+#| label: sample_name_beta_dispersion_plot
+#| title: Beta dispersion plot by sample names
+#| description: Plot beta dispersion by sample names
+#| fig.width: 10
+#| fig.height: 8
+#| fig.align: center
+# Create the boxplot
+ggplot(sample_name_beta_dispersion$beta_disp_df, aes(x = Group, y = Distance, fill = Group)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.2, alpha = 0.5) +  # Adds individual data points
+  labs(
+    title = "Beta Dispersion by Group",
+    x = "Group",
+    y = "Distance to Centroid"
+  ) +
+  theme_minimal() +
+  ggplot2::theme(
+    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
+  )
+```
+
+Do permanova with *bray-curtis* on *sample_name* column:
+
+```{r sample_name_permanova}
+#| label: sample_name_permanova
+# load the permanova with targets
+targets::tar_load(sample_name_permanova, store = store_path)
+print(sample_name_permanova)
+```
+
+Load the *pairwise* permanova on the same columns and filter only significant
+values (P.adj < 0.05):
+
+```{r pairwise_sample_name_permanova}
+#| label: pairwise_sample_name_permanova
+# load the permanova with targets
+targets::tar_load(pairwise_sample_name_permanova, store = store_path)
+
+pairwise_sample_name_permanova %>%
+  dplyr::filter(P.adj < 0.05) %>%
+  dplyr::arrange(P.adj) %>%
+  dplyr::select(Comparison, P.adj, everything())
+```
+
+No comparison has been filtered for *sample_name* column
+
+#### date_condition permanova
+
+Calculate beta dispersion for *date_condition* column:
+
+```{r date_condition_beta_dispersion}
+#| label: date_condition_beta_dispersion
+#| title: Beta dispersion by sample names
+#| description: Calculate beta dispersion by sample names
+tar_load(date_condition_beta_dispersion, store = store_path)
+print(date_condition_beta_dispersion$anova_result)
+```
+
+I see significant differences in dispersions: should I trust the `date_condition`
+permanova? Plot beta dispersion:
+
+```{r date_condition_beta_dispersion_plot}
+#| label: date_condition_beta_dispersion_plot
+#| title: Beta dispersion plot by sample names
+#| description: Plot beta dispersion by sample names
+#| fig.width: 10
+#| fig.height: 8
+#| fig.align: center
+# Create the boxplot
+ggplot(date_condition_beta_dispersion$beta_disp_df, aes(x = Group, y = Distance, fill = Group)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.2, alpha = 0.5) +  # Adds individual data points
+  labs(
+    title = "Beta Dispersion by Group",
+    x = "Group",
+    y = "Distance to Centroid"
+  ) +
+  theme_minimal() +
+  ggplot2::theme(
+    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
+  )
+```
+
+Do permanova with *bray-curtis* on *date_condition* column:
+
+```{r date_condition_permanova}
+#| label: date_condition_permanova
+# load the permanova with targets
+targets::tar_load(date_condition_permanova, store = store_path)
+print(date_condition_permanova)
+```
+
+Load the *pairwise* permanova on the same columns and filter only significant
+values (P.adj < 0.05):
+
+```{r pairwise_date_condition_permanova}
+#| label: pairwise_date_condition_permanova
+# load the permanova with targets
+targets::tar_load(pairwise_date_condition_permanova, store = store_path)
+
+pairwise_date_condition_permanova %>%
+  dplyr::filter(P.adj < 0.05) %>%
+  dplyr::arrange(P.adj) %>%
+  dplyr::select(Comparison, P.adj, everything())
 ```
