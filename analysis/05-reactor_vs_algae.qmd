@@ -574,8 +574,8 @@ tar_load(date_condition_beta_dispersion, store = store_path)
 print(date_condition_beta_dispersion$anova_result)
 ```
 
-I see significant differences in dispersions: should I trust the `date_condition`
-permanova? Plot beta dispersion:
+We don't see significant difference in dispersion: let's do the permanova
+for `date_condition`
 
 ```{r date_condition_beta_dispersion_plot}
 #| label: date_condition_beta_dispersion_plot

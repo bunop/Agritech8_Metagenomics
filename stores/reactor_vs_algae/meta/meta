@@ -1,5 +1,5 @@
 name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
-.Random.seed|object|e90f2b0ba563a6fb|||||||||||||||
+.Random.seed|object|932f48505f405b99|||||||||||||||
 agglomerate_by_taxa|function|44ab39ab7822fe92|||||||||||||||
 alpha_diversity_by_date_condition|stem|f841307b0c3ee291|e1222eda0ff68801|33ea98d8d8cded18|162458656||t20073.6719743837s|590f3467600c07e8|480816|rds|local|vector|||0.089||
 alpha_diversity_by_sample_name|stem|7b7d152c87095296|b6bf617cfc2c9bbb|34ac745e83fd8f60|969736287||t20073.6719716059s|29de0e7f6a36617e|410018|rds|local|vector|||0.068||
@@ -44,7 +44,7 @@ metadata|stem|2a3ea6a8f0a364d9|68d74dab361444a6|9539da6e9fb2fce0|-1204988447||t2
 metadata_path|stem|88151cb444d0705c|66a41174dc2d47b2|2c530c1562a7fbd1|-1761454659|/home/paolo/Projects/Agritech8_Metagenomics/data/metadata_bacteria_fix.tsv|t20057.7232387354s|dfcc40f65ef32e48|5765|file|local|vector|||5.87||
 metadata_subset|stem|21b81a53c3f96456|6b234bd39f0ef4cf|1c667ac3ea17e932|-1929594058||t20073.6138783687s|4cf3ac8d774f0829|949|rds|local|vector|||0.024||
 nmds_object|stem|d8394e3556476243|b9821a2c34d82d8a|1daf1a1187c83b8d|1812068040||t20073.6828325512s|337bc91d1972337e|5918|rds|local|vector|||0.233|stress is nearly zero you may have insufficient data|
-object|object|09c04c556c10f144|||||||||||||||
+object|object|88542346b5c66f69|||||||||||||||
 otu_table_matrix|stem|c618e17ac3c98f9a|2859f4617881abdb|da83ff7ff3d82d00|1067928734||t20073.6138783224s|2ff2992f8e48527b|223542|rds|local|vector|||0.005||
 pairwise_date_condition_permanova|stem|5cc3ade60f5b35b8|dceb8cf96db7d3ec|9300ea778e57abff|-1688808087||t20073.6828471345s|f247d143044ef25b|457|rds|local|vector|||0.138||
 pairwise_sample_name_permanova|stem|cb07957e0d289a81|7efe42a06776ad49|9300ea778e57abff|-557304184||t20073.6828569493s|b77589e6a0fabb27|1405|rds|local|vector|||1.565||
@@ -62,7 +62,7 @@ rarefaction_by_sample_name|stem|cd8d695f86e800f7|244ddcc194cf0986|18eb6ca66ad199
 rarefaction_depth|stem|227c4802e39d60ee|5963f4b08f2f43ee|0e54340293451f6e|-319696460||t20073.6138772113s|d0ec9a5a63f98b43|53|rds|local|vector|||0.002||
 rarefaction_results|stem|49689bbc4be99720|b2f7b65362085aa0|a68ca7b17cfc29e6|2056008308||t20073.6719571615s|52550efceb24262b|2746|rds|local|vector|||0.188||
 rarefy_alpha|function|96312602b69a14d1|||||||||||||||
-reactor_vs_algae|stem|1691f4a35e40d7cf|0ea41364a26cc26b|677a15872b11f766|-1441846563|analysis/05-reactor_vs_algae.html*analysis/05-reactor_vs_algae.qmd|t20073.6723792438s||2757417|file|local|vector|||32.229||Error running quarto cli.ℹ Rerun with quiet  FALSE to see the full error message.Caused by error System command quarto failed
+reactor_vs_algae|stem|21692e1045eff6db|0ea41364a26cc26b|677a15872b11f766|-1441846563|analysis/05-reactor_vs_algae.html*analysis/05-reactor_vs_algae.qmd|t20074.3894477278s|7f7163cded745e88|3606921|file|local|vector|||28.524||
 reshape_rarefaction_data|function|73c69b3451a7f839|||||||||||||||
 sample_name_beta_dispersion|stem|57f7de2a514f9076|5939f0bafb6595bf|43b647c57896b31f|-552616359||t20073.6828608382s|50a0c58f16a927fb|5695|rds|local|vector|||0.151||
 sample_name_permanova|stem|8a737361224b6861|42c7adb9f411229d|0c04a49ee63b58a4|-953573383||t20073.6828580141s|91a47fb52d9373b2|11007|rds|local|vector|||0.063||
