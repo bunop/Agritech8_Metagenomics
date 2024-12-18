@@ -6,7 +6,7 @@
 # Load packages required to define the pipeline:
 library(targets)
 library(tarchetypes) # Load other packages as needed.
-library(parallel)
+library(parallelly)
 library(crew)
 library(quarto)
 
@@ -32,7 +32,7 @@ tar_option_set(
   # to do and exits if 60 seconds pass with no tasks to run.
   #
   controller = crew::crew_controller_local(
-    workers = detectCores() - 1,
+    workers = parallelly::availableCores() - 1,
     seconds_idle = 60,
     tasks_max = 50
   ),
