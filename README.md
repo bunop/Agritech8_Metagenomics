@@ -142,18 +142,6 @@ make technical_replicates
 
 ### Creating Krona report
 
-In order to create report with *Krona*, first from your R session:
-
-```r
-source(here::here("R/krona.R"))
-get_krona_cmd(
-  phyloseq_object, 
-  output = "results-bacteria-krona", 
-  variable = "sample_name")
-```
-
-The `get_krona_cmd` function will return the command to run to generate the *krona*
-report and will create the required files in the `output` parameter folder. You can
-also define the variable to use to group OTUs in the report. Copy and execute the
-command in your terminal to generate the report. Once the report is created, you can
-remove the folder with the temporary files.
+In order to create report with *Krona*, you can call the `scripts/run_krona.R`
+(or execute the proper rule in the Makefile). The script will generate the
+krona input files and the command to run to generate the report.

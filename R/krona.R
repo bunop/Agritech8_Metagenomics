@@ -23,14 +23,20 @@
 #' get_krona_cmd(GlobalPatterns, "GP-krona", "SampleType", trim=T)
 #' }
 get_krona_cmd <- function(physeq, output, variable, trim=F){
-  if (is.null(tax_table(physeq))) {
+  if (is.null(phyloseq::tax_table(physeq))) {
     stop("No taxonomy table available.")
   }
-  if (!variable %in% colnames(sample_data(physeq))) {
-    stop(paste(variable, "is not a variable in the sample data."))
+
+  columns <- colnames(sample_data(physeq))
+  if (!variable %in% columns) {
+    stop(glue::glue(
+      "There's no '{variable}' in the sample data. ",
+      "Available variables are: {glue::glue_collapse(columns, sep = ', ')}"
+    ))
   }
+
   if (trim == FALSE) {
-    spec.char <- grepl(" |\\(|\\)", as(sample_data(physeq),"data.frame")[,variable])
+    spec.char <- grepl(" |\\(|\\)", as(phyloseq::sample_data(physeq),"data.frame")[,variable])
     if (sum(spec.char > 0)) {
       message("The following lines contains spaces or brackets.")
       print(paste(which(spec.char)))
