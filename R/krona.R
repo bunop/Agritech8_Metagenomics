@@ -45,12 +45,22 @@ get_krona_cmd <- function(physeq, output, variable, trim=F){
   }
 
   # Melt the OTU table and merge associated metadata
-  df <- phyloseq::psmelt(physeq) %>%
-    # Fetch only OTU, Abundance, Description and taxonomic rank names columns
-    dplyr::select(Abundance, {{ variable }}, rank_names(physeq)[1:8]) %>%
-    # Make sure there are no spaces left
+  melted_physeq <- phyloseq::psmelt(physeq)
+
+  # Define the columns of interest
+  columns_of_interest <- c("Abundance", {{ variable }}, rank_names(physeq)[1:7])
+
+  # Check if 'Species_exact' exists in the melted data frame
+  if ("Species_exact" %in% colnames(melted_physeq)) {
+    columns_of_interest <- c(columns_of_interest, "Species_exact")
+  }
+
+  df <- melted_physeq %>%
+    # Fetch only column of interest
+    dplyr::select(dplyr::all_of(columns_of_interest)) %>%
+    # Ensure there are no spaces left in the variable of interest
     dplyr::mutate({{ variable }} := gsub(" |\\(|\\)", "", .data[[ variable ]])) %>%
-    # Convert the field of interest as factor.
+    # Convert the field of interest to a factor
     dplyr::mutate({{ variable }} := as.factor(.data[[ variable ]]))
 
   # Create a directory for krona files
