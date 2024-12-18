@@ -1,6 +1,9 @@
 technical_replicates:
   script: scripts/02-technical_replicates.R
   store: stores/technical_replicates
+plot_iNEXT:
+  script: scripts/04-plot_iNEXT.R
+  store: stores/plot_iNEXT
 reactor_vs_algae:
   script: scripts/05-reactor_vs_algae.R
   store: stores/reactor_vs_algae

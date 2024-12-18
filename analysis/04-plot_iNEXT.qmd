@@ -23,7 +23,7 @@ library(iNEXT)
 library(targets)
 library(dplyr)
 
-store_path <- here::here("_targets")
+store_path <- here::here("stores", "plot_iNEXT")
 ```
 
 load coverage data

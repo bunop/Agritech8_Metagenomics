@@ -6,6 +6,7 @@
 # Load packages required to define the pipeline:
 library(targets)
 library(tarchetypes) # Load other packages as needed.
+library(parallel)
 library(crew)
 library(quarto)
 
@@ -15,11 +16,8 @@ tar_option_set(
     "here",
     "readr",
     "dplyr",
-    "tidyr",
     "stringr",
     "phyloseq",
-    "vegan",
-    "ape",
     "iNEXT"
   ), # Packages that your targets need for their tasks.
   # format = "qs", # Optionally set the default storage format. qs is fast.
@@ -33,7 +31,11 @@ tar_option_set(
   # which run as local R processes. Each worker launches when there is work
   # to do and exits if 60 seconds pass with no tasks to run.
   #
-  controller = crew::crew_controller_local(workers = 4, seconds_idle = 60),
+  controller = crew::crew_controller_local(
+    workers = detectCores() - 1,
+    seconds_idle = 60,
+    tasks_max = 50
+  ),
   #
   # Alternatively, if you want workers to run on a high-performance computing
   # cluster, select a controller from the {crew.cluster} package.
@@ -64,46 +66,30 @@ tar_source()
 # Replace the target list below with your own:
 list(
   tar_target(
+    name = metadata_path,
+    command = here::here("data", "metadata_bacteria_fix.tsv"),
+    format = "file"
+  ),
+  tar_target(
     name = metadata,
-    command = load_metadata("data", "metadata_bacteria.tsv")
+    command = load_metadata(metadata_path)
+  ),
+  tar_target(
+    name = phyloseq_path,
+    command = here::here("results-bacteria", "phyloseq", "dada2_phyloseq.rds"),
+    format = "file"
   ),
   tar_target(
     name = phyloseq_object,
-    command = load_phyloseq(metadata, "results-bacteria/phyloseq/dada2_phyloseq.rds")
+    command = load_phyloseq(metadata, phyloseq_path)
   ),
   tar_target(
     name = otu_table_matrix,
     command = get_otu_table(phyloseq_object)
   ),
   tar_target(
-    name = samples_data,
-    command = get_samples_data(phyloseq_object)
-  ),
-  tar_target(
     name = coverage_stats,
     command = calculate_coverage_stats(otu_table_matrix)
-  ),
-  tar_target(
-    name = distance_matrix,
-    command = calculate_distance_matrix(
-      otu_table_matrix,
-      min_sequencing_depth = min(samples_data$sequencing_depth)
-    )
-  ),
-  tar_target(
-    name = adonis_result,
-    command = calculate_anova(
-      phyloseq_object,
-      distance_matrix
-    )
-  ),
-  tar_target(
-    name = pcoa_object,
-    command = calculate_pcoa(distance_matrix, metadata)
-  ),
-  tar_target(
-    name = nmds_object,
-    command = calculate_nmds(distance_matrix, metadata)
   ),
   tar_target(
     name = abundance_list,
@@ -125,16 +111,8 @@ list(
     command = calculate_rarecurve(otu_table_matrix)
   ),
   tar_quarto(
-    technical_replicates,
-    "analysis/02-technical_replicates.qmd",
-    quiet = TRUE
-  ),
-  tar_quarto(
     plot_iNEXT,
     "analysis/04-plot_iNEXT.qmd",
-    quiet = TRUE,
-    execute_params = list(
-      rarecurve_df = rarecurve_df
-    )
+    quiet = TRUE
   )
 )
