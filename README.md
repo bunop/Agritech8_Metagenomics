@@ -71,7 +71,10 @@ This project can be managed using [R 4.4.2](https://cran.r-project.org/),
 [RStudio](https://posit.co/downloads/), [renv](https://rstudio.github.io/renv/articles/renv.html) 
 and [targets](https://books.ropensci.org/targets/). 
 You require also [quarto](https://quarto.org/docs/download/)
-to render the final reports (should be present in a RStudio installation). 
+to render the final reports (should be present in a RStudio installation).
+
+### Using Rstudio
+
 Opening the `Agritech8_Metagenomics.Rproj` with Rstudio should initialize the
 `renv` environment. When ready, install the required packages with:
 
@@ -114,6 +117,28 @@ from the *targets* pipeline, you can
 [tar_load](https://docs.ropensci.org/targets/reference/tar_load.html) to read a
 specific object or [tar_load_everything](https://docs.ropensci.org/targets/reference/tar_load_everything.html)
 to load all data in your *global environment*.
+
+### Using GNU Make
+
+If you don't want to use Rstudio, you can use GNU Make to compile the pipeline.
+First, you need to install the required packages with:
+
+```bash
+make restore
+```
+
+Next you can build the projects one-by-one: first get a list of the available
+projects with:
+
+```bash
+make list
+```
+
+Then simply build a project using its name, for example:
+
+```bash
+make technical_replicates
+```
 
 ### Creating Krona report
 
