@@ -3,7 +3,7 @@
   "FW_primer": "CCTACGGGNGGCWGCAG",
   "RV_primer": "GACTACHVGGGTATCTAATCC",
   "double_primer": true,
-  "metadata": "data/metadata_bacteria.tsv",
+  "metadata": "data/metadata_bacteria_fix.tsv",
   "outdir": "results-bacteria",
   "trunclenf": 230,
   "trunclenr": 210,
@@ -11,6 +11,8 @@
   "max_ee": 6,
   "sample_inference": "pseudo",
   "dada_ref_taxonomy": "silva=138",
+  "exclude_taxa": "mitochondria",
+  "save_intermediates": true,
   "max_memory": "64.GB",
   "max_cpus": 32
 }

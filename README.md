@@ -10,6 +10,13 @@ This file has been processed to fill the missing information using two ipython
 notebooks: `scripts/metadata.ipynb` and `scripts/samplesheet.ipynb`. Please
 execute these notebooks to generate the metadata files.
 
+### Update metadata
+
+Metadata were then fixed to describe better samples. Now the current metadata
+come from `metadata_bacteria_fix.xlsx` and `metadata_fungi_fix.xlsx`, which are
+a manual edited version of `metadata_bacteria.tsv` and `metadata_fungi.tsv` created
+with the previous step. File were then exported as TSV files.
+
 ## Create the configuration files for nextflow
 
 Simply call:
@@ -22,77 +29,17 @@ and follow the instructions to create the configuration files. Two configuration
 has been created: `config/nf-params-bacteria.json` and `config/nf-params-fungi.json`
 for *bacteria* and *fungi* respectively.
 
-## Determine the best trimming parameters using figaro
+## Determine the best trimming parameters
 
-[figaro](https://github.com/Zymo-Research/figaro) can analyze error rates in files and
-suggest best parameter to be used with `dada2`: download the singularity image with
-
-```bash
-cd /home/core/nxf_singularity_cache/
-singularity pull docker://quay.io/biocontainers/figaro:1.1.2--hdfd78af_0
-cd -
-```
-
-Figaro requires all the files in the same folder. Get all bacteria files in `data/bacteria`
-folder by calling the `scripts/bacteria.ipynb` Ipython notebook.
-Figaro complains about reads of different lengths: use `seqkit` to ged rid of reads shorter
-than 251 bp:
-
-```bash
-cd data
-mkdir bacteria-fixed-size
-cd bacteria
-for fastq in $(ls *.gz); do seqkit seq -m 251 $fastq > ../bacteria-fixed-size/$fastq ; done
-cd -
-```
-
-Next call figaro on bacteria folder:
-
-```bash
-singularity run -B /home/ /home/core/nxf_singularity_cache/figaro_1.1.2--hdfd78af_0.sif figaro.py \
-    --outputDirectory test-figaro --ampliconLength 423 --forwardPrimerLength 17 --reversePrimerLength 21 \
-    --inputDirectory data/bacteria-fixed-size
-```
-
-Select the first two results using figaro:
-
-```bash
-jq '.[0:2] | map({trimPosition, maxExpectedError, readRetentionPercent, score})' test-figaro/trimParameters.json
-```
-
-here's the output:
-
-```json
-[
-  {
-    "trimPosition": [
-      250,
-      231
-    ],
-    "maxExpectedError": [
-      3,
-      2
-    ],
-    "readRetentionPercent": 82.31,
-    "score": 77.31462467136672
-  },
-  {
-    "trimPosition": [
-      241,
-      240
-    ],
-    "maxExpectedError": [
-      2,
-      2
-    ],
-    "readRetentionPercent": 76.45,
-    "score": 74.45350738362131
-  }
-]
-```
-
-First results has and higher retention, however it doesn't truncate R1 and has an higher *expected error*.
-Chosen parameters are from the second result, and were passed to `config/nf-params-bacteria.json`
+The dada creator suggested to use [figaro](https://github.com/Zymo-Research/figaro)
+to determine which error rates and trimming parameters are better. I've found
+different problems in running figaro since all the sequences are supposed to be 
+of the same length: this is not true and using seqtk to remove all the sequence
+and keep only the ones with the same length is a good idea drops out a lot of data.
+The suggested parameters don't work with this data, so I've decided to manually 
+explore the dada parameters. The different parameters combination are described 
+in `analysis/01-about-dada2-filtering.ipynb` notebook. The best combination
+was selected and used in the `config/nf-params-bacteria.json` file.
 
 ## Launch the Nextflow pipeline
 
@@ -106,7 +53,82 @@ nextflow run nf-core/ampliseq -r 2.11.0 -params-file config/nf-params-bacteria.j
 for bacteria and
 
 ```bash
-nextflow run nf-core/ampliseq -r 2.11.0 -params-file config/nf-params-fungi.json -profile singularity
+nextflow run nf-core/ampliseq -r 2.11.0 -params-file config/nf-params-fungi.json \
+    -profile singularity -resume -c config/custom.config
 ```
 
 for fungi.
+
+> note: for fungi the pipeline need to be called. See
+> [DADA2 ITS Pipeline Workflow (1.8)](https://benjjneb.github.io/dada2/ITS_workflow.html)
+> for more information
+
+## Analyze the results
+
+The results of the pipeline are stored in the `results-bacteria` and `results-fungi`
+folders. The `analysis` folder contains some notebooks to analyze the results.
+This project can be managed using [R 4.4.2](https://cran.r-project.org/), 
+[RStudio](https://posit.co/downloads/), [renv](https://rstudio.github.io/renv/articles/renv.html) 
+and [targets](https://books.ropensci.org/targets/). 
+You require also [quarto](https://quarto.org/docs/download/)
+to render the final reports (should be present in a RStudio installation). 
+Opening the `Agritech8_Metagenomics.Rproj` with Rstudio should initialize the
+`renv` environment. When ready, install the required packages with:
+
+```r
+renv::restore()
+```
+
+Next, since targets is managed by projects, you need to declare which project
+you want to compile, for example
+
+```r
+Sys.setenv(TAR_PROJECT = "technical_replicates")
+```
+
+`technical_replicates` is the name of the project you want to compile (inspect
+`_targets.yaml` for the list of projects already configured).
+You can check for pipeline errors using `targets` (a dependency installed with
+`renv`):
+
+```r
+targets::tar_manifest(fields = all_of("command"))
+```
+
+You can also see the dependency graph of the pipeline, with information on which
+process is outdated and need to be called by `targets`:
+
+```r
+targets::tar_visnetwork()
+```
+
+To call the pipeline, simply call:
+
+```r
+targets::tar_make()
+```
+
+This will run the pipeline and generate the results. The final reports are managed
+with quarto, you should find the *html* files in `analysis` folder. To load data
+from the *targets* pipeline, you can 
+[tar_load](https://docs.ropensci.org/targets/reference/tar_load.html) to read a
+specific object or [tar_load_everything](https://docs.ropensci.org/targets/reference/tar_load_everything.html)
+to load all data in your *global environment*.
+
+### Creating Krona report
+
+In order to create report with *Krona*, first from your R session:
+
+```r
+source(here::here("R/krona.R"))
+get_krona_cmd(
+  phyloseq_object, 
+  output = "results-bacteria-krona", 
+  variable = "sample_name")
+```
+
+The `get_krona_cmd` function will return the command to run to generate the *krona*
+report and will create the required files in the `output` parameter folder. You can
+also define the variable to use to group OTUs in the report. Copy and execute the
+command in your terminal to generate the report. Once the report is created, you can
+remove the folder with the temporary files.

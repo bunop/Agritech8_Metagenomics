@@ -2,8 +2,17 @@
   "input": "data/samplesheet_fungi.csv",
   "FW_primer": "CTTGGTCATTTAGAGGAAGTAA",
   "RV_primer": "GCTGCGTTCTTCATCGATGC",
-  "metadata": "data/metadata_fungi.tsv",
+  "double_primer": true,
+  "metadata": "data/metadata_fungi_fix.tsv",
   "outdir": "results-fungi",
+  "trunc_qmin": 25,
+  "max_ee": 6,
+  "sample_inference": "pseudo",
   "dada_ref_taxonomy": "unite-fungi",
-  "max_memory": "64.GB"
+  "illumina_pe_its": true,
+  "skip_barrnap": true,
+  "exclude_taxa": "mitochondria",
+  "save_intermediates": true,
+  "max_memory": "64.GB",
+  "max_cpus": 32
 }

@@ -9,6 +9,11 @@ archives/
 *.rds
 *.png
 
+# r output files
+*.png
+*.rds
+*.pdf
+
 # quarto output files
 *.html
 *_files/

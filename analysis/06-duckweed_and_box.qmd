@@ -1,5 +1,5 @@
 ---
-title: "Technical Replicates Analysis"
+title: "Duckweed and box"
 author: "Paolo Cozzi"
 date: today
 toc: true
@@ -25,42 +25,30 @@ library(ggplot2)
 library(phyloseq)
 library(ampvis2)
 
-store_path <- here::here("stores", "technical_replicates")
+store_path <- here::here("stores", "duckweed_and_box")
 ```
 
-## Loading the data from bacteria samples
+## Load and select data
 
-We have grouped the technical replicates
-together. We will use the `sample_group` column to group the samples.
-The `sample_group` column is a unique identifier for the technical replicates.
-We have removed the last letter from the `sampleID` column to get a new name
-for the sample:
+Load data and select only the stuff I need:
 
-```{r load-metadata}
-#| label: load-metadata
-# load data from targets
-targets::tar_load(metadata, store = store_path)
-
-# check the new metadata
-metadata
+```{r load_data}
+#| label: load_data
+# load objects from targets
+targets::tar_load(phyloseq_subset, store = store_path)
+targets::tar_load(metadata_subset, store = store_path)
 ```
 
-Load phyloseq object other stuff
-
-```{r load-phyloseq}
-#| label: load-phyloseq
-targets::tar_load(phyloseq_object, store = store_path)
-targets::tar_load(samples_data, store = store_path)
-```
-
-## Checking samples
-
-### Display number of samples
+## Display number of samples
 
 Try to see sample depths and other information about the samples:
 
 ```{r sequencing-depth}
 #| label: sequencing-depth
+#| description: Display the sequencing depth of each sample.
+# load stuff from store directory
+tar_load(samples_data, store = store_path)
+
 # Create the bar plot
 depth_plot <- ggplot2::ggplot(
   samples_data,
@@ -76,151 +64,6 @@ depth_plot <- ggplot2::ggplot(
 print(depth_plot)
 ```
 
-### Attempt to estimate the sequencing depth
-
-Try to follow the suggestion of Patrick D. Schloss to estimate the sequencing depth
-(see [How to find the best sampling depth for rarefaction (CC202)](https://youtu.be/c7H8jLjTxSE?si=Wu5JLRCsBJuRyZc7) on
-[Riffomonas Project](https://www.youtube.com/@Riffomonas)).
-
-```{r estimate-sampling-coverage}
-#| label: estimate-sampling-coverage
-sampling_coverage <- samples_data %>%
-  rownames_to_column(var = "rowname") %>%
-  select(-everything(), sampleID, sequencing_depth) %>%
-  arrange(sequencing_depth) %>%
-  rename(n_seqs = sequencing_depth)
-sampling_coverage
-```
-
-Plot the sampling coverage: here's the histogram of the number of sequences per sample:
-
-```{r coverage-histogram}
-#| label: coverage-histogram
-sampling_coverage %>%
-  ggplot(aes(x=n_seqs)) +
-  geom_histogram(binwidth=10000) +
-  coord_cartesian(xlim=c(0, 100000))
-```
-
-There are 2 samples below 50000 sequences. All the other samples are above such
-value. This can be shown using a jitter plot of the number of sequences per
-sample (plot random x values to avoid overplotting):
-
-```{r coverage-jitter}
-#| label: coverage-jitter
-sampling_coverage %>%
-  ggplot(aes(x=1, y=n_seqs)) +
-  geom_jitter() +
-  scale_y_log10()
-```
-
-A lineplot of the number of sequences per sample:
-
-```{r coverage-lineplot}
-#| label: coverage-lineplot
-sampling_coverage %>%
-  arrange(n_seqs) %>%
-  ggplot(aes(x=1:nrow(.), y=n_seqs))+
-  geom_line()
-```
-
-We didn't see a curve like the one we see in the tutorial. If we choose a
-sequencing depth of 60,000, we will throw away only 2 samples.
-
-Calculate the *good's coverage* as defined by the formula:
-
-$$
-C_{Good's} = 100(1-\frac{n_1}{N_T})
-$$
-
-where $n_1$ is the number of OTUs that are observed only once
-and $N_T$ is the total number of sequences.
-
-```{r goods-coverage}
-#| label: goods-coverage
-targets::tar_load(coverage_stats, store = store_path)
-
-coverage_stats %>%
-  arrange(goods) %>%
-  print(n=10)
-```
-
-Here's the plot of the Good's coverage:
-
-```{r goods-coverage-plot}
-#| label: goods-coverage-plot
-coverage_stats %>%
-  ggplot(aes(x=n_seqs, y=goods)) +
-  geom_point()
-```
-
-The three samples with the lowest sampling depth have a Good's coverage above
-99.6%. We don't see the need of throwing them away.
-
-### Permanova
-
-We will calculate the distance matrix using the *bray-curtis* method using a
-*rarefaction* method as suggested by Patrick D. Schloss. Then
-we will use the `adonis2` function from the `vegan` package to test if the technical
-replicates are similar to each other. The formula should include the `sample_group`
-as a factor to account for biological variability and `technical_rep` to assess
-technical replicate similarity:
-
-```{r tech_rep_permanova}
-#| label: tech_rep_permanova
-# load the permanova with targets
-targets::tar_load(tech_rep_permanova, store = store_path)
-print(tech_rep_permanova)
-```
-
-The **PERMANOVA** (Permutational Multivariate Analysis of Variance) output provides
-insights into the differences in community composition across the groups in the
-dataset. Here’s a detailed interpretation of each section of the output:
-
-#### Degrees of Freedom (Df)
-
-- **Model**: This indicates that there are 12 levels in the grouping
-  variable `sample_group` (13 groups - 1 = 12) and 2 for technical replicates.
-- **Residual (24)**: The remaining 24 degrees of freedom represent the
-  unexplained variance within groups.
-- **Total (38)**: The total degrees of freedom in the dataset.
-
-#### Sum of Squares (SumOfSqs)
-
-- **Model**: This is the sum of squares for the grouping factor, representing
-  the variability explained by both variables.
-- **Residual**: This is the residual sum of squares, indicating the variability
-  within groups.
-- **Total**: The total sum of squares for the dataset.
-
-#### R-squared (R2)
-
-- **Model**: This value shows that the reported percentage of the total
-  variability is explained by differences between the groups, indicating a very
-  high proportion of variation accounted for `sample_group`. Vice versa, the
-  `technical_rep` variable explains a very low proportion of the variation.
-- **Residual**: Only this percentage of the variability is left unexplained by
-  the model (i.e., within groups).
-
-#### F-statistic (F) and P-value (Pr(\>F))
-
-- **F**: The F-statistic is high for `sample_group`, indicating a strong separation
-  between groups relative to within-group variability. `technical_rep` has a low F-value,
-  suggesting that technical replicates are similar to each other.
-- **Pr(\>F)**: The p-value of 0.001 is highly significant (denoted by `***`) for
-  `sample_group`, indicating that the observed differences are unlikely to have
-  occurred by chance. The p-value for `technical_rep` is not significant.
-
-#### Summary
-
-- `sample_group`: The highly significant p-value and high $R^2$
-  indicate that differences between biological samples (sample_name) account
-  for the majority of the variance in your data.
-- `technical_rep`: The non-significant p-value and very low $R^2$
-  suggest that differences among technical replicates (technical_rep) do not
-  contribute significantly to the variance. This implies that technical
-  replicates are consistent with each other, as expected.
-
 ## Barplots
 
 Let's create some barplots to visualize the relative abundance of taxa in the
@@ -229,7 +72,7 @@ dataset. Here are the available taxonomic ranks in the dataset:
 ```{r taxonomic-ranks}
 #| label: taxonomic-ranks
 #| description: List the available taxonomic ranks in the dataset.
-phyloseq::rank_names(phyloseq_object)
+phyloseq::rank_names(phyloseq_subset)
 ```
 
 ### By Phylum
@@ -244,14 +87,15 @@ by sampleID.
 #| fig-height: 8
 #| fig-caption: "Barplot of Phylum"
 #| fig-align: center
-# load the melted data
-tar_load(melted_phylum, store = store_path)
-taxrank <- "Phylum"
+# melt by phylum
+targets::tar_load(melted_phylum, store = store_path)
 
+# make plot
+taxrank <- "Phylum"
 ggplot2::ggplot(melted_phylum, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
   ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
   # need a sorted object like the one used in agglomerate_by_taxa
-  ggplot2::scale_x_discrete(labels = metadata$date_condition) +
+  ggplot2::scale_x_discrete(labels = metadata_subset$date_condition) +
   ggplot2::labs(
     title = glue::glue("Microbial composition at {taxrank} level"),
     x = "Sample",
@@ -273,14 +117,15 @@ by sampleID.
 #| fig-height: 8
 #| fig-caption: "Barplot of Class"
 #| fig-align: center
-# load the melted data
-tar_load(melted_class, store = store_path)
-taxrank <- "Class"
+# melt by class
+targets::tar_load(melted_class, store = store_path)
 
+# make plot
+taxrank <- "Class"
 ggplot2::ggplot(melted_class, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
   ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
   # need a sorted object like the one used in agglomerate_by_taxa
-  ggplot2::scale_x_discrete(labels = metadata$date_condition) +
+  ggplot2::scale_x_discrete(labels = metadata_subset$date_condition) +
   ggplot2::labs(
     title = glue::glue("Microbial composition at {taxrank} level"),
     x = "Sample",
@@ -304,7 +149,7 @@ taxa at the Phylum level:
 #| fig-height: 8
 #| fig-caption: "Heatmap of the top 10 most abundant taxa at the Phylum level"
 #| fig-align: center
-tar_load(heatmap_phylum, store = store_path)
+targets::tar_load(heatmap_phylum, store = store_path)
 print(heatmap_phylum)
 ```
 
@@ -320,7 +165,7 @@ taxa at the Class level:
 #| fig-height: 8
 #| fig-caption: "Heatmap of the top 20 most abundant taxa at the Class level"
 #| fig-align: center
-tar_load(heatmap_class, store = store_path)
+targets::tar_load(heatmap_class, store = store_path)
 print(heatmap_class)
 ```
 
@@ -338,12 +183,12 @@ comparison of diversity metrics between samples with varying sequencing depths.
 #| fig-width: 10
 #| fig-height: 8
 #| fig-caption: "Rarefaction curves with vegan"
-# load calculated rarefaction data
-tar_load(rarecurve_df, store = store_path)
-tar_load(rarefaction_depth, store = store_path)
+# deal with rarefaction data
+targets::tar_load(rarecurve_df, store = store_path)
+targets::tar_load(rarefaction_depth, store = store_path)
 
 # Add metadata to the rarecurve_df
-rarecurve_df <- metadata %>%
+rarecurve_df <- metadata_subset %>%
   select(sampleID, sample_name) %>%
   inner_join(rarecurve_df, by = c("sampleID" = "Site"))
 
@@ -357,83 +202,6 @@ ggplot(rarecurve_df, aes(x = Sample, y = Species, color = sample_name, group = s
     y = "Number of Species Observed"
   ) +
   theme_bw()
-```
-
-## Qiime2 rarefactions
-
-### Observed features by sample_name
-
-```{r observed-sample_name}
-#| label: observed-sample_name
-#| description: Analyze the Qiime2 rarafaction plot for observed_features sample_name
-#| fig-width: 10
-#| fig-height: 8
-#| fig-caption: "Observed features by sample name"
-# load the rarefaction data
-tar_load(observed_features_by_sample_name, store = store_path)
-
-ggplot(
-  observed_features_by_sample_name,
-  aes(x = depth, y = mean_value, color = sample_name, fill = sample_name)) +
-  geom_line() +
-  geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.2, color = NA) +
-  labs(title = "Alpha Rarefaction Plot with Confidence Intervals",
-       x = "Depth",
-       y = "Observed Features") +
-  theme_minimal() +
-  ggplot2::theme(
-    legend.position = "bottom"
-  )
-```
-
-### Shannon diversity by sample_name
-
-```{r shannon-sample_name}
-#| label: shannon-sample_name
-#| description: Analyze the Qiime2 rarafaction plot for Shannon sample_name
-#| fig-width: 10
-#| fig-height: 8
-#| fig-caption: "Shannon by sample name"
-# load the rarefaction data
-tar_load(shannon_by_sample_name, store = store_path)
-
-ggplot(
-  shannon_by_sample_name,
-  aes(x = depth, y = mean_value, color = sample_name, fill = sample_name)) +
-  geom_line() +
-  geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.2, color = NA) +
-  labs(title = "Alpha Rarefaction Plot with Confidence Intervals",
-       x = "Depth",
-       y = "Shannon") +
-  theme_minimal() +
-  ggplot2::theme(
-    legend.position = "bottom"
-  )
-```
-
-### Faith PD by sample_name
-
-```{r faith_sample_name}
-#| label: faith-sample_name
-#| description: Analyze the Qiime2 rarafaction plot for faith pd sample_name
-#| fig-width: 10
-#| fig-height: 8
-#| fig-caption: "Faith PD by sample name"
-# load the rarefaction data
-tar_load(faith_by_sample_name, store = store_path)
-
-ggplot(
-  faith_by_sample_name,
-  aes(x = depth, y = mean_value, color = sample_name, fill = sample_name)) +
-  geom_line() +
-  geom_ribbon(aes(ymin = ci_lower, ymax = ci_upper), alpha = 0.2, color = NA) +
-  labs(title = "Alpha Rarefaction Plot with Confidence Intervals",
-       x = "Depth",
-       y = "Faith PD") +
-  theme_minimal() +
-  ggplot2::theme(
-    legend.position = "bottom"
-  )
 ```
 
 ## Alpha diversity
@@ -512,27 +280,6 @@ dunn_shannon_date_condition$res %>%
 
 ### PCoA plot
 
-**Principal Coordinates Analysis (PCoA)** is an ordination technique used to visualize patterns in complex, high-dimensional data by projecting samples into a lower-dimensional space based on a distance matrix.
-
-#### Key Points
-
-- **Input**: PCoA takes a **distance or dissimilarity matrix** as input, such as Bray-Curtis, Jaccard, or Euclidean distances.
-- **Goal**: It represents the relative distances between samples in a reduced number of dimensions, typically 2D or 3D, for easy visualization.
-- **Output**: Samples that are closer together in the PCoA plot are more similar, while those farther apart are more dissimilar.
-- **Interpretation**: The axes (principal coordinates) explain portions of the variance in the data, helping reveal clusters, trends, or group separations.
-
-#### Applications
-
-- **Microbiome and Ecology**: Useful for visualizing community composition differences.
-- **Genomics and Transcriptomics**: Reveals patterns in gene expression across conditions.
-
-#### PCoA vs. PCA
-
-- **PCoA** uses a distance matrix, making it ideal for data with non-linear
-  relationships or compositional constraints. Is a dimensional reduction technique
-- **PCA** works directly with raw data and assumes linear relationships. Is not
-  used in microbiome studies since it doesn't deal with 0 (see Pat Schloss YT channel)
-
 #### PCoA plot by sample names
 
 Now we will plot a PCoA plot to visualize the technical replicates. See
@@ -553,7 +300,7 @@ In the following pictures we are grouping by technical replicates
 ```{r pcoa-plot}
 #| label: pcoa-plot
 # count the number of levels in the group column
-num_levels <- length(unique(metadata$sample_group))
+num_levels <- length(unique(metadata_subset$sample_group))
 
 # Get the color palette
 color_palette <- Polychrome::palette36.colors(num_levels)
@@ -654,34 +401,6 @@ ggplot(plot_data, aes(x = axis, y = pe)) +
 
 ### NMDS plot
 
-Non-metric Multidimensional Scaling (**NMDS**) is an ordination technique used to visualize the similarity or dissimilarity between samples in complex, multidimensional datasets. Unlike metric methods, NMDS focuses on preserving the rank order of distances rather than the actual distance values, making it particularly useful for ecological and environmental data where relationships may be non-linear.
-
-#### Key Features of NMDS
-
-- **Non-metric Approach**: NMDS emphasizes the rank order of dissimilarities, allowing it to handle data that do not meet the assumptions of linearity or normality.
-
-- **Dimensionality Reduction**: It projects high-dimensional data into a lower-dimensional space (typically 2D or 3D) to facilitate visualization and interpretation.
-
-- **Stress Value**: NMDS iteratively adjusts the configuration of points to minimize a measure called "stress," which quantifies the disparity between the distances in the reduced-dimensional space and the original dissimilarities. Lower stress values indicate a better fit.
-
-#### Interpreting an NMDS Plot
-
-- **Proximity of Points**: Samples plotted closer together are more similar in composition, while those farther apart are more dissimilar.
-
-- **Axes**: The axes in an NMDS plot are arbitrary and do not correspond to specific gradients or variables. The orientation and rotation of the plot can change without affecting the interpretation of the relationships between points.
-
-- **Stress Value**: A stress value below 0.2 is generally considered acceptable, indicating that the plot provides a reasonable representation of the data.
-
-#### Applications of NMDS
-
-- **Ecology**: Visualizing species composition across different sites or conditions.
-
-- **Microbial Community Analysis**: Comparing microbial communities based on sequencing data.
-
-- **Environmental Science**: Assessing the impact of environmental gradients on community structure.
-
-NMDS is a flexible and robust method for exploring complex datasets, especially when the data do not conform to the assumptions required by other ordination techniques.
-
 ```{r nmds}
 #| label: nmds
 targets::tar_load(nmds_object, store = store_path)
@@ -697,7 +416,7 @@ for more information.
 ```{r nmds-plot}
 #| label: nmds-plot
 # count the number of levels in the group column
-num_levels <- length(unique(metadata$sample_group))
+num_levels <- length(unique(metadata_subset$sample_group))
 
 # Get the color palette
 color_palette <- Polychrome::palette36.colors(num_levels)
@@ -879,7 +598,6 @@ ggplot(date_condition_beta_dispersion$beta_disp_df, aes(x = Group, y = Distance,
     axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
   )
 ```
-
 
 Do permanova with *bray-curtis* on *date_condition* column:
 

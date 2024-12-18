@@ -63,6 +63,8 @@ get_otu_table <- function(phyloseq_object) {
   if (taxa_are_rows(phyloseq_object)) {
     otu_table_matrix <- t(otu_table_matrix)
   }
+
+  return(otu_table_matrix)
 }
 
 # get information on samples
@@ -77,4 +79,80 @@ get_samples_data <- function(phyloseq_object) {
   samples_data$sequencing_depth <- sequencing_depth
 
   return(samples_data)
+}
+
+# load the qiime2 rarefaction tables
+load_qiime_rarefaction <- function(rarefaction_csv, metadata, alpha_metric, column_name) {
+  # Load the rarefaction CSV file
+  data <- readr::read_csv(here::here(rarefaction_csv))
+
+  # Merge the metadata with the rarefaction data (inner join)
+  # get rid of the common columns from the first dataframe
+  common_columns <- intersect(names(data), names(metadata))
+  data <- data  %>%
+    select(-all_of(common_columns)) %>%
+    dplyr::inner_join(metadata, by = c("sample-id" = "sampleID"))
+
+  # Reshape the data to long format
+  long_data <- data %>%
+    pivot_longer(
+      cols = starts_with("depth-"),
+      names_to = c("depth", "iteration"),
+      names_sep = "_iter-",
+      values_to = alpha_metric
+    ) %>%
+    mutate(
+      depth = as.numeric(gsub("depth-", "", depth))
+    )
+
+  # Convert alpha_metric and column_name to symbols for tidy evaluation
+  alpha_metric_sym <- sym(alpha_metric)
+  column_name_sym <- sym(column_name)
+
+  # Group and summarize data with 95% CI
+  summary_data <- long_data %>%
+    # unquote the symbols
+    group_by(depth, !!column_name_sym) %>%
+    summarise(
+      mean_value = mean(!!alpha_metric_sym, na.rm = TRUE),
+      se_value = sd(!!alpha_metric_sym, na.rm = TRUE) / sqrt(n()),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      ci_lower = mean_value - 1.96 * se_value,
+      ci_upper = mean_value + 1.96 * se_value
+    ) # 95% CI
+
+  return(summary_data)
+}
+
+# select samples based on a column in metadata table
+select_samples <- function(metadata, values, column_name="date_condition") {
+  samples_to_keep <- metadata %>%
+    dplyr::filter(!!sym(column_name) %in% values) %>%
+    dplyr::select(sampleID)
+
+  return(samples_to_keep)
+}
+
+# subsetting phyloseq object
+subset_phyloseq <- function(phyloseq_object, samples_to_keep) {
+  phyloseq_subset <- phyloseq::prune_samples(
+    sample_names(phyloseq_object) %in% t(samples_to_keep), phyloseq_object)
+
+  # Identify taxa with non-zero total abundance
+  non_zero_taxa <- phyloseq::taxa_sums(phyloseq_subset) > 0
+
+  # Prune taxa with zero abundance
+  phyloseq_pruned <- phyloseq::prune_taxa(non_zero_taxa, phyloseq_subset)
+
+  return(phyloseq_pruned)
+}
+
+# get metadata from a phyloseq object
+get_metadata <- function(phyloseq_object, order_by="sample_number") {
+  metadata <- phyloseq::sample_data(phyloseq_object) %>%
+    as_tibble() %>%
+    dplyr::arrange(!!sym(order_by))
+  return(metadata)
 }
