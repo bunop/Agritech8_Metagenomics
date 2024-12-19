@@ -30,3 +30,11 @@ krona_fungi:
 	@echo "Calling Krona on fungi samples"
 	@set -e; Rscript scripts/run_krona.R -i results-fungi/phyloseq/dada2_phyloseq.rds \
 		-m data/metadata_fungi_fix.tsv -o results-fungi-krona
+
+# Add a 'projects' rule to build all specified projects.
+projects: $(PROJECTS)
+	@echo "All projects have been built."
+
+# Add an 'all' rule to run all specified projects and tasks.
+all: projects krona_bacteria krona_fungi
+	@echo "All tasks completed."

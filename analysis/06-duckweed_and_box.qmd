@@ -175,6 +175,8 @@ Rarefaction is a technique used to estimate species richness or diversity
 in a community by standardizing the number of samples or reads across different
 samples. It involves subsampling the data to a common depth, allowing for a fair
 comparison of diversity metrics between samples with varying sequencing depths.
+The red line correspond to the lowest number of sequences present in samples: this
+is the sequencing depth used in rarefaction step.
 
 ```{r rarefaction}
 #| label: rarefaction
@@ -223,7 +225,7 @@ print(alpha_diversity_by_sample_name)
 ```
 
 Perform Kruskal-Wallis tests to determine if the alpha diversity metrics are
-significantly different between the groups. Run on shannon metric:
+significantly different between the groups. Run on *shannon* metric:
 
 ```{r kruscal_shannon_sample_name}
 #| label: kruscal_shannon_sample_name
@@ -233,7 +235,8 @@ print(kruscal_shannon_sample_name)
 ```
 
 This means that *at least* one group is significantly different in terms of
-Shannon diversity. Let's do a post-hoc test with Dunn's test:
+Shannon diversity. Let's do a post-hoc test with Dunn's test to find significant
+differences between pairs:
 
 ```{r dunn_shannon_sample_name}
 #| label: dunn_shannon_sample_name
@@ -266,7 +269,8 @@ print(kruscal_shannon_date_condition)
 ```
 
 This means that *at least* one group is significantly different in terms of
-Shannon diversity. Let's do a post-hoc test with Dunn's test:
+Shannon diversity. Let's do a post-hoc test with Dunn's test to find significant
+differences between pairs:
 
 ```{r dunn_shannon_date_condition}
 #| label: dunn_shannon_date_condition
@@ -358,11 +362,9 @@ pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = date_con
 pcoa_plot
 ```
 
-In this image there's a clear separation between samples in reactor (pink and brown
-on the left) and the other samples. The default *may24* and *nov23* cluster more or
-less together (yellow and orange). *box_may24* (red) and *box_nov23* (blue) don't
-cluster together and they are more simular to *box+dw_may24* (green) and *box+dw_nov23*
-(purple).
+The default *may24* and *nov23* cluster more or less together (yellow and orange). 
+*box_may24* (red) and *box_nov23* (blue) don't cluster together and they are more 
+similar to *box+dw_may24* (green) and *box+dw_nov23* (purple) respectively.
 
 #### Scree plot
 
@@ -425,12 +427,13 @@ names(color_palette) <- NULL  # Remove any names from the color palette
 # Use palette36 from Polychrome, which supports up to 36 colors
 nmds_plot_rep <- ggplot2::ggplot(
     nmds_tb,
-    ggplot2::aes(x=NMDS1, y=NMDS2, color = sample_name)) +
-  ggplot2::geom_point(size = 4, alpha = 0.5) +
+    ggplot2::aes(x = NMDS1, y = NMDS2, color = sample_name, shape = condition)) +
+  ggplot2::geom_jitter(size = 4, alpha = 0.5, width = 0.01, height = 0.01) +
   ggplot2::theme_minimal() +
   ggplot2::labs(
     title = "NMDS Plot on distance metrics (Bray-Curtis)",
-    color = NULL) +
+    color = NULL,
+    shape = NULL) +
   ggplot2::scale_color_manual(values = color_palette) +
   ggplot2::theme(
     legend.position = "bottom",       # Position the legend at the bottom
@@ -439,6 +442,10 @@ nmds_plot_rep <- ggplot2::ggplot(
 
 print(nmds_plot_rep)
 ```
+::: {.callout-warning}
+I've applied a certain amount of jitter (random noise) to points in order
+to clearly see them in the image.
+:::
 
 #### NMDS plot by date and condition (sample replicates)
 
@@ -451,8 +458,8 @@ Now, let's visualize the NMDS plot but grouping with date and condition
 # Plot the NMDS
 nmds_plot <- ggplot2::ggplot(
     nmds_tb,
-    ggplot2::aes(x=NMDS1, y=NMDS2, color = date_condition)) +
-  ggplot2::geom_point(size = 4, alpha = 0.5) +
+    ggplot2::aes(x = NMDS1, y = NMDS2, color = date_condition)) +
+  ggplot2::geom_jitter(size = 4, alpha = 0.5, width = 0.01, height = 0.01) +
   ggplot2::theme_minimal() +
   ggplot2::labs(
     title = "NMDS Plot on distance metrics (Bray-Curtis)",
@@ -465,8 +472,24 @@ nmds_plot <- ggplot2::ggplot(
 
 print(nmds_plot)
 ```
+::: {.callout-warning}
+Note: I've applied a certain amount of jitter (random noise) to points in order
+to clearly see them in the image
+:::
 
 ### Between group distances
+
+Here we will do some analyses on beta diversity. First, we evaluate beta dispersion
+which is essential to ensure the validity of statistical tests, accurately 
+interpret differences in community composition, and select appropriate analytical 
+methods. Neglecting this step can lead to incorrect conclusions about the 
+ecological patterns present in your data. For unbalanced designs PERMANOVA and ANOSIM were
+
+1. too liberal if the smaller group had greater dispersion, and
+2. too conservative if the larger group had greater dispersion.
+
+This result was especially so for ANOSIM (see [here](https://stats.stackexchange.com/a/316386/451801)
+for more information)
 
 #### sample_name distances
 
@@ -621,3 +644,6 @@ pairwise_date_condition_permanova %>%
   dplyr::arrange(P.adj) %>%
   dplyr::select(Comparison, P.adj, everything())
 ```
+
+No comparison has been filtered for *date_condition* column: should we check for 
+another distance metric?
