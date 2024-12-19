@@ -24,7 +24,7 @@ calculate_beta_dispersion <- function(distance_matrix, metadata, column) {
   beta_disp_df <- data.frame(
     Sample = names(beta_disp$distances),
     Distance = beta_disp$distances,
-    Group = metadata[[column]]
+    Group = beta_disp$group
   )
 
   return(list(
