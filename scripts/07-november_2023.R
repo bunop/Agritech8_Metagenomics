@@ -10,6 +10,11 @@ library(parallelly)
 library(crew)
 library(quarto)
 
+# those packages are not strictly related to targets or quarto, I need them to
+# avoid to create a custom function to do a simple filter with dplyr, for example
+library(dplyr)
+library(phyloseq)
+
 # Set target options:
 tar_option_set(
   packages = c(
@@ -79,10 +84,35 @@ list(
     name = metadata,
     command = load_metadata(metadata_path)
   ),
+  # select with dplyr where date is "nov 23"
+  tar_target(
+    name = nov_2023_metadata,
+    command = metadata %>%
+      dplyr::filter(date == "nov 23")
+  ),
   tar_target(
     name = phyloseq_path,
     command = here::here("results-bacteria", "phyloseq", "dada2_phyloseq.rds"),
     format = "file"
+  ),
+  tar_target(
+    name = phyloseq_obj,
+    command = load_phyloseq(metadata, phyloseq_path)
+  ),
+  tar_target(
+    name = nov_2023_phyloseq_obj,
+    command = phyloseq::subset_samples(
+      phyloseq_obj,
+      date == "nov 23"
+    )
+  ),
+  tar_target(
+    name = nov_2023_otu_table_matrix,
+    command = get_otu_table(nov_2023_phyloseq_obj)
+  ),
+  tar_target(
+    name = nov_2023_samples_data,
+    command = get_samples_data(nov_2023_phyloseq_obj)
   ),
   # render technical replicates quarto document
   tar_quarto(

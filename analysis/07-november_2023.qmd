@@ -27,3 +27,16 @@ library(ampvis2)
 
 store_path <- here::here("stores", "november_2023")
 ```
+
+## Load metadata from november 2023
+
+Let's load the metadata from the November 2023 experiments and try to do some analysis.
+
+```{r load-metadata}
+#| label: load-metadata
+# load data from targets
+targets::tar_load(nov_2023_metadata, store = store_path)
+
+# check the new metadata
+nov_2023_metadata
+```
