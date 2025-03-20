@@ -180,3 +180,6 @@ without Rstudio, you need *only* to add the project name in the `PROJECTS` varia
 # Start by specifying the project names and their corresponding scripts and stores.
 PROJECTS := technical_replicates plot_iNEXT reactor_vs_algae duckweed_and_box november_2023
 ```
+
+Remember to track using git all changes, the new *target* script and *quarto* report 
+with the *store* folder as managed by its `.gitignore` file.

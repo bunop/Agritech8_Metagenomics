@@ -1,0 +1,29 @@
+---
+title: "November 2023 Analysis"
+author: "Paolo Cozzi"
+date: today
+toc: true
+number-sections: true
+format:
+  html:
+    code-line-numbers: true
+    html-math-method: katex
+    df-print: paged
+    code-fold: true
+    toc-depth: 4
+    embed-resources: true  # Embed all resources directly into the HTML file
+editor: source
+---
+
+```{r setup}
+#| label: setup
+#| output: false
+library(targets)
+library(here)
+library(tidyverse)
+library(ggplot2)
+library(phyloseq)
+library(ampvis2)
+
+store_path <- here::here("stores", "november_2023")
+```
