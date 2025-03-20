@@ -145,3 +145,38 @@ make technical_replicates
 In order to create report with *Krona*, you can call the `scripts/run_krona.R`
 (or execute the proper rule in the Makefile). The script will generate the
 krona input files and the command to run to generate the report.
+
+## Add another analysis
+
+Open `_targets.yaml` at the project root directory and define a new *target* section
+with the source script and the store folder, for example:
+
+```yaml
+november_2023:
+  script: scripts/07-november_2023.R
+  store: stores/november_2023
+```
+
+Then create the script `scripts/07-november_2023.R` and add stuff using targets:
+you can also copy another script and modify it. If you add new r packages, remember
+to update the `renv.lock` file with:
+
+```r
+renv::install(<package_name>)
+renv::snapshot()
+```
+
+Then you need to declare the target to compile with `TAR_PROJECT` environment
+variable:
+
+```r
+Sys.setenv(TAR_PROJECT = "november_2023")
+```
+
+Remember also to update the `Makefile` in order to be able to compile the new project
+without Rstudio, you need *only* to add the project name in the `PROJECTS` variable:
+
+```make
+# Start by specifying the project names and their corresponding scripts and stores.
+PROJECTS := technical_replicates plot_iNEXT reactor_vs_algae duckweed_and_box november_2023
+```
