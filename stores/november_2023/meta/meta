@@ -1,5 +1,5 @@
 name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
-.Random.seed|object|ad18d821f44bed3a|||||||||||||||
+.Random.seed|object|f28c64fdffbb871b|||||||||||||||
 agglomerate_by_taxa|function|44ab39ab7822fe92|||||||||||||||
 calculate_beta_dispersion|function|38f232c326c24cd0|||||||||||||||
 calculate_coverage_stats|function|899573af7734a8d4|||||||||||||||
@@ -23,15 +23,20 @@ load_phyloseq|function|b060fe9c9b9ded34|||||||||||||||
 load_qiime_rarefaction|function|d846115beab01ccc|||||||||||||||
 merge_metadata|function|2b1e227f6ef12c09|||||||||||||||
 merge_technical_replicates|function|878f303d0ceaee51|||||||||||||||
-metadata|stem|f309c9e66af10c29|68d74dab361444a6|9539da6e9fb2fce0|-1204988447||t20167.6244470457s|8cff2934fb2f9b43|1438|rds|local|vector|||0.874||
+metadata|stem|f309c9e66af10c29|68d74dab361444a6|9539da6e9fb2fce0|-1204988447||t20168.5705893024s|8cff2934fb2f9b43|1438|rds|local|vector|||12.469||
 metadata_path|stem|88151cb444d0705c|66a41174dc2d47b2|2c530c1562a7fbd1|-1761454659|/home/paolo/Projects/Agritech8_Metagenomics/data/metadata_bacteria_fix.tsv|t20057.7232387354s|dfcc40f65ef32e48|5765|file|local|vector|||5.53||
-nov_2023_metadata|stem|a031344b5e12a7be|dea3c7b5ca9aab53|1c52f77e052d7e47|-1332104223||t20167.6441424158s|9ca79dc0b9da7cc6|1238|rds|local|vector|||6.182||
-nov_2023_otu_table_matrix|stem|1385302048edb440|bf904cde753f9a36|c50964e56f67a999|1758296413||t20167.6537656348s|ae0b248b36db7367|315693|rds|local|vector|||6.051||
-nov_2023_phyloseq_obj|stem|915a730bce1d03dc|b61210154ca55803|25515ff01fa4bfd6|1768904401||t20167.6523641633s|6f224c32f2eea380|1322779|rds|local|vector|||0.052||
-nov_2023_samples_data|stem|5ed82477423c392a|d30acab00e78e4d1|88e0ca17816c1759|-1496098497||t20167.6537644774s|750ffc11a7b8c6e4|1390|rds|local|vector|||6.029||
-november_2023|stem|e12417e619bb718d|06b30e4352ea0813|853c32655391c4ca|1207674139|analysis/07-november_2023.html*analysis/07-november_2023.qmd|t20167.6444267657s|8e31b0f7978fcede|1165399|file|local|vector|||24.586||
+nov_2023_bray_distance_matrix|stem|0252b19819a9e0cb|dccd9ecbf2e72166|6a5c6fc4bc1a8531|-1089082932||t20168.6077936806s|76b1069b54fc7283|3658|rds|local|vector|||146.448||
+nov_2023_melted_class|stem|a9337e80f8973070|f253598b19cb70ab|99be623a7787e868|2068356740||t20168.6196499352s|b5fc9c41a7f91664|33317|rds|local|vector|||12.922||
+nov_2023_melted_phylum|stem|5870780418fe8c94|5a96046832751147|99be623a7787e868|-412889871||t20168.6196385923s|fdd732e4eaef730c|19250|rds|local|vector|||11.875||
+nov_2023_metadata|stem|a031344b5e12a7be|dea3c7b5ca9aab53|1c52f77e052d7e47|-1332104223||t20168.5705913395s|9ca79dc0b9da7cc6|1238|rds|local|vector|||0.005||
+nov_2023_otu_table_matrix|stem|1385302048edb440|bf904cde753f9a36|c50964e56f67a999|1758296413||t20168.5710268589s|ae0b248b36db7367|315693|rds|local|vector|||0.479||
+nov_2023_phyloseq_obj|stem|915a730bce1d03dc|b61210154ca55803|25515ff01fa4bfd6|1768904401||t20168.5710183402s|6f224c32f2eea380|1322779|rds|local|vector|||0.056||
+nov_2023_samples_data|stem|5ed82477423c392a|d30acab00e78e4d1|88e0ca17816c1759|-1496098497||t20168.5710269052s|750ffc11a7b8c6e4|1390|rds|local|vector|||0.002||
+nov_2023_tech_rep_permanova|stem|95487e37fecc5d8e|8387c216ad4f4751|1402a746ad416597|-931420083||t20168.6090651923s|41bfb66b767b18e0|18603|rds|local|vector|||5.76||
+nov_23_rarefaction_depth|stem|bdc2e6429147fb4f|d194db6620e17b2c|cc81fbf14450815b|-1931327672||t20168.6060965571s|d0ec9a5a63f98b43|53|rds|local|vector|||6.494||
+november_2023|stem|a0740c1a1d0fce02|2d47e465982631b3|1ec324f4f861d8d1|1207674139|analysis/07-november_2023.html*analysis/07-november_2023.qmd|t20168.60433096s||1166332|file|local|vector|||20.157||Error running quarto cli.ℹ Rerun with quiet  FALSE to see the full error message.Caused by error System command quarto failed
 object|object|a85c84dcb467c615|||||||||||||||
-phyloseq_obj|stem|a6636039185e4835|36fbfaa7c9af935b|f103f1dec195db42|959985470||t20167.6523481912s|1b4ceb13011c0b71|1336935|rds|local|vector|||6.384||
+phyloseq_obj|stem|a6636039185e4835|36fbfaa7c9af935b|f103f1dec195db42|959985470||t20168.5710084789s|1b4ceb13011c0b71|1336935|rds|local|vector|||0.858||
 phyloseq_object|stem|a6636039185e4835|36fbfaa7c9af935b|f103f1dec195db42|-512304128||t20167.6454558325s|1b4ceb13011c0b71|1336935|rds|local|vector|||7.632||
 phyloseq_path|stem|48bc5a5f2d332798|315e3d642ae25b92|2c530c1562a7fbd1|-776385659|/home/paolo/Projects/Agritech8_Metagenomics/results-bacteria/phyloseq/dada2_phyloseq.rds|t20057.7259542294s|3bded0e7014f7ac0|1336510|file|local|vector|||5.509||
 phyloseq_to_ampvis2|function|801e2c649335d705|||||||||||||||

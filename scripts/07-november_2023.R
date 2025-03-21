@@ -107,12 +107,49 @@ list(
     )
   ),
   tar_target(
+    nov_23_rarefaction_depth,
+    min(sample_sums(nov_2023_phyloseq_obj))
+  ),
+  tar_target(
     name = nov_2023_otu_table_matrix,
     command = get_otu_table(nov_2023_phyloseq_obj)
   ),
   tar_target(
     name = nov_2023_samples_data,
     command = get_samples_data(nov_2023_phyloseq_obj)
+  ),
+  tar_target(
+    name = nov_2023_bray_distance_matrix,
+    command = calculate_distance_matrix(
+      nov_2023_otu_table_matrix,
+      min_sequencing_depth = nov_23_rarefaction_depth,
+      dmethod = "bray"
+    )
+  ),
+  tar_target(
+    name = nov_2023_tech_rep_permanova,
+    command = calculate_permanova(
+      nov_2023_bray_distance_matrix,
+      nov_2023_metadata,
+      columns = c("sample_group", "technical_rep")
+    )
+  ),
+  # here are barplots
+  tar_target(
+    name = nov_2023_melted_phylum,
+    command = agglomerate_by_taxa(
+      nov_2023_phyloseq_obj,
+      taxrank = "Phylum",
+      sample_order = nov_2023_metadata$sampleID
+    )
+  ),
+  tar_target(
+    name = nov_2023_melted_class,
+    command = agglomerate_by_taxa(
+      nov_2023_phyloseq_obj,
+      taxrank = "Class",
+      sample_order = nov_2023_metadata$sampleID
+    )
   ),
   # render technical replicates quarto document
   tar_quarto(
