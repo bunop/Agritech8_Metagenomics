@@ -1,5 +1,5 @@
 name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
-.Random.seed|object|f28c64fdffbb871b|||||||||||||||
+.Random.seed|object|3304857f47287111|||||||||||||||
 agglomerate_by_taxa|function|44ab39ab7822fe92|||||||||||||||
 calculate_beta_dispersion|function|38f232c326c24cd0|||||||||||||||
 calculate_coverage_stats|function|899573af7734a8d4|||||||||||||||
@@ -34,7 +34,7 @@ nov_2023_phyloseq_obj|stem|915a730bce1d03dc|b61210154ca55803|25515ff01fa4bfd6|17
 nov_2023_samples_data|stem|5ed82477423c392a|d30acab00e78e4d1|88e0ca17816c1759|-1496098497||t20168.5710269052s|750ffc11a7b8c6e4|1390|rds|local|vector|||0.002||
 nov_2023_tech_rep_permanova|stem|95487e37fecc5d8e|8387c216ad4f4751|1402a746ad416597|-931420083||t20168.6090651923s|41bfb66b767b18e0|18603|rds|local|vector|||5.76||
 nov_23_rarefaction_depth|stem|bdc2e6429147fb4f|d194db6620e17b2c|cc81fbf14450815b|-1931327672||t20168.6060965571s|d0ec9a5a63f98b43|53|rds|local|vector|||6.494||
-november_2023|stem|a0740c1a1d0fce02|2d47e465982631b3|1ec324f4f861d8d1|1207674139|analysis/07-november_2023.html*analysis/07-november_2023.qmd|t20168.60433096s||1166332|file|local|vector|||20.157||Error running quarto cli.ℹ Rerun with quiet  FALSE to see the full error message.Caused by error System command quarto failed
+november_2023|stem|066abcfd3c83ad40|2d47e465982631b3|1ec324f4f861d8d1|1207674139|analysis/07-november_2023.html*analysis/07-november_2023.qmd|t20168.6704694302s|0286c6ded60b07de|1964513|file|local|vector|||20.456||
 object|object|a85c84dcb467c615|||||||||||||||
 phyloseq_obj|stem|a6636039185e4835|36fbfaa7c9af935b|f103f1dec195db42|959985470||t20168.5710084789s|1b4ceb13011c0b71|1336935|rds|local|vector|||0.858||
 phyloseq_object|stem|a6636039185e4835|36fbfaa7c9af935b|f103f1dec195db42|-512304128||t20167.6454558325s|1b4ceb13011c0b71|1336935|rds|local|vector|||7.632||

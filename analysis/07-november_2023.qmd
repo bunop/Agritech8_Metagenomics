@@ -41,7 +41,7 @@ targets::tar_load(nov_2023_metadata, store = store_path)
 nov_2023_metadata
 ```
 
-Load phyloseq object other stuff
+Load other phyloseq stuff
 
 ```{r load-phyloseq}
 #| label: load-phyloseq
@@ -128,6 +128,35 @@ ggplot2::ggplot(nov_2023_melted_phylum, ggplot2::aes(x = sampleID, y = Abundance
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
 
+### By Phylum (>5%)
+
+Same as before, but this time let's group the taxa with less than 5% abundance
+
+```{r barplot-phylum-grouped}
+#| label: barplot-phylum-grouped
+#| description: Create a barplot of the relative abundance of Phylum in the dataset grouping taxa with less than 5% abundance.
+#| fig-width: 10
+#| fig-height: 8
+#| fig-caption: "Barplot of Phylum grouped (>5% abundance)"
+taxrank <- "Phylum"
+nov_2023_melted_phylum_grouped <- nov_2023_melted_phylum %>%
+  dplyr::mutate(!!rlang::sym(taxrank) := ifelse(Abundance < 0.05, "Other Taxa", !!rlang::sym(taxrank))) %>%
+  dplyr::group_by(sampleID, !!rlang::sym(taxrank)) %>%
+  dplyr::summarise(Abundance = sum(Abundance), .groups = 'drop')
+
+ggplot2::ggplot(nov_2023_melted_phylum_grouped, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
+  ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
+  # need a sorted object like the one used in agglomerate_by_taxa
+  ggplot2::scale_x_discrete(labels = nov_2023_metadata$date_condition) +
+  ggplot2::labs(
+    title = glue::glue("Microbial composition at {taxrank} level grouped (>5% abundance)"),
+    x = "Sample",
+    y = "Relative Abundance"
+  ) +
+  ggplot2::theme_bw() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
+
 ### By Class
 
 Create a barplot of the relative abundance Class in the dataset. Sort samples
@@ -150,6 +179,35 @@ ggplot2::ggplot(nov_2023_melted_class, ggplot2::aes(x = sampleID, y = Abundance,
   ggplot2::scale_x_discrete(labels = nov_2023_metadata$date_condition) +
   ggplot2::labs(
     title = glue::glue("Microbial composition at {taxrank} level"),
+    x = "Sample",
+    y = "Relative Abundance"
+  ) +
+  ggplot2::theme_bw() +
+  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
+```
+
+### By Class (>5%)
+
+Same as before, but this time let's group the taxa with less than 5% abundance
+
+```{r barplot-class-grouped}
+#| label: barplot-class-grouped
+#| description: Create a barplot of the relative abundance of Class in the dataset grouping taxa with less than 5% abundance.
+#| fig-width: 10
+#| fig-height: 8
+#| fig-caption: "Barplot of Class grouped (>5% abundance)"
+taxrank <- "Class"
+nov_2023_melted_class_grouped <- nov_2023_melted_class %>%
+  dplyr::mutate(!!rlang::sym(taxrank) := ifelse(Abundance < 0.05, "Other Taxa", !!rlang::sym(taxrank))) %>%
+  dplyr::group_by(sampleID, !!rlang::sym(taxrank)) %>%
+  dplyr::summarise(Abundance = sum(Abundance), .groups = 'drop')
+
+ggplot2::ggplot(nov_2023_melted_class_grouped, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
+  ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
+  # need a sorted object like the one used in agglomerate_by_taxa
+  ggplot2::scale_x_discrete(labels = nov_2023_metadata$date_condition) +
+  ggplot2::labs(
+    title = glue::glue("Microbial composition at {taxrank} level grouped (>5% abundance)"),
     x = "Sample",
     y = "Relative Abundance"
   ) +
