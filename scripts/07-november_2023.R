@@ -135,7 +135,7 @@ list(
     command = sort_phyloseq(nov_2023_phyloseq_obj_tmp, nov_2023_metadata$sampleID)
   ),
   tar_target(
-    nov_23_rarefaction_depth,
+    nov_2023_rarefaction_depth,
     min(sample_sums(nov_2023_phyloseq_obj))
   ),
   tar_target(
@@ -154,7 +154,7 @@ list(
     name = nov_2023_bray_distance_matrix,
     command = calculate_distance_matrix(
       nov_2023_otu_table_matrix,
-      min_sequencing_depth = nov_23_rarefaction_depth,
+      min_sequencing_depth = nov_2023_rarefaction_depth,
       dmethod = "bray"
     )
   ),
@@ -183,7 +183,40 @@ list(
       sample_order = nov_2023_metadata$sampleID
     )
   ),
-  # render technical replicates quarto document
+  tar_target(
+    name = nov_2023_ampvis2_object,
+    command = phyloseq_to_ampvis2(nov_2023_phyloseq_obj)
+  ),
+  tar_target(
+    name = nov_2023_heatmap_phylum,
+    command = custom_heatmap(
+      nov_2023_ampvis2_object,
+      group_by = "date_condition",
+      order_x_by = custom_order,
+      showRemainingTaxa = TRUE
+    )
+  ),
+  tar_target(
+    name = nov_2023_heatmap_class,
+    command = custom_heatmap(
+      nov_2023_ampvis2_object,
+      group_by = "date_condition",
+      order_x_by = custom_order,
+      showRemainingTaxa = TRUE,
+      tax_add = "Class",
+      tax_show = 20
+    )
+  ),
+  # deal with rarefaction curves
+  tar_target(
+    rarefaction_depth,
+    min(sample_sums(nov_2023_phyloseq_obj))
+  ),
+  tar_target(
+    name = nov_2023_rarecurve_df,
+    command = calculate_rarecurve(nov_2023_otu_table_matrix)
+  ),
+  # render november 2023 quarto document
   tar_quarto(
     name = november_2023,
     path = "analysis/07-november_2023.qmd",
