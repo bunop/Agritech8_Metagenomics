@@ -7,6 +7,7 @@ PROJECTS := technical_replicates plot_iNEXT november_2023 reactor_vs_algae duckw
 # keeps the Makefile concise.
 .PHONY: $(PROJECTS) restore list krona_bacteria krona_fungi
 
+# $@ is the make current target
 $(PROJECTS):
 	@echo "Building project: $@"
 	@Rscript -e 'Sys.setenv(TAR_PROJECT = "$@"); targets::tar_make()'
@@ -34,6 +35,14 @@ krona_fungi:
 # Add a 'projects' rule to build all specified projects.
 projects: $(PROJECTS)
 	@echo "All projects have been built."
+
+# required to prune all projects
+# $$project is expanded to $project in the shell
+prune:
+	@for project in $(PROJECTS); do \
+        echo "Pruning project: $$project"; \
+        Rscript -e "Sys.setenv(TAR_PROJECT = '$$project'); targets::tar_prune()"; \
+    done
 
 # Add an 'all' rule to run all specified projects and tasks.
 all: projects krona_bacteria krona_fungi
