@@ -57,22 +57,9 @@ Try to see sample depths and other information about the samples:
 
 ```{r sequencing-depth}
 #| label: sequencing-depth
-# try to define a custom order for the samples
-custom_order <- c("default_nov23", "reactor_nov23", "reactor+cs_nov23", "box_nov23", "box+dw_nov23")
-
-# now order the samples
-depth_data <- nov_2023_samples_data %>%
-  # mutate the date_condition to a factor with the custom order
-  mutate(date_condition = factor(date_condition, levels = custom_order)) %>%
-  # order the samples by the date_condition and sampleID
-  arrange(date_condition, sampleID) %>%
-  # transform sampleID to factor to keep the order
-  mutate(sampleID = factor(sampleID, levels = unique(sampleID)))
-
-
 # Create the bar plot
 depth_plot <- ggplot2::ggplot(
-  depth_data,
+  nov_2023_samples_data,
   aes(x = sampleID, y = sequencing_depth, fill = date_condition)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") +
   labs(title = "Sequencing Depth per Sample",

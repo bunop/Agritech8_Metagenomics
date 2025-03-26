@@ -42,6 +42,23 @@ load_metadata <- function(...) {
   return(metadata)
 }
 
+# order metadata using a column and user defined levels
+sort_by_factor_column <- function(metadata, order_by, levels) {
+  # for simplicity, we assume sampleID is a column in metadata
+  sampleID <- sym("sampleID")
+
+  # reorder metadata by the order_by column and sampleID
+  metadata <- metadata %>%
+    # mutate the order_by to a factor with the custom order
+    dplyr::mutate(!!sym(order_by) := factor(!!sym(order_by), levels = levels)) %>%
+    # order the samples by the date_condition and sampleID
+    dplyr::arrange(!!sym(order_by), !!sampleID) %>%
+    # keep the sample order as levels
+    dplyr::mutate(sampleID = factor(sampleID, levels = unique(sampleID)))
+
+  return(metadata)
+}
+
 # load and update phyloseq object
 load_phyloseq <- function(metadata, ...) {
   args <- list(...)
@@ -53,6 +70,18 @@ load_phyloseq <- function(metadata, ...) {
   phyloseq::sample_data(phyloseq_object) <- metadata
 
   return(phyloseq_object)
+}
+
+# order phyloseq object relying on sample ids
+sort_phyloseq <- function(phyloseq_obj, sample_ids) {
+  # ensure sample_ids is a character vector
+  sample_ids <- as.character(sample_ids)
+
+  # now order the samples with microViz
+  sorted_phyloseq_obj <- microViz::ps_reorder(
+    phyloseq_obj, sample_ids)
+
+  return(sorted_phyloseq_obj)
 }
 
 # get the otu table from a phyloseq object

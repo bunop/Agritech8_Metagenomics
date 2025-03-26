@@ -24,6 +24,7 @@ tar_option_set(
     "tidyr",
     "stringr",
     "phyloseq",
+    "microViz",
     "vegan",
     "ape",
     "ampvis2",
@@ -86,10 +87,31 @@ list(
   ),
   # select with dplyr where date is "nov 23"
   tar_target(
-    name = nov_2023_metadata,
+    name = nov_2023_metadata_tmp,
     command = metadata %>%
       dplyr::filter(date == "nov 23")
   ),
+  # attempt to order metadata and phyloseq object using date_condition column
+  # and a custom levels order
+  tar_target(
+    name = custom_order,
+    command = c(
+      "default_nov23",
+      "reactor_nov23",
+      "reactor+cs_nov23",
+      "box_nov23",
+      "box+dw_nov23"
+    )
+  ),
+  tar_target(
+    name = nov_2023_metadata,
+    command = sort_by_factor_column(
+      nov_2023_metadata_tmp,
+      "date_condition",
+      custom_order
+    )
+  ),
+  # open the phyloseq object
   tar_target(
     name = phyloseq_path,
     command = here::here("results-bacteria", "phyloseq", "dada2_phyloseq.rds"),
@@ -99,12 +121,18 @@ list(
     name = phyloseq_obj,
     command = load_phyloseq(metadata, phyloseq_path)
   ),
+  # subsetting samples from phyloseq object
   tar_target(
-    name = nov_2023_phyloseq_obj,
+    name = nov_2023_phyloseq_obj_tmp,
     command = phyloseq::subset_samples(
       phyloseq_obj,
       date == "nov 23"
     )
+  ),
+  # now order the samples in the phyloseq object using the sorted_metadata
+  tar_target(
+    name = nov_2023_phyloseq_obj,
+    command = sort_phyloseq(nov_2023_phyloseq_obj_tmp, nov_2023_metadata$sampleID)
   ),
   tar_target(
     nov_23_rarefaction_depth,
@@ -116,7 +144,11 @@ list(
   ),
   tar_target(
     name = nov_2023_samples_data,
-    command = get_samples_data(nov_2023_phyloseq_obj)
+    command = sort_by_factor_column(
+      get_samples_data(nov_2023_phyloseq_obj),
+      "date_condition",
+      custom_order
+    )
   ),
   tar_target(
     name = nov_2023_bray_distance_matrix,
