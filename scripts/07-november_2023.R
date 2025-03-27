@@ -216,6 +216,26 @@ list(
     name = nov_2023_rarecurve_df,
     command = calculate_rarecurve(nov_2023_otu_table_matrix)
   ),
+  # alpha diversity steps
+  # Generate a sequence of iterations
+  tar_target(
+    name = thousand_iterations,
+    command = seq_len(1000)
+  ),
+  # Perform rarefaction across multiple iterations
+  tar_target(
+    name = nov_2023_samples_rarefaction,
+    command = rarefy_alpha(
+      nov_2023_phyloseq_obj,
+      rarefaction_depth,
+      measures = c("Observed", "Shannon", "Simpson", "InvSimpson", "Fisher")),
+    pattern = map(thousand_iterations)
+  ),
+  # now transform rarefaction in a summary table
+  tar_target(
+    name = nov_2023_rarefaction_results,
+    command = summarize_rarefactions(nov_2023_samples_rarefaction, metadata)
+  ),
   # render november 2023 quarto document
   tar_quarto(
     name = november_2023,
