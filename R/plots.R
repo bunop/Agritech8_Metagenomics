@@ -32,7 +32,12 @@ custom_heatmap <- function(ampvis2_object, ...) {
   return(heatmap_plot)
 }
 
-plot_alpha_diversity <- function(data, x, y, fill, facet, title, xlab, ylab) {
+plot_alpha_diversity <- function(data, x, y, fill, facet, title, xlab, ylab, custom_order = NULL) {
+  # Check if custom_order is provided
+  if (!is.null(custom_order)) {
+    data[[x]] <- forcats::fct_relevel(data[[x]], custom_order)
+  }
+
   # Create the faceting formula
   facet_formula <- as.formula(paste("~", facet))
 

@@ -28,6 +28,7 @@ tar_option_set(
     "vegan",
     "ape",
     "ampvis2",
+    "forcats",
     "FSA",
     "pairwiseAdonis"
   ), # Packages that your targets need for their tasks.
@@ -94,7 +95,7 @@ list(
   # attempt to order metadata and phyloseq object using date_condition column
   # and a custom levels order
   tar_target(
-    name = custom_order,
+    name = custom_order_date_condition,
     command = c(
       "default_nov23",
       "reactor_nov23",
@@ -108,8 +109,17 @@ list(
     command = sort_by_factor_column(
       nov_2023_metadata_tmp,
       "date_condition",
-      custom_order
+      custom_order_date_condition
     )
+  ),
+  # extract the sample names from the metadata in the same order
+  # of date_condition
+  tar_target(
+    name = custom_order_sample_names,
+    command = nov_2023_metadata %>%
+      dplyr::distinct(sample_name) %>%
+      dplyr::pull(sample_name) %>%
+      as.character()
   ),
   # open the phyloseq object
   tar_target(
@@ -132,7 +142,10 @@ list(
   # now order the samples in the phyloseq object using the sorted_metadata
   tar_target(
     name = nov_2023_phyloseq_obj,
-    command = sort_phyloseq(nov_2023_phyloseq_obj_tmp, nov_2023_metadata$sampleID)
+    command = sort_phyloseq(
+      nov_2023_phyloseq_obj_tmp,
+      nov_2023_metadata$sampleID
+    )
   ),
   tar_target(
     nov_2023_rarefaction_depth,
@@ -147,7 +160,7 @@ list(
     command = sort_by_factor_column(
       get_samples_data(nov_2023_phyloseq_obj),
       "date_condition",
-      custom_order
+      custom_order_date_condition
     )
   ),
   tar_target(
@@ -192,7 +205,7 @@ list(
     command = custom_heatmap(
       nov_2023_ampvis2_object,
       group_by = "date_condition",
-      order_x_by = custom_order,
+      order_x_by = custom_order_date_condition,
       showRemainingTaxa = TRUE
     )
   ),
@@ -201,7 +214,7 @@ list(
     command = custom_heatmap(
       nov_2023_ampvis2_object,
       group_by = "date_condition",
-      order_x_by = custom_order,
+      order_x_by = custom_order_date_condition,
       showRemainingTaxa = TRUE,
       tax_add = "Class",
       tax_show = 20
@@ -255,7 +268,8 @@ list(
       facet = "Metric",
       title = "Alpha Diversity Metrics Across Groups",
       xlab = "Sample Name",
-      ylab = "Alpha Diversity Measure"
+      ylab = "Alpha Diversity Measure",
+      custom_order = custom_order_sample_names
     )
   ),
   # do the Kruskall-Wallis test
@@ -295,7 +309,8 @@ list(
       facet = "Metric",
       title = "Alpha Diversity Metrics Across Groups",
       xlab = "Sample Name",
-      ylab = "Alpha Diversity Measure"
+      ylab = "Alpha Diversity Measure",
+      custom_order = custom_order_date_condition
     )
   ),
   # do the Kruskall-Wallis test
