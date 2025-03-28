@@ -229,8 +229,8 @@ taxa at the Phylum level:
 #| fig-height: 8
 #| fig-caption: "Heatmap of the top 10 most abundant taxa at the Phylum level"
 #| fig-align: center
-tar_load(nov_23_heatmap_phylum, store = store_path)
-print(nov_23_heatmap_phylum)
+tar_load(nov_2023_heatmap_phylum, store = store_path)
+print(nov_2023_heatmap_phylum)
 ```
 
 ### By Class
@@ -245,8 +245,8 @@ taxa at the Class level:
 #| fig-height: 8
 #| fig-caption: "Heatmap of the top 20 most abundant taxa at the Class level"
 #| fig-align: center
-tar_load(nov_23_heatmap_class, store = store_path)
-print(nov_23_heatmap_class)
+tar_load(nov_2023_heatmap_class, store = store_path)
+print(nov_2023_heatmap_class)
 ```
 
 ## Samples Rarefaction
@@ -266,16 +266,16 @@ is the sequencing depth used in rarefaction step.
 #| fig-height: 8
 #| fig-caption: "Rarefaction curves with vegan"
 # load calculated rarefaction data
-tar_load(nov_23_rarecurve_df, store = store_path)
+tar_load(nov_2023_rarecurve_df, store = store_path)
 tar_load(rarefaction_depth, store = store_path)
 
 # Add metadata to the rarecurve_df
-nov_23_rarecurve_df <- nov_2023_metadata %>%
+nov_2023_rarecurve_df <- nov_2023_metadata %>%
   select(sampleID, sample_name, date_condition) %>%
-  inner_join(nov_23_rarecurve_df, by = c("sampleID" = "Site"))
+  inner_join(nov_2023_rarecurve_df, by = c("sampleID" = "Site"))
 
 # draw the plot
-ggplot(nov_23_rarecurve_df, aes(x = Sample, y = Species, color = date_condition, group = sampleID)) +
+ggplot(nov_2023_rarecurve_df, aes(x = Sample, y = Species, color = date_condition, group = sampleID)) +
   geom_line() +
   geom_vline(xintercept = rarefaction_depth, linetype = "dashed", color = "red") +  # Add vertical line
   labs(
