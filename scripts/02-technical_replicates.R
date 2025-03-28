@@ -164,9 +164,15 @@ list(
     name = rarecurve_df,
     command = calculate_rarecurve(otu_table_matrix)
   ),
+  # load the qiime2 alpha rarefaction results
   tar_target(
     name = observed_features_by_sample_name_path,
-    command = here::here("results-bacteria", "qiime2", "alpha-rarefaction", "observed_features.csv"),
+    command = here::here(
+      "results-bacteria",
+      "qiime2",
+      "alpha-rarefaction",
+      "observed_features.csv"
+    ),
     format = "file"
   ),
   tar_target(
@@ -180,7 +186,12 @@ list(
   ),
   tar_target(
     name = shannon_by_sample_name_path,
-    command = here::here("results-bacteria", "qiime2", "alpha-rarefaction", "shannon.csv"),
+    command = here::here(
+      "results-bacteria",
+      "qiime2",
+      "alpha-rarefaction",
+      "shannon.csv"
+    ),
     format = "file"
   ),
   tar_target(
@@ -194,7 +205,12 @@ list(
   ),
   tar_target(
     name = faith_by_sample_name_path,
-    command = here::here("results-bacteria", "qiime2", "alpha-rarefaction", "faith_pd.csv"),
+    command = here::here(
+      "results-bacteria",
+      "qiime2",
+      "alpha-rarefaction",
+      "faith_pd.csv"
+    ),
     format = "file"
   ),
   tar_target(
@@ -229,7 +245,10 @@ list(
   # pivot data and group by sample name
   tar_target(
     name = rarefaction_by_sample_name,
-    command = reshape_rarefaction_data(rarefaction_results, by_column = "sample_name")
+    command = reshape_rarefaction_data(
+      rarefaction_results,
+      by_column = "sample_name"
+    )
   ),
   # make plots
   tar_target(
@@ -248,17 +267,28 @@ list(
   # do the Kruskall-Wallis test
   tar_target(
     name = kruscal_shannon_sample_name,
-    command = calculate_kruskal_wallis(rarefaction_results, "Shannon_mean", "sample_name")
+    command = calculate_kruskal_wallis(
+      rarefaction_results,
+      "Shannon_mean",
+      "sample_name"
+    )
   ),
   # do the post-hoc tests
   tar_target(
     name = dunn_shannon_sample_name,
-    command = calculate_dunn_test(rarefaction_results, "Shannon_mean", "sample_name")
+    command = calculate_dunn_test(
+      rarefaction_results,
+      "Shannon_mean",
+      "sample_name"
+    )
   ),
   # pivot data and group by date_condition
   tar_target(
     name = rarefaction_by_date_condition,
-    command = reshape_rarefaction_data(rarefaction_results, by_column = "date_condition")
+    command = reshape_rarefaction_data(
+      rarefaction_results,
+      by_column = "date_condition"
+    )
   ),
   # make plots
   tar_target(
@@ -277,12 +307,20 @@ list(
   # do the Kruskall-Wallis test
   tar_target(
     name = kruscal_shannon_date_condition,
-    command = calculate_kruskal_wallis(rarefaction_results, "Shannon_mean", "date_condition")
+    command = calculate_kruskal_wallis(
+      rarefaction_results,
+      "Shannon_mean",
+      "date_condition"
+    )
   ),
   # do the post-hoc tests
   tar_target(
     name = dunn_shannon_date_condition,
-    command = calculate_dunn_test(rarefaction_results, "Shannon_mean", "date_condition")
+    command = calculate_dunn_test(
+      rarefaction_results,
+      "Shannon_mean",
+      "date_condition"
+    )
   ),
   # ordinations
   tar_target(

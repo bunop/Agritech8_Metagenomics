@@ -285,3 +285,77 @@ ggplot(nov_2023_rarecurve_df, aes(x = Sample, y = Species, color = date_conditio
   ) +
   theme_bw()
 ```
+
+## Alpha diversity
+
+Alpha diversity measures the diversity within a single sample or community.
+It provides insights into the richness and evenness of species in a sample,
+helping to compare diversity between samples or track changes over time.
+
+### By sample_name
+
+```{r alpha-diversity_sample_name}
+#| label: alpha-diversity_sample_name
+#| description: Calculate and visualize alpha diversity metrics for the samples.
+#| fig-width: 10
+#| fig-height: 8
+#| fig-caption: "Alpha diversity metrics for the samples"
+tar_load(nov_2023_alpha_diversity_by_sample_name, store = store_path)
+print(nov_2023_alpha_diversity_by_sample_name)
+```
+
+Perform Kruskal-Wallis tests to determine if the alpha diversity metrics are
+significantly different between the groups. Run on *shannon* metric:
+
+```{r kruscal_shannon_sample_name}
+#| label: kruscal_shannon_sample_name
+#| description: Perform Kruskal-Wallis tests on the Shannon ~ sample_name
+tar_load(nov_2023_kruscal_shannon_sample_name, store = store_path)
+print(nov_2023_kruscal_shannon_sample_name)
+```
+
+This means that *at least* one group is significantly different in terms of
+Shannon diversity. Let's do a post-hoc test with Dunn's test to find significant
+differences between pairs:
+
+```{r dunn_shannon_sample_name}
+#| label: dunn_shannon_sample_name
+tar_load(nov_2023_dunn_shannon_sample_name, store = store_path)
+nov_2023_dunn_shannon_sample_name$res %>%
+  dplyr::filter(P.adj < 0.05) %>%
+  dplyr::arrange(P.adj)
+```
+
+### By date_condition
+
+```{r alpha-diversity_date_condition}
+#| label: alpha-diversity_date_condition
+#| description: Calculate and visualize alpha diversity metrics for date-condition.
+#| fig-width: 10
+#| fig-height: 8
+#| fig-caption: "Alpha diversity metrics for date-condition"
+tar_load(nov_2023_alpha_diversity_by_date_condition, store = store_path)
+print(nov_2023_alpha_diversity_by_date_condition)
+```
+
+Perform Kruskal-Wallis tests to determine if the alpha diversity metrics are
+significantly different between the groups. Run on shannon metric:
+
+```{r kruscal_shannon_date_condition}
+#| label: kruscal_shannon_date_condition
+#| description: Perform Kruskal-Wallis tests on the Shannon ~ date_condition
+tar_load(nov_2023_kruscal_shannon_date_condition, store = store_path)
+print(nov_2023_kruscal_shannon_date_condition)
+```
+
+This means that *at least* one group is significantly different in terms of
+Shannon diversity. Let's do a post-hoc test with Dunn's test to find significant
+differences between pairs:
+
+```{r dunn_shannon_date_condition}
+#| label: dunn_shannon_date_condition
+tar_load(nov_2023_dunn_shannon_date_condition, store = store_path)
+nov_2023_dunn_shannon_date_condition$res %>%
+  dplyr::filter(P.adj < 0.05) %>%
+  dplyr::arrange(P.adj)
+```

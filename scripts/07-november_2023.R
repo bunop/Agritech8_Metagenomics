@@ -236,6 +236,86 @@ list(
     name = nov_2023_rarefaction_results,
     command = summarize_rarefactions(nov_2023_samples_rarefaction, metadata)
   ),
+  # pivot data and group by sample name
+  tar_target(
+    name = nov_2023_rarefaction_by_sample_name,
+    command = reshape_rarefaction_data(
+      nov_2023_rarefaction_results,
+      by_column = "sample_name"
+    )
+  ),
+  # make plots
+  tar_target(
+    name = nov_2023_alpha_diversity_by_sample_name,
+    command = plot_alpha_diversity(
+      data = nov_2023_rarefaction_by_sample_name,
+      x = "sample_name",
+      y = "mean",
+      fill = "sample_name",
+      facet = "Metric",
+      title = "Alpha Diversity Metrics Across Groups",
+      xlab = "Sample Name",
+      ylab = "Alpha Diversity Measure"
+    )
+  ),
+  # do the Kruskall-Wallis test
+  tar_target(
+    name = nov_2023_kruscal_shannon_sample_name,
+    command = calculate_kruskal_wallis(
+      nov_2023_rarefaction_results,
+      "Shannon_mean",
+      "sample_name"
+    )
+  ),
+  # do the post-hoc tests
+  tar_target(
+    name = nov_2023_dunn_shannon_sample_name,
+    command = calculate_dunn_test(
+      nov_2023_rarefaction_results,
+      "Shannon_mean",
+      "sample_name"
+    )
+  ),
+  # pivot data and group by date_condition
+  tar_target(
+    name = nov_2023_rarefaction_by_date_condition,
+    command = reshape_rarefaction_data(
+      nov_2023_rarefaction_results,
+      by_column = "date_condition"
+    )
+  ),
+  # make plots
+  tar_target(
+    name = nov_2023_alpha_diversity_by_date_condition,
+    command = plot_alpha_diversity(
+      data = nov_2023_rarefaction_by_date_condition,
+      x = "date_condition",
+      y = "mean",
+      fill = "date_condition",
+      facet = "Metric",
+      title = "Alpha Diversity Metrics Across Groups",
+      xlab = "Sample Name",
+      ylab = "Alpha Diversity Measure"
+    )
+  ),
+  # do the Kruskall-Wallis test
+  tar_target(
+    name = nov_2023_kruscal_shannon_date_condition,
+    command = calculate_kruskal_wallis(
+      nov_2023_rarefaction_results,
+      "Shannon_mean",
+      "date_condition"
+    )
+  ),
+  # do the post-hoc tests
+  tar_target(
+    name = nov_2023_dunn_shannon_date_condition,
+    command = calculate_dunn_test(
+      nov_2023_rarefaction_results,
+      "Shannon_mean",
+      "date_condition"
+    )
+  ),
   # render november 2023 quarto document
   tar_quarto(
     name = november_2023,
