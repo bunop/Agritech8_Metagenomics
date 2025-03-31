@@ -359,3 +359,125 @@ nov_2023_dunn_shannon_date_condition$res %>%
   dplyr::filter(P.adj < 0.05) %>%
   dplyr::arrange(P.adj)
 ```
+
+## Beta diversity
+
+### PCoA plot
+
+**Principal Coordinates Analysis (PCoA)** is an ordination technique used to visualize patterns in complex, high-dimensional data by projecting samples into a lower-dimensional space based on a distance matrix.
+
+#### PCoA plot by sample names
+
+Now we will plot a PCoA plot to visualize the technical replicates. See
+[CC186](https://www.youtube.com/watch?v=G5Qckqq5Erw) for more information.
+
+```{r pcoa}
+#| label: pcoa
+# retrieve the PCoA object from targets
+targets::tar_load(nov_2023_pcoa_object, store = store_path)
+
+pcoa_results <- nov_2023_pcoa_object$pcoa_results
+percent_explained <- nov_2023_pcoa_object$percent_explained
+pcoa_df <- nov_2023_pcoa_object$pcoa_df
+```
+
+In the following pictures we are grouping by technical replicates
+
+```{r pcoa-plot}
+#| label: pcoa-plot
+# count the number of levels in the group column
+num_levels <- length(unique(nov_2023_metadata$sample_group))
+
+# Get the color palette
+color_palette <- Polychrome::palette36.colors(num_levels)
+names(color_palette) <- NULL  # Remove any names from the color palette
+
+# try to annotate plot
+pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
+labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
+            glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
+
+# plot the PCoA
+pcoa_plot_rep <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = sample_name)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
+  ggplot2::ggtitle("PCoA Plot on Distance Metrics (Bray-Curtis)") +
+  ggplot2::labs(title = "PCoA of Bray-Curtis Distance Matrix",
+       color = NULL,
+       x = labels[1],
+       y = labels[2]) +
+  ggplot2::scale_color_manual(values = color_palette) +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+print(pcoa_plot_rep)
+```
+
+#### PCoA plot by date and condition (sample replicates)
+
+Visualize the same plot but grouping with date and condition (which should group sample replicates)
+
+```{r pcoa-date-condition}
+#| label: pcoa-date-condition
+# try to annotate plot
+pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
+labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
+            glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
+
+# plot the PCoA
+pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = date_condition)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
+  ggplot2::ggtitle("PCoA Plot on Distance Metrics (Bray-Curtis)") +
+  ggplot2::labs(title = "PCoA of Bray-Curtis Distance Matrix",
+       color = NULL,
+       x = labels[1],
+       y = labels[2]) +
+  ggplot2::scale_color_brewer(palette = "Set1") +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+pcoa_plot
+```
+
+In this image there's a clear separation from *reactor samples* from *default*.
+*Box* samples are closer togheterbut distant from *reactor* conditions.
+
+#### Scree plot
+
+The scree plot is a graphical representation of the eigenvalues of the principal
+components in a PCA or PCoA analysis. It helps visualize the proportion of variance
+explained by each principal component, allowing you to determine the optimal
+number of components to retain. The red line in the plot is at y=2, which is the
+number of components used when plotting a 2D PCoA plot.
+
+```{r scree-plot}
+#| label: scree-plot
+# Determine which cumulative eigenvalues to use
+if ("Cum_corr_eig" %in% colnames(pcoa_results$values)) {
+  cumulative_eig <- pcoa_results$values$Cum_corr_eig * 100
+} else {
+  cumulative_eig <- pcoa_results$values$Cumul_eig * 100
+}
+
+# Create a tibble for plotting
+plot_data <- tibble(
+  pe = cumulative_eig,
+  axis = seq_along(cumulative_eig)
+)
+
+# Generate the plot
+ggplot(plot_data, aes(x = axis, y = pe)) +
+  geom_line() +
+  geom_vline(xintercept = 2, color = "red") +
+  labs(
+    x = "Principal Coordinate Axis",
+    y = "Cumulative Percentage of Variance Explained",
+    title = "Scree Plot of PCoA"
+  ) +
+  theme_minimal()
+```

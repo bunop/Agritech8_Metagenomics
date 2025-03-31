@@ -322,7 +322,7 @@ list(
       "date_condition"
     )
   ),
-  # ordinations
+  # ordinations (beta diversity)
   tar_target(
     name = pcoa_object,
     command = calculate_pcoa(bray_distance_matrix, metadata)

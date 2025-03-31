@@ -331,6 +331,11 @@ list(
       "date_condition"
     )
   ),
+  # ordinations (beta diversity)
+  tar_target(
+    name = nov_2023_pcoa_object,
+    command = calculate_pcoa(nov_2023_bray_distance_matrix, nov_2023_metadata)
+  ),
   # render november 2023 quarto document
   tar_quarto(
     name = november_2023,
