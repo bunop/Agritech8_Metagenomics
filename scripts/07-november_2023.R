@@ -222,10 +222,6 @@ list(
   ),
   # deal with rarefaction curves
   tar_target(
-    rarefaction_depth,
-    min(sample_sums(nov_2023_phyloseq_obj))
-  ),
-  tar_target(
     name = nov_2023_rarecurve_df,
     command = calculate_rarecurve(nov_2023_otu_table_matrix)
   ),
@@ -240,7 +236,7 @@ list(
     name = nov_2023_samples_rarefaction,
     command = rarefy_alpha(
       nov_2023_phyloseq_obj,
-      rarefaction_depth,
+      nov_2023_rarefaction_depth,
       measures = c("Observed", "Shannon", "Simpson", "InvSimpson", "Fisher")),
     pattern = map(thousand_iterations)
   ),

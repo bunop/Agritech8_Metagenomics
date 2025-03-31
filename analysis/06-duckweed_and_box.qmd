@@ -500,6 +500,7 @@ nmds_plot_rep <- ggplot2::ggplot(
 
 print(nmds_plot_rep)
 ```
+
 ::: {.callout-warning}
 I've applied a certain amount of jitter (random noise) to points in order
 to clearly see them in the image.

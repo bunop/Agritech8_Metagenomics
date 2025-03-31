@@ -267,7 +267,7 @@ is the sequencing depth used in rarefaction step.
 #| fig-caption: "Rarefaction curves with vegan"
 # load calculated rarefaction data
 tar_load(nov_2023_rarecurve_df, store = store_path)
-tar_load(rarefaction_depth, store = store_path)
+tar_load(nov_2023_rarefaction_depth, store = store_path)
 
 # Add metadata to the rarecurve_df
 nov_2023_rarecurve_df <- nov_2023_metadata %>%
@@ -277,7 +277,7 @@ nov_2023_rarecurve_df <- nov_2023_metadata %>%
 # draw the plot
 ggplot(nov_2023_rarecurve_df, aes(x = Sample, y = Species, color = date_condition, group = sampleID)) +
   geom_line() +
-  geom_vline(xintercept = rarefaction_depth, linetype = "dashed", color = "red") +  # Add vertical line
+  geom_vline(xintercept = nov_2023_rarefaction_depth, linetype = "dashed", color = "red") +  # Add vertical line
   labs(
     title = "Rarefaction Curves for All Samples",
     x = "Number of Individuals Sampled",
