@@ -481,3 +481,72 @@ ggplot(plot_data, aes(x = axis, y = pe)) +
   ) +
   theme_minimal()
 ```
+
+### NMDS plot
+
+Non-metric Multidimensional Scaling (**NMDS**) is an ordination technique used to visualize the similarity or dissimilarity between samples in complex, multidimensional datasets. Unlike metric methods, NMDS focuses on preserving the rank order of distances rather than the actual distance values, making it particularly useful for ecological and environmental data where relationships may be non-linear.
+
+```{r nmds}
+#| label: nmds
+targets::tar_load(nov_2023_nmds_object, store = store_path)
+
+nmds_tb <- nov_2023_nmds_object$nmds_tb
+```
+#### NMDS plot by sample names
+
+Let's plot the NMDS plot focusing on the technical replicates.
+see [CC187](https://www.youtube.com/watch?v=h7OrVmT7Ja8&ab_channel=RiffomonasProject)
+for more information.
+
+```{r nmds-plot}
+#| label: nmds-plot
+# count the number of levels in the group column
+num_levels <- length(unique(nov_2023_metadata$sample_group))
+
+# Get the color palette
+color_palette <- Polychrome::palette36.colors(num_levels)
+names(color_palette) <- NULL  # Remove any names from the color palette
+
+# Use palette36 from Polychrome, which supports up to 36 colors
+nmds_plot_rep <- ggplot2::ggplot(
+    nmds_tb,
+    ggplot2::aes(x=NMDS1, y=NMDS2, color = sample_name)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
+  ggplot2::labs(
+    title = "NMDS Plot on distance metrics (Bray-Curtis)",
+    color = NULL) +
+  ggplot2::scale_color_manual(values = color_palette) +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+print(nmds_plot_rep)
+```
+
+#### NMDS plot by date and condition (sample replicates)
+
+Now, let's visualize the NMDS plot but grouping with date and condition
+(which should group sample replicates)
+
+```{r nmds-date-condition}
+#| label: nmds-date-condition
+
+# Plot the NMDS
+nmds_plot <- ggplot2::ggplot(
+    nmds_tb,
+    ggplot2::aes(x=NMDS1, y=NMDS2, color = date_condition)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
+  ggplot2::labs(
+    title = "NMDS Plot on distance metrics (Bray-Curtis)",
+    color = NULL) +
+  ggplot2::scale_color_brewer(palette = "Set1") +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+print(nmds_plot)
+```
