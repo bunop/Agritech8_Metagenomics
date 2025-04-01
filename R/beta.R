@@ -12,13 +12,41 @@ calculate_distance_matrix <- function(
   return(distance_matrix)
 }
 
-# work on beta dispersion
-calculate_beta_dispersion <- function(distance_matrix, metadata, column) {
+#' Calculate Beta Dispersion and Perform ANOVA
+#'
+#' This function calculates beta dispersion for a given distance matrix and conducts ANOVA 
+#' on the resulting dispersion values based on groups defined in the metadata. It can also 
+#' reorder the levels of the grouping factor in the metadata if specified.
+#'
+#' @param distance_matrix A dissimilarity matrix (object of class 'dist') that contains the pairwise distances between samples.
+#' @param metadata A data frame that includes sample information, with one column defining the grouping of samples for dispersion analysis.
+#' @param column A string indicating the name of the column in `metadata` that represents the groups to compare for beta dispersion.
+#' @param levels A character vector (optional) that defines the desired order of factor levels for the specified column. 
+#' If provided, the levels will be reordered using `forcats::fct_relevel`.
+#'
+#' @return A list containing:
+#'   - `beta_disp`: An object of class 'betadisper' containing the beta dispersion results.
+#'   - `anova_result`: The results of the ANOVA test performed on the beta dispersion values.
+#'   - `beta_disp_df`: A data frame with the beta dispersion values for each sample, including the group information.
+#'
+#' @examples
+#' # Create a distance matrix and metadata
+#' distance_matrix <- vegdist(data_matrix)
+#' metadata <- data.frame(SampleID = rownames(data_matrix), Group = c("A", "A", "B", "B"))
+#' # Calculate beta dispersion
+#' result <- calculate_beta_dispersion(distance_matrix, metadata, column = "Group", levels = c("A", "B"))
+#' 
+#' @importFrom vegan betadisper
+#' @importFrom dplyr mutate
+#' @importFrom rlang sym
+#' @importFrom forcats fct_relevel
+#' @importFrom stats anova
+calculate_beta_dispersion <- function(distance_matrix, metadata, column, levels=NULL) {
   # calculate beta dispersion
   beta_disp <- vegan::betadisper(distance_matrix, metadata[[column]])
 
   # Perform ANOVA on dispersion
-  anova_result <- anova(beta_disp)
+  anova_result <- stats::anova(beta_disp)
 
   # organize results for plotting
   beta_disp_df <- data.frame(
@@ -26,6 +54,11 @@ calculate_beta_dispersion <- function(distance_matrix, metadata, column) {
     Distance = beta_disp$distances,
     Group = beta_disp$group
   )
+
+  if (!is.null(levels)) {
+    beta_disp_df <- beta_disp_df %>%
+      dplyr::mutate(Group := forcats::fct_relevel(Group, !!!levels))
+  }
 
   return(list(
     beta_disp = beta_disp,

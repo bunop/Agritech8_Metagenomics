@@ -372,7 +372,8 @@ list(
     command = calculate_beta_dispersion(
       nov_2023_bray_distance_matrix,
       nov_2023_metadata,
-      column = "sample_name"
+      column = "sample_name",
+      levels = custom_order_sample_names
     )
   ),
   tar_target(
@@ -380,7 +381,8 @@ list(
     command = calculate_beta_dispersion(
       nov_2023_bray_distance_matrix,
       nov_2023_metadata,
-      column = "date_condition"
+      column = "date_condition",
+      levels = custom_order_date_condition
     )
   ),
   # permanova on distance matrix
