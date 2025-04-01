@@ -563,3 +563,35 @@ print(nmds_plot)
 I've applied `0.05` of jitter (random noise) to points in order
 to clearly see them in the image.
 :::
+
+### Between group distances
+
+#### sample_name distances
+
+Plot distances by sample names:
+
+```{r sample_name_distances}
+#| label: sample_name_distances
+#| title: Distance matrix by sample names
+#| description: Plot the distance matrix by sample names
+#| fig.width: 10
+#| fig.height: 8
+#| fig.align: center
+tar_load(nov_2023_bray_distance_by_sample_name_plot, store = store_path)
+print(nov_2023_bray_distance_by_sample_name_plot)
+```
+
+#### date_condition distances
+
+Plot distances by date_condition:
+
+```{r date_condition_distances}
+#| label: date_condition_distances
+#| title: Distance matrix by date_condition
+#| description: Plot the distance matrix by date_condition
+#| fig.width: 10
+#| fig.height: 8
+#| fig.align: center
+tar_load(nov_2023_bray_distance_by_date_condition_plot, store = store_path)
+print(nov_2023_bray_distance_by_date_condition_plot)
+```

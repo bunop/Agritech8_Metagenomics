@@ -1,5 +1,5 @@
 name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
-.Random.seed|object|0afd9c61a4c41097|||||||||||||||
+.Random.seed|object|f210bb00cd4e96c4|||||||||||||||
 agglomerate_by_taxa|function|44ab39ab7822fe92|||||||||||||||
 calculate_beta_dispersion|function|38f232c326c24cd0|||||||||||||||
 calculate_coverage_stats|function|899573af7734a8d4|||||||||||||||
@@ -18,7 +18,7 @@ custom_order_sample_names|stem|4ccb6e501a8ae226|72298279fa009845|77178e97bde05ab
 get_distances|function|ef33c785bf0d9dd2|||||||||||||||
 get_krona_cmd|function|32c1c108b31fb3d7|||||||||||||||
 get_metadata|function|7185b4f1c4503a2c|||||||||||||||
-get_otu_table|function|007ace0903fcc16d|||||||||||||||
+get_otu_table|function|1e1654f9c96ca994|||||||||||||||
 get_samples_data|function|f60254bee1bb4944|||||||||||||||
 load_metadata|function|419fe299e9e4ae91|||||||||||||||
 load_phyloseq|function|b060fe9c9b9ded34|||||||||||||||
@@ -30,6 +30,10 @@ metadata_path|stem|88151cb444d0705c|66a41174dc2d47b2|2c530c1562a7fbd1|-176145465
 nov_2023_alpha_diversity_by_date_condition|stem|7cf2573f194564bb|8929e5c022e15a13|c10fa409b7e48c1d|-171491949||t20179.429118249s|69a05f6229551374|475074|rds|local|vector|||0.225||
 nov_2023_alpha_diversity_by_sample_name|stem|8cf92ed9a5de40ee|b5c385b686779c1d|728f648f71234053|676498048||t20179.4291110268s|dbf95d61a6c920fc|602810|rds|local|vector|||0.062||
 nov_2023_ampvis2_object|stem|df8baadecac84a85|d99359ccec4d9f46|5d80045fef5f5678|1433456022||t20179.4239098125s|abff564394f902a7|790918|rds|local|vector|||0.751|Could not find a column named one of OTU, ASV, OTU ID in otutable. Using row names as OTU IDs.. Could not find a column named one of OTU, ASV, OTU ID in taxonomy. Using row names as OTU IDs.|
+nov_2023_bray_distance_by_date_condition|stem|3f4daf45b2b9f164|f5460e5d2ffc6b5d|213774c581a5ba22|567365368||t20179.5393913639s|6cdc55081f50819b|6647|rds|local|vector|||0.056||
+nov_2023_bray_distance_by_date_condition_plot|stem|2e48da56461b4332|b3f97f3e318550b7|d762f5b670c9a33f|851896412||t20179.5393960861s|b77e07983686a284|419303|rds|local|vector|||0.081||
+nov_2023_bray_distance_by_sample_name|stem|4d873f10de96c9b7|ea2ed1f5edc34738|213774c581a5ba22|-245419789||t20179.5393918268s|5757672ec08dfd37|7175|rds|local|vector|||0.031||
+nov_2023_bray_distance_by_sample_name_plot|stem|f7370f6dbd904d7c|26b9dbd87ad0cc05|f84a8b88353a46d3|283198137||t20179.5393986324s|20e845298ee12322|428676|rds|local|vector|||0.039||
 nov_2023_bray_distance_matrix|stem|d91c4f09f366c6a1|675bdd106961d2e0|5f245aba91434130|-1089082932||t20179.4308752738s|0dbc432f5ed6deea|3665|rds|local|vector|||179.187||
 nov_2023_dunn_shannon_date_condition|stem|0b165427cfe0c689|fa1b1ff01ddebc6c|c642a79f858f156e|-103386126||t20179.4291850541s|63ced487326d3464|909|rds|local|vector|||7.016||
 nov_2023_dunn_shannon_sample_name|stem|4b03c1c650184183|b105c10f682e2285|c642a79f858f156e|-2040287511||t20179.4291043602s|b05f7f8a22f60f83|1687|rds|local|vector|||0.048|sample_name was coerced to a factor.|
@@ -42,7 +46,7 @@ nov_2023_melted_phylum|stem|c802132b26446af8|5a96046832751147|80a43d3834f73488|-
 nov_2023_metadata|stem|87b236a386ca003b|1369d0e10036b85f|e1b11451ffeca8f9|-1332104223||t20178.5355980408s|b6a66ff3c6d74183|1298|rds|local|vector|||9.457||
 nov_2023_metadata_tmp|stem|a031344b5e12a7be|dea3c7b5ca9aab53|1c52f77e052d7e47|-352620213||t20173.5660974255s|9ca79dc0b9da7cc6|1238|rds|local|vector|||9.671||
 nov_2023_nmds_object|stem|a159f303cea6f84a|62f1aa4946f63ef0|8a32277031a80b2a|-1778988028||t20179.4308804126s|62b87ab873144821|10310|rds|local|vector|||0.147|stress is nearly zero you may have insufficient data|
-nov_2023_otu_table_matrix|stem|d71bca020a84cc5c|bf904cde753f9a36|340b42310406e39b|1758296413||t20179.4242048105s|9483d5ab36e170e4|313762|rds|local|vector|||11.693||
+nov_2023_otu_table_matrix|stem|d71bca020a84cc5c|bf904cde753f9a36|39ea8f56704cd0b1|1758296413||t20179.5393370587s|9483d5ab36e170e4|313762|rds|local|vector|||0.006||
 nov_2023_pcoa_object|stem|6777fb41b3766395|e30fbd47e1b99e86|542d8205ac9102b4|-394561260||t20179.4308768478s|b6f90248aff697e4|16232|rds|local|vector|||0.118||
 nov_2023_phyloseq_obj|stem|cf5c968fc393a273|9708923107527491|860b71ac6dc4c93c|1768904401||t20179.4238940718s|c03abbdfa96ff5ae|1312915|rds|local|vector|||0.109||
 nov_2023_phyloseq_obj_tmp|stem|0fac799ea937ab16|fd2376e60fb17806|de633c3d82ca0fa3|-1008731423||t20179.4238866645s|a9381c8d65760832|1312889|rds|local|vector|||0.055||
@@ -1057,13 +1061,13 @@ nov_2023_tech_rep_permanova|stem|543efdb616829592|8387c216ad4f4751|02d9f54fed502
 november_2023|stem|a47e60a099984455|a91f19bac6c39cf8|8b016e97a06c81d7|1207674139|analysis/07-november_2023.html*analysis/07-november_2023.qmd|t20179.4312567989s|0f545813451d698c|3632212|file|local|vector|||32.518||
 object|object|a85c84dcb467c615|||||||||||||||
 phyloseq_obj|stem|a6636039185e4835|36fbfaa7c9af935b|f103f1dec195db42|959985470||t20167.6523481912s|1b4ceb13011c0b71|1336935|rds|local|vector|||0.858||
-phyloseq_obj_pruned|stem|76cb477e3a5bb69b|00a2e32b5041ca2e|36dca0faa0bc1a3f|173610066||t20179.4238721738s|7f9d7708564304ad|1328376|rds|local|vector|||6.011||
+phyloseq_obj_pruned|stem|76cb477e3a5bb69b|00a2e32b5041ca2e|072551594c583ed1|173610066||t20179.5393204385s|7f9d7708564304ad|1328376|rds|local|vector|||7.656||
 phyloseq_path|stem|48bc5a5f2d332798|315e3d642ae25b92|2c530c1562a7fbd1|-776385659|/home/paolo/Projects/Agritech8_Metagenomics/results-bacteria/phyloseq/dada2_phyloseq.rds|t20057.7259542294s|3bded0e7014f7ac0|1336510|file|local|vector|||5.509||
 phyloseq_to_ampvis2|function|801e2c649335d705|||||||||||||||
 plot_alpha_diversity|function|c7ae3948d13e0575|||||||||||||||
 plot_alpha_diversity_with_stddev|function|847c6b63366b908b|||||||||||||||
 plot_distances|function|758c0052050354ab|||||||||||||||
-prune_phyloseq|function|a9e3845e5ae06a10|||||||||||||||
+prune_phyloseq|function|9567177c0cff2032|||||||||||||||
 rarefy_alpha|function|96312602b69a14d1|||||||||||||||
 reshape_rarefaction_data|function|73c69b3451a7f839|||||||||||||||
 select_samples|function|58877607ce0b93c5|||||||||||||||

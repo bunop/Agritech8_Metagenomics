@@ -341,6 +341,31 @@ list(
     name = nov_2023_nmds_object,
     command = calculate_nmds(nov_2023_bray_distance_matrix, nov_2023_metadata)
   ),
+  # calculate distances with and between groups
+  tar_target(
+    name = nov_2023_bray_distance_by_sample_name,
+    command = get_distances(
+      nov_2023_bray_distance_matrix,
+      nov_2023_metadata,
+      column = "sample_name"
+    )
+  ),
+  tar_target(
+    name = nov_2023_bray_distance_by_sample_name_plot,
+    command = plot_distances(nov_2023_bray_distance_by_sample_name, column = "sample_name")
+  ),
+  tar_target(
+    name = nov_2023_bray_distance_by_date_condition,
+    command = get_distances(
+      nov_2023_bray_distance_matrix,
+      nov_2023_metadata,
+      column = "date_condition"
+    )
+  ),
+  tar_target(
+    name = nov_2023_bray_distance_by_date_condition_plot,
+    command = plot_distances(nov_2023_bray_distance_by_date_condition, column = "date_condition")
+  ),
   # render november 2023 quarto document
   tar_quarto(
     name = november_2023,
