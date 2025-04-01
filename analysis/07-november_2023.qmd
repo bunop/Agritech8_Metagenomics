@@ -595,3 +595,140 @@ Plot distances by date_condition:
 tar_load(nov_2023_bray_distance_by_date_condition_plot, store = store_path)
 print(nov_2023_bray_distance_by_date_condition_plot)
 ```
+
+### Permanova
+
+Here we will do some analyses on beta diversity. First, we evaluate beta dispersion
+which is essential to ensure the validity of statistical tests, accurately 
+interpret differences in community composition, and select appropriate analytical 
+methods. Neglecting this step can lead to incorrect conclusions about the 
+ecological patterns present in your data. For unbalanced designs PERMANOVA and ANOSIM were
+
+1. too liberal if the smaller group had greater dispersion, and
+2. too conservative if the larger group had greater dispersion.
+
+This result was especially so for ANOSIM (see [here](https://stats.stackexchange.com/a/316386/451801)
+for more information)
+
+#### sample_name permanova
+
+Calculate beta dispersion for *sample_name* column:
+
+```{r sample_name_beta_dispersion}
+#| label: sample_name_beta_dispersion
+#| title: Beta dispersion by sample names
+#| description: Calculate beta dispersion by sample names
+tar_load(nov_2023_sample_name_beta_dispersion, store = store_path)
+print(nov_2023_sample_name_beta_dispersion$anova_result)
+```
+
+Since we don't see any significant differences in dispersion, we can proceed
+with the PERMANOVA analysis. Plot beta dispersion:
+
+```{r sample_name_beta_dispersion_plot}
+#| label: sample_name_beta_dispersion_plot
+#| title: Beta dispersion plot by sample names
+#| description: Plot beta dispersion by sample names
+#| fig.width: 10
+#| fig.height: 8
+#| fig.align: center
+# Create the boxplot
+ggplot(nov_2023_sample_name_beta_dispersion$beta_disp_df, aes(x = Group, y = Distance, fill = Group)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.2, alpha = 0.5) +  # Adds individual data points
+  labs(
+    title = "Beta Dispersion by Group",
+    x = "Group",
+    y = "Distance to Centroid"
+  ) +
+  theme_minimal() +
+  ggplot2::theme(
+    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
+  )
+```
+
+Do permanova with *bray-curtis* on *sample_name* column:
+
+```{r sample_name_permanova}
+#| label: sample_name_permanova
+# load the permanova with targets
+targets::tar_load(nov_2023_sample_name_permanova, store = store_path)
+print(nov_2023_sample_name_permanova)
+```
+
+Load the *pairwise* permanova on the same columns and filter only significant
+values (P.adj < 0.05):
+
+```{r pairwise_sample_name_permanova}
+#| label: pairwise_sample_name_permanova
+# load the permanova with targets
+targets::tar_load(nov_2023_pairwise_sample_name_permanova, store = store_path)
+
+nov_2023_pairwise_sample_name_permanova %>%
+  dplyr::filter(P.adj < 0.05) %>%
+  dplyr::arrange(P.adj) %>%
+  dplyr::select(Comparison, P.adj, everything())
+```
+
+No comparison has been filtered for *sample_name* column
+
+#### date_condition permanova
+
+Calculate beta dispersion for *date_condition* column:
+
+```{r date_condition_beta_dispersion}
+#| label: date_condition_beta_dispersion
+#| title: Beta dispersion by sample names
+#| description: Calculate beta dispersion by sample names
+tar_load(nov_2023_date_condition_beta_dispersion, store = store_path)
+print(nov_2023_date_condition_beta_dispersion$anova_result)
+```
+
+I see significant differences in dispersions: should I trust the `date_condition`
+permanova? Plot beta dispersion:
+
+```{r date_condition_beta_dispersion_plot}
+#| label: date_condition_beta_dispersion_plot
+#| title: Beta dispersion plot by sample names
+#| description: Plot beta dispersion by sample names
+#| fig.width: 10
+#| fig.height: 8
+#| fig.align: center
+# Create the boxplot
+ggplot(nov_2023_date_condition_beta_dispersion$beta_disp_df, aes(x = Group, y = Distance, fill = Group)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.2, alpha = 0.5) +  # Adds individual data points
+  labs(
+    title = "Beta Dispersion by Group",
+    x = "Group",
+    y = "Distance to Centroid"
+  ) +
+  theme_minimal() +
+  ggplot2::theme(
+    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
+  )
+```
+
+
+Do permanova with *bray-curtis* on *date_condition* column:
+
+```{r date_condition_permanova}
+#| label: date_condition_permanova
+# load the permanova with targets
+targets::tar_load(nov_2023_date_condition_permanova, store = store_path)
+print(nov_2023_date_condition_permanova)
+```
+
+Load the *pairwise* permanova on the same columns and filter only significant
+values (P.adj < 0.05):
+
+```{r pairwise_date_condition_permanova}
+#| label: pairwise_date_condition_permanova
+# load the permanova with targets
+targets::tar_load(nov_2023_pairwise_date_condition_permanova, store = store_path)
+
+nov_2023_pairwise_date_condition_permanova %>%
+  dplyr::filter(P.adj < 0.05) %>%
+  dplyr::arrange(P.adj) %>%
+  dplyr::select(Comparison, P.adj, everything())
+```

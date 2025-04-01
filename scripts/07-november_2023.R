@@ -366,6 +366,56 @@ list(
     name = nov_2023_bray_distance_by_date_condition_plot,
     command = plot_distances(nov_2023_bray_distance_by_date_condition, column = "date_condition")
   ),
+  # calculate beta dispersion
+  tar_target(
+    name = nov_2023_sample_name_beta_dispersion,
+    command = calculate_beta_dispersion(
+      nov_2023_bray_distance_matrix,
+      nov_2023_metadata,
+      column = "sample_name"
+    )
+  ),
+  tar_target(
+    name = nov_2023_date_condition_beta_dispersion,
+    command = calculate_beta_dispersion(
+      nov_2023_bray_distance_matrix,
+      nov_2023_metadata,
+      column = "date_condition"
+    )
+  ),
+  # permanova on distance matrix
+  tar_target(
+    name = nov_2023_sample_name_permanova,
+    command = calculate_permanova(
+      nov_2023_bray_distance_matrix,
+      nov_2023_metadata,
+      columns = c("sample_name")
+    )
+  ),
+  tar_target(
+    name = nov_2023_pairwise_sample_name_permanova,
+    command = calculate_pairwise_permanova(
+      nov_2023_bray_distance_matrix,
+      nov_2023_metadata,
+      columns = c("sample_name")
+    )
+  ),
+  tar_target(
+    name = nov_2023_date_condition_permanova,
+    command = calculate_permanova(
+      nov_2023_bray_distance_matrix,
+      nov_2023_metadata,
+      columns = c("date_condition")
+    )
+  ),
+  tar_target(
+    name = nov_2023_pairwise_date_condition_permanova,
+    command = calculate_pairwise_permanova(
+      nov_2023_bray_distance_matrix,
+      nov_2023_metadata,
+      columns = c("date_condition")
+    )
+  ),
   # render november 2023 quarto document
   tar_quarto(
     name = november_2023,
