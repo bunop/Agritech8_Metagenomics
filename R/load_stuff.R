@@ -88,6 +88,27 @@ load_phyloseq <- function(metadata, ...) {
   return(phyloseq_object)
 }
 
+# remove unwanted taxa from phyloseq object
+prune_phyloseq <- function(phyloseq_obj, rank, items) {
+  # Check if the rank provided is valid
+  if (!rank %in% colnames(phyloseq::tax_table(phyloseq_obj))) {
+    stop("The specified rank does not exist in the taxonomy table.")
+  }
+  
+  # Ensure items is a character vector (it can be a single item or multiple items)
+  if (is.vector(items) && !is.character(items)) {
+    stop("Items should be a character vector.")
+  }
+
+  # Create a logical vector to identify taxa to keep (not matching any of the specified items)
+  taxa_to_keep <- as.vector(!(phyloseq::tax_table(phyloseq_obj)[, rank] %in% items))
+
+  # Use prune_taxa to remove the specified taxa
+  pruned_phyloseq_obj <- phyloseq::prune_taxa(taxa_to_keep, phyloseq_obj)
+
+  return(pruned_phyloseq_obj)
+}
+
 # order phyloseq object relying on sample ids
 sort_phyloseq <- function(phyloseq_obj, sample_ids) {
   # ensure sample_ids is a character vector
@@ -105,7 +126,7 @@ get_otu_table <- function(phyloseq_object) {
   otu_table_matrix <- as(phyloseq::otu_table(phyloseq_object), "matrix")
 
   # check if the taxa are rows
-  if (taxa_are_rows(phyloseq_object)) {
+  if (phyloseq::taxa_are_rows(phyloseq_object)) {
     otu_table_matrix <- t(otu_table_matrix)
   }
 
@@ -140,7 +161,7 @@ load_qiime_rarefaction <- function(rarefaction_csv, metadata, alpha_metric, colu
 
   # Reshape the data to long format
   long_data <- data %>%
-    pivot_longer(
+    tidyr::pivot_longer(
       cols = starts_with("depth-"),
       names_to = c("depth", "iteration"),
       names_sep = "_iter-",

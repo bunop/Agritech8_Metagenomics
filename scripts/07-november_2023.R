@@ -131,11 +131,16 @@ list(
     name = phyloseq_obj,
     command = load_phyloseq(metadata, phyloseq_path)
   ),
+  # remove chloroplast from data
+  tar_target(
+    name = phyloseq_obj_pruned,
+    command = prune_phyloseq(phyloseq_obj, rank="Phylum", items=("Cyanobacteria"))
+  ),
   # subsetting samples from phyloseq object
   tar_target(
     name = nov_2023_phyloseq_obj_tmp,
     command = phyloseq::subset_samples(
-      phyloseq_obj,
+      phyloseq_obj_pruned,
       date == "nov 23"
     )
   ),
