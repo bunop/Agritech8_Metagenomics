@@ -1,5 +1,5 @@
 name|type|data|command|depend|seed|path|time|size|bytes|format|repository|iteration|parent|children|seconds|warnings|error
-.Random.seed|object|4f2bc758318d09af|||||||||||||||
+.Random.seed|object|77f4e43956146372|||||||||||||||
 agglomerate_by_taxa|function|44ab39ab7822fe92|||||||||||||||
 calculate_beta_dispersion|function|33cc91add3ee3be8|||||||||||||||
 calculate_coverage_stats|function|899573af7734a8d4|||||||||||||||
@@ -1064,7 +1064,7 @@ nov_2023_samples_rarefaction_ff6b795913d67b90|branch|93c62cdfddcb5733|be23f730df
 nov_2023_samples_rarefaction_ff7a0acfadb291cc|branch|672792bdbecdb677|be23f730df12aa25|1fc73346cfeb3bb8|-650373033||t20179.4264221565s|bc710c3d8fff9888|1335|rds|local|vector|nov_2023_samples_rarefaction||2.232||
 nov_2023_samples_rarefaction_ffbed3f2c17c35eb|branch|ff11ed15c2574fc1|be23f730df12aa25|1fc73346cfeb3bb8|273942824||t20179.4263759994s|04311f83848b6023|1354|rds|local|vector|nov_2023_samples_rarefaction||1.329||
 nov_2023_tech_rep_permanova|stem|543efdb616829592|8387c216ad4f4751|02d9f54fed502b3f|-931420083||t20179.4308786071s|b67a5fb4ede2483f|18609|rds|local|vector|||0.137||
-november_2023|stem|5b69e54a088b2c81|68b7d0a7bd1065d3|3093984f6f2b9fdc|1207674139|analysis/07-november_2023.html*analysis/07-november_2023.qmd|t20179.5896156258s|5b91f5f4314b67be|4239800|file|local|vector|||47.566||
+november_2023|stem|d02842a142c4b99f|f0c09bd594b51424|ecbe39ab3798a701|1207674139|analysis/07-november_2023.html*analysis/07-november_2023.qmd|t20179.643247147s|fd3bed11320741b1|4254033|file|local|vector|||49.429||
 object|object|a85c84dcb467c615|||||||||||||||
 phyloseq_obj|stem|a6636039185e4835|36fbfaa7c9af935b|f103f1dec195db42|959985470||t20167.6523481912s|1b4ceb13011c0b71|1336935|rds|local|vector|||0.858||
 phyloseq_obj_pruned|stem|76cb477e3a5bb69b|00a2e32b5041ca2e|072551594c583ed1|173610066||t20179.5393204385s|7f9d7708564304ad|1328376|rds|local|vector|||7.656||

@@ -24,8 +24,18 @@ library(tidyverse)
 library(ggplot2)
 library(phyloseq)
 library(ampvis2)
+library(openxlsx)
 
+# where I can find artifacts
 store_path <- here::here("stores", "november_2023")
+
+# a folder in which store data files
+data_path <- here::here("analysis", "november_2023")
+
+if (!dir.exists(data_path)) {
+  dir.create(data_path, recursive = TRUE)
+  cat("Directory created:", data_path, "\n")
+}
 ```
 
 ## Load metadata from november 2023
@@ -37,16 +47,22 @@ Let's load the metadata from the November 2023 experiments and try to do some an
 # load data from targets
 targets::tar_load(nov_2023_metadata, store = store_path)
 
+# write table for metadata
+write.xlsx(nov_2023_metadata, file = here(data_path, "nov_2023_metadata.xlsx"))
+
 # check the new metadata
 nov_2023_metadata
 ```
 
+Download the [nov_2023_metadata.xlsx](november_2023/nov_2023_metadata.xlsx) table.
 Load other phyloseq stuff
 
 ```{r load-phyloseq}
 #| label: load-phyloseq
 targets::tar_load(nov_2023_phyloseq_obj, store = store_path)
 targets::tar_load(nov_2023_samples_data, store = store_path)
+
+write.xlsx(nov_2023_samples_data, file = here(data_path, "nov_2023_samples_data.xlsx"))
 ```
 
 ## Checking samples
@@ -71,6 +87,7 @@ depth_plot <- ggplot2::ggplot(
 # Display the plot
 print(depth_plot)
 ```
+Download the full [nov_2023_samples_data.xlsx](november_2023/nov_2023_samples_data.xlsx) table.
 
 ### Permanova
 
@@ -115,6 +132,9 @@ by sampleID.
 tar_load(nov_2023_melted_phylum, store = store_path)
 taxrank <- "Phylum"
 
+# write table for melted_phylum
+write.xlsx(nov_2023_melted_phylum, file = here(data_path, "nov_2023_melted_phylum.xlsx"))
+
 ggplot2::ggplot(nov_2023_melted_phylum, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
   ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
   # need a sorted object like the one used in agglomerate_by_taxa
@@ -127,6 +147,8 @@ ggplot2::ggplot(nov_2023_melted_phylum, ggplot2::aes(x = sampleID, y = Abundance
   ggplot2::theme_bw() +
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
+
+Download the [nov_2023_melted_phylum.xlsx](november_2023/nov_2023_melted_phylum.xlsx) table.
 
 ### By Phylum (>5%)
 
@@ -173,6 +195,9 @@ by sampleID.
 tar_load(nov_2023_melted_class, store = store_path)
 taxrank <- "Class"
 
+# write table for melted_class
+write.xlsx(nov_2023_melted_class, file = here(data_path, "nov_2023_melted_class.xlsx"))
+
 ggplot2::ggplot(nov_2023_melted_class, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
   ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
   # need a sorted object like the one used in agglomerate_by_taxa
@@ -185,6 +210,8 @@ ggplot2::ggplot(nov_2023_melted_class, ggplot2::aes(x = sampleID, y = Abundance,
   ggplot2::theme_bw() +
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
+
+Download the [nov_2023_melted_class.xlsx](november_2023/nov_2023_melted_class.xlsx) table.
 
 ### By Class (>5%)
 
@@ -230,8 +257,14 @@ taxa at the Phylum level:
 #| fig-caption: "Heatmap of the top 10 most abundant taxa at the Phylum level"
 #| fig-align: center
 tar_load(nov_2023_heatmap_phylum, store = store_path)
+
+# write a file for heatmap_phylum
+write.xlsx(nov_2023_heatmap_phylum$data, file = here(data_path, "nov_2023_heatmap_phylum.xlsx"))
+
 print(nov_2023_heatmap_phylum)
 ```
+
+Download the [nov_2023_heatmap_phylum.xlsx](november_2023/nov_2023_heatmap_phylum.xlsx) table.
 
 ### By Class
 
@@ -246,8 +279,14 @@ taxa at the Class level:
 #| fig-caption: "Heatmap of the top 20 most abundant taxa at the Class level"
 #| fig-align: center
 tar_load(nov_2023_heatmap_class, store = store_path)
+
+# write a file for heatmap_class
+write.xlsx(nov_2023_heatmap_class$data, file = here(data_path, "nov_2023_heatmap_class.xlsx"))
+
 print(nov_2023_heatmap_class)
 ```
+
+Download the [nov_2023_heatmap_class.xlsx](november_2023/nov_2023_heatmap_class.xlsx) table.
 
 ## Samples Rarefaction
 
@@ -321,10 +360,16 @@ differences between pairs:
 ```{r dunn_shannon_sample_name}
 #| label: dunn_shannon_sample_name
 tar_load(nov_2023_dunn_shannon_sample_name, store = store_path)
+
+# write the full table for dunn_shannon_sample_name
+write.xlsx(nov_2023_dunn_shannon_sample_name$res, file = here(data_path, "nov_2023_dunn_shannon_sample_name.xlsx"))
+
 nov_2023_dunn_shannon_sample_name$res %>%
   dplyr::filter(P.adj < 0.05) %>%
   dplyr::arrange(P.adj)
 ```
+
+Download the full [nov_2023_dunn_shannon_sample_name.xlsx](november_2023/nov_2023_dunn_shannon_sample_name.xlsx) table.
 
 ### By date_condition
 
@@ -355,10 +400,16 @@ differences between pairs:
 ```{r dunn_shannon_date_condition}
 #| label: dunn_shannon_date_condition
 tar_load(nov_2023_dunn_shannon_date_condition, store = store_path)
+
+# write the full table for dunn_shannon_date_condition
+write.xlsx(nov_2023_dunn_shannon_date_condition$res, file = here(data_path, "nov_2023_dunn_shannon_date_condition.xlsx"))
+
 nov_2023_dunn_shannon_date_condition$res %>%
   dplyr::filter(P.adj < 0.05) %>%
   dplyr::arrange(P.adj)
 ```
+
+Download the full [nov_2023_dunn_shannon_date_condition.xlsx](november_2023/nov_2023_dunn_shannon_date_condition.xlsx) table.
 
 ## Beta diversity
 
@@ -577,9 +628,14 @@ Plot distances by sample names:
 #| fig.width: 10
 #| fig.height: 8
 #| fig.align: center
+tar_load(nov_2023_bray_distance_by_sample_name)
+write.xlsx(nov_2023_bray_distance_by_sample_name, file = here(data_path, "nov_2023_bray_distance_by_sample_name.xlsx"))
+
 tar_load(nov_2023_bray_distance_by_sample_name_plot, store = store_path)
 print(nov_2023_bray_distance_by_sample_name_plot)
 ```
+
+Download the full [nov_2023_bray_distance_by_sample_name.xlsx](november_2023/nov_2023_bray_distance_by_sample_name.xlsx) table.
 
 #### date_condition distances
 
@@ -592,9 +648,14 @@ Plot distances by date_condition:
 #| fig.width: 10
 #| fig.height: 8
 #| fig.align: center
+tar_load(nov_2023_bray_distance_by_date_condition)
+write.xlsx(nov_2023_bray_distance_by_date_condition, file = here(data_path, "nov_2023_bray_distance_by_date_condition.xlsx"))
+
 tar_load(nov_2023_bray_distance_by_date_condition_plot, store = store_path)
 print(nov_2023_bray_distance_by_date_condition_plot)
 ```
+
+Download the full [nov_2023_bray_distance_by_date_condition.xlsx](november_2023/nov_2023_bray_distance_by_date_condition.xlsx) table.
 
 ### Permanova
 
@@ -663,6 +724,7 @@ values (P.adj < 0.05):
 #| label: pairwise_sample_name_permanova
 # load the permanova with targets
 targets::tar_load(nov_2023_pairwise_sample_name_permanova, store = store_path)
+write.xlsx(nov_2023_pairwise_sample_name_permanova, file = here(data_path, "nov_2023_pairwise_sample_name_permanova.xlsx"))
 
 nov_2023_pairwise_sample_name_permanova %>%
   dplyr::filter(P.adj < 0.05) %>%
@@ -670,7 +732,8 @@ nov_2023_pairwise_sample_name_permanova %>%
   dplyr::select(Comparison, P.adj, everything())
 ```
 
-No comparison has been filtered for *sample_name* column
+No comparison has been filtered for *sample_name* column. 
+Download the full [nov_2023_pairwise_sample_name_permanova.xlsx](november_2023/nov_2023_pairwise_sample_name_permanova.xlsx) table.
 
 #### date_condition permanova
 
@@ -726,9 +789,12 @@ values (P.adj < 0.05):
 #| label: pairwise_date_condition_permanova
 # load the permanova with targets
 targets::tar_load(nov_2023_pairwise_date_condition_permanova, store = store_path)
+write.xlsx(nov_2023_pairwise_date_condition_permanova, file = here(data_path, "nov_2023_pairwise_date_condition_permanova.xlsx"))
 
 nov_2023_pairwise_date_condition_permanova %>%
   dplyr::filter(P.adj < 0.05) %>%
   dplyr::arrange(P.adj) %>%
   dplyr::select(Comparison, P.adj, everything())
 ```
+
+Download the full [nov_2023_pairwise_date_condition_permanova.xlsx](november_2023/nov_2023_pairwise_date_condition_permanova.xlsx) table.
