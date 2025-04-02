@@ -84,7 +84,7 @@ calculate_pairwise_permanova <- function(distance_matrix, metadata, columns, met
   permanova_formula <- as.formula(paste0("distance_matrix ~ ", paste(columns, collapse = " + ")))
 
   # do the pairwise permanova
-  pairwise_results <- pairwise.adonis2(
+  pairwise_results <- pairwiseAdonis::pairwise.adonis2(
     permanova_formula,
     data = metadata,
     method = method,
@@ -153,8 +153,8 @@ calculate_nmds <- function(distance_matrix, metadata, distance = "bray") {
 
   nmds_tb <- vegan::scores(nmds_result) %>%
     # tibbles has not rownames, so we need to add them as a new column
-    as_tibble(rownames = "sampleID") %>%
-    inner_join(metadata, by = "sampleID")
+    dplyr::as_tibble(rownames = "sampleID") %>%
+    dplyr::inner_join(metadata, by = "sampleID")
 
   return(
     list(
@@ -174,8 +174,8 @@ get_distances <- function(distance_matrix, metadata, column) {
   distance_df <- merge(distance_df, metadata, by.x = "Sample2", by.y = "sampleID", suffixes = c(".1", ".2"))
 
   # filter the column I need
-  column.1 <- sym(paste0(column, ".1"))
-  column.2 <- sym(paste0(column, ".2"))
+  column.1 <- rlang::sym(paste0(column, ".1"))
+  column.2 <- rlang::sym(paste0(column, ".2"))
 
   distance_df <- distance_df %>%
     dplyr::select(Sample1, Sample2, !!column.1, !!column.2, Distance)
