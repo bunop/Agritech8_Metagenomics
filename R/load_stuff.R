@@ -42,35 +42,35 @@ load_metadata <- function(...) {
   return(metadata)
 }
 
-# This function sorts a metadata dataframe by a specified factor column, reordering the 
+# This function sorts a metadata dataframe by a specified factor column, reordering the
 # levels of that factor column according to user-defined levels.
 sort_by_factor_column <- function(metadata, order_by, levels) {
   # First, convert the order_by string into a symbol.
-  # A symbol is a type of object in R that represents a column name in a dataframe 
+  # A symbol is a type of object in R that represents a column name in a dataframe
   # when working with dplyr in a non-standard evaluation context.
   order_by_sym <- sym(order_by)
-  
-  # Next, reorder the metadata dataframe by mutating the order_by column to reorder 
+
+  # Next, reorder the metadata dataframe by mutating the order_by column to reorder
   # its factor levels, then arrange the dataframe by this newly ordered factor column
   # and sampleID.
   metadata <- metadata %>%
     # Use mutate to change the order_by column into a factor with levels ordered as
     # specified by the 'levels' vector.
     # The 'forcats::fct_relevel' function is used to reorder the levels of the factor.
-    # The '!!' operator is used to force evaluation of the symbol created earlier, 
+    # The '!!' operator is used to force evaluation of the symbol created earlier,
     # so that it is interpreted as a column name.
     mutate(!!order_by_sym := forcats::fct_relevel(!!order_by_sym, !!!levels)) %>%
-    
-    # Use arrange to sort the dataframe by the order_by column (now a factor with 
+
+    # Use arrange to sort the dataframe by the order_by column (now a factor with
     # the right order) and then by sampleID.
     arrange(!!order_by_sym, sampleID) %>%
-    
-    # Further, ensure that the 'sampleID' column is also a factor with levels 
-    # corresponding to the order in which they appear in the dataframe after sorting. 
-    # This can be useful for keeping the order consistent when using the sampleID in 
+
+    # Further, ensure that the 'sampleID' column is also a factor with levels
+    # corresponding to the order in which they appear in the dataframe after sorting.
+    # This can be useful for keeping the order consistent when using the sampleID in
     # plots or analyses later on.
     mutate(sampleID = factor(sampleID, levels = unique(sampleID)))
-  
+
   # Finally, return the sorted dataframe.
   return(metadata)
 }
@@ -88,13 +88,28 @@ load_phyloseq <- function(metadata, ...) {
   return(phyloseq_object)
 }
 
+# add tree to phyloseq object
+add_tree_to_phyloseq <- function(phyloseq_object, ...) {
+  # collect all the arguments in a list
+  args <- list(...)
+
+  # load the tree
+  newick_file_path <- here::here(args)
+  phylogenetic_tree <- ape::read.tree(newick_file_path)
+
+  # add the tree to the phyloseq object
+  phyloseq::phy_tree(phyloseq_object) <- phylogenetic_tree
+
+  return(phyloseq_object)
+}
+
 # remove unwanted taxa from phyloseq object
 prune_phyloseq <- function(phyloseq_obj, rank, items) {
   # Check if the rank provided is valid
   if (!rank %in% colnames(phyloseq::tax_table(phyloseq_obj))) {
     stop("The specified rank does not exist in the taxonomy table.")
   }
-  
+
   # Ensure items is a character vector (it can be a single item or multiple items)
   if (is.vector(items) && !is.character(items)) {
     stop("Items should be a character vector.")

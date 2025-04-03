@@ -24,6 +24,7 @@ tar_option_set(
     "tidyr",
     "stringr",
     "phyloseq",
+    "ape",
     "microViz",
     "vegan",
     "ape",
@@ -131,10 +132,29 @@ list(
     name = phyloseq_obj,
     command = load_phyloseq(metadata, phyloseq_path)
   ),
+  # Add tree to phyloseq object
+  tar_target(
+    name = tree_path,
+    command = here::here(
+      "results-bacteria",
+      "qiime2",
+      "phylogenetic_tree",
+      "tree.nwk"
+    ),
+    format = "file"
+  ),
+  tar_target(
+    name = phyloseq_obj_with_tree,
+    command = add_tree_to_phyloseq(phyloseq_obj, tree_path)
+  ),
   # remove chloroplast from data
   tar_target(
     name = phyloseq_obj_pruned,
-    command = prune_phyloseq(phyloseq_obj, rank="Phylum", items=("Cyanobacteria"))
+    command = prune_phyloseq(
+      phyloseq_obj_with_tree,
+      rank = "Phylum",
+      items = ("Cyanobacteria")
+    )
   ),
   # subsetting samples from phyloseq object
   tar_target(
