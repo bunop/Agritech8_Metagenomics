@@ -30,7 +30,7 @@ library(openxlsx)
 store_path <- here::here("stores", "november_2023")
 
 # a folder in which store data files
-data_path <- here::here("analysis", "november_2023")
+data_path <- here::here("analysis", "07-november_2023")
 
 if (!dir.exists(data_path)) {
   dir.create(data_path, recursive = TRUE)
@@ -417,25 +417,25 @@ Download the full [nov_2023_dunn_shannon_date_condition.xlsx](november_2023/nov_
 
 **Principal Coordinates Analysis (PCoA)** is an ordination technique used to visualize patterns in complex, high-dimensional data by projecting samples into a lower-dimensional space based on a distance matrix.
 
-#### PCoA plot by sample names
+#### Bray-Curtis PCoA plot by sample names
 
-Now we will plot a PCoA plot to visualize the technical replicates. See
+Now we will plot a Bray-Curtis PCoA plot to visualize the technical replicates. See
 [CC186](https://www.youtube.com/watch?v=G5Qckqq5Erw) for more information.
 
-```{r pcoa}
-#| label: pcoa
+```{r bray-pcoa}
+#| label: bray-pcoa
 # retrieve the PCoA object from targets
-targets::tar_load(nov_2023_pcoa_object, store = store_path)
+targets::tar_load(nov_2023_bray_pcoa_object, store = store_path)
 
-pcoa_results <- nov_2023_pcoa_object$pcoa_results
-percent_explained <- nov_2023_pcoa_object$percent_explained
-pcoa_df <- nov_2023_pcoa_object$pcoa_df
+pcoa_results <- nov_2023_bray_pcoa_object$pcoa_results
+percent_explained <- nov_2023_bray_pcoa_object$percent_explained
+pcoa_df <- nov_2023_bray_pcoa_object$pcoa_df
 ```
 
 In the following pictures we are grouping by technical replicates
 
-```{r pcoa-plot}
-#| label: pcoa-plot
+```{r bray-pcoa-plot}
+#| label: bray-pcoa-plot
 # count the number of levels in the group column
 num_levels <- length(unique(nov_2023_metadata$sample_group))
 
@@ -466,12 +466,12 @@ pcoa_plot_rep <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = samp
 print(pcoa_plot_rep)
 ```
 
-#### PCoA plot by date and condition (sample replicates)
+#### Bray-Curtis PCoA plot by date and condition (sample replicates)
 
 Visualize the same plot but grouping with date and condition (which should group sample replicates)
 
-```{r pcoa-date-condition}
-#| label: pcoa-date-condition
+```{r bray-pcoa-date-condition}
+#| label: bray-pcoa-date-condition
 # try to annotate plot
 pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
 labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
@@ -496,7 +496,7 @@ pcoa_plot
 ```
 
 In this image there's a clear separation from *reactor samples* from *default*.
-*Box* samples are closer togheterbut distant from *reactor* conditions.
+*Box* samples are closer togheter but distant from *reactor* conditions.
 
 #### Scree plot
 
@@ -533,16 +533,98 @@ ggplot(plot_data, aes(x = axis, y = pe)) +
   theme_minimal()
 ```
 
+#### Jaccard PCoA plot by sample names
+
+Now we will plot a Jaccard PCoA plot to visualize the technical replicates. See
+[CC186](https://www.youtube.com/watch?v=G5Qckqq5Erw) for more information.
+
+```{r jaccard-pcoa}
+#| label: jaccard-pcoa
+# retrieve the PCoA object from targets
+targets::tar_load(nov_2023_jaccard_pcoa_object, store = store_path)
+
+pcoa_results <- nov_2023_jaccard_pcoa_object$pcoa_results
+percent_explained <- nov_2023_jaccard_pcoa_object$percent_explained
+pcoa_df <- nov_2023_jaccard_pcoa_object$pcoa_df
+```
+
+In the following pictures we are grouping by technical replicates
+
+```{r jaccard-pcoa-plot}
+#| label: jaccard-pcoa-plot
+# count the number of levels in the group column
+num_levels <- length(unique(nov_2023_metadata$sample_group))
+
+# Get the color palette
+color_palette <- Polychrome::palette36.colors(num_levels)
+names(color_palette) <- NULL  # Remove any names from the color palette
+
+# try to annotate plot
+pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
+labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
+            glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
+
+# plot the PCoA
+pcoa_plot_rep <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = sample_name)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
+  ggplot2::ggtitle("PCoA Plot on Distance Metrics (Jaccard)") +
+  ggplot2::labs(title = "PCoA of Jaccard Distance Matrix",
+       color = NULL,
+       x = labels[1],
+       y = labels[2]) +
+  ggplot2::scale_color_manual(values = color_palette) +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+print(pcoa_plot_rep)
+```
+
+#### Jaccard PCoA plot by date and condition (sample replicates)
+
+Visualize the same plot but grouping with date and condition (which should group sample replicates)
+
+```{r jaccard-pcoa-date-condition}
+#| label: jaccard-pcoa-date-condition
+# try to annotate plot
+pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
+labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
+            glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
+
+# plot the PCoA
+pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = date_condition)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
+  ggplot2::ggtitle("PCoA Plot on Distance Metrics (Jaccard)") +
+  ggplot2::labs(title = "PCoA of Jaccard Distance Matrix",
+       color = NULL,
+       x = labels[1],
+       y = labels[2]) +
+  ggplot2::scale_color_brewer(palette = "Set1") +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+pcoa_plot
+```
+
+In this image there's a clear separation from *reactor samples* from *default*.
+*Box* samples are closer togheter but distant from *reactor* conditions and closer
+to *default* than reactor.
+
 ### NMDS plot
 
 Non-metric Multidimensional Scaling (**NMDS**) is an ordination technique used to visualize the similarity or dissimilarity between samples in complex, multidimensional datasets. Unlike metric methods, NMDS focuses on preserving the rank order of distances rather than the actual distance values, making it particularly useful for ecological and environmental data where relationships may be non-linear.
 
-```{r nmds}
-#| label: nmds
-targets::tar_load(nov_2023_nmds_object, store = store_path)
+```{r bray-nmds}
+#| label: bray-nmds
+targets::tar_load(nov_2023_bray_nmds_object, store = store_path)
 
 # get the tibble object
-nmds_tb <- nov_2023_nmds_object$nmds_tb
+nmds_tb <- nov_2023_bray_nmds_object$nmds_tb
 jitter <- 0.05
 ```
 #### NMDS plot by sample names
@@ -551,8 +633,8 @@ Let's plot the NMDS plot focusing on the technical replicates.
 see [CC187](https://www.youtube.com/watch?v=h7OrVmT7Ja8&ab_channel=RiffomonasProject)
 for more information.
 
-```{r nmds-plot}
-#| label: nmds-plot
+```{r bray-nmds-plot}
+#| label: bray-nmds-plot
 # count the number of levels in the group column
 num_levels <- length(unique(nov_2023_metadata$sample_group))
 
@@ -628,7 +710,7 @@ Plot distances by sample names:
 #| fig.width: 10
 #| fig.height: 8
 #| fig.align: center
-tar_load(nov_2023_bray_distance_by_sample_name)
+tar_load(nov_2023_bray_distance_by_sample_name, store = store_path)
 write.xlsx(nov_2023_bray_distance_by_sample_name, file = here(data_path, "nov_2023_bray_distance_by_sample_name.xlsx"))
 
 tar_load(nov_2023_bray_distance_by_sample_name_plot, store = store_path)
@@ -648,7 +730,7 @@ Plot distances by date_condition:
 #| fig.width: 10
 #| fig.height: 8
 #| fig.align: center
-tar_load(nov_2023_bray_distance_by_date_condition)
+tar_load(nov_2023_bray_distance_by_date_condition, store = store_path)
 write.xlsx(nov_2023_bray_distance_by_date_condition, file = here(data_path, "nov_2023_bray_distance_by_date_condition.xlsx"))
 
 tar_load(nov_2023_bray_distance_by_date_condition_plot, store = store_path)
@@ -748,7 +830,9 @@ print(nov_2023_date_condition_beta_dispersion$anova_result)
 ```
 
 I see significant differences in dispersions: should I trust the `date_condition`
-permanova? Plot beta dispersion:
+permanova? The point is also that groups are unbalanced (ie less elements in
+*default* group than the others). Permanova (and also ANOSIM) may suffer in 
+this particular case. Plot beta dispersion:
 
 ```{r date_condition_beta_dispersion_plot}
 #| label: date_condition_beta_dispersion_plot
@@ -771,7 +855,6 @@ ggplot(nov_2023_date_condition_beta_dispersion$beta_disp_df, aes(x = Group, y = 
     axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
   )
 ```
-
 
 Do permanova with *bray-curtis* on *date_condition* column:
 

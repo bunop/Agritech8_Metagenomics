@@ -332,14 +332,31 @@ list(
       "date_condition"
     )
   ),
+  # calculate other distance metrics
+  tar_target(
+    name = nov_2023_jaccard_distance_matrix,
+    command = calculate_distance_matrix(
+      nov_2023_otu_table_matrix,
+      min_sequencing_depth = nov_2023_rarefaction_depth,
+      dmethod = "jaccard"
+    )
+  ),
   # ordinations (beta diversity)
   tar_target(
-    name = nov_2023_pcoa_object,
+    name = nov_2023_bray_pcoa_object,
     command = calculate_pcoa(nov_2023_bray_distance_matrix, nov_2023_metadata)
   ),
   tar_target(
-    name = nov_2023_nmds_object,
+    name = nov_2023_jaccard_pcoa_object,
+    command = calculate_pcoa(nov_2023_jaccard_distance_matrix, nov_2023_metadata)
+  ),
+  tar_target(
+    name = nov_2023_bray_nmds_object,
     command = calculate_nmds(nov_2023_bray_distance_matrix, nov_2023_metadata)
+  ),
+  tar_target(
+    name = nov_2023_jaccard_nmds_object,
+    command = calculate_nmds(nov_2023_jaccard_distance_matrix, nov_2023_metadata)
   ),
   # calculate distances with and between groups
   tar_target(
