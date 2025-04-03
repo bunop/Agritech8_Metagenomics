@@ -14,14 +14,14 @@ calculate_distance_matrix <- function(
 
 #' Calculate Beta Dispersion and Perform ANOVA
 #'
-#' This function calculates beta dispersion for a given distance matrix and conducts ANOVA 
-#' on the resulting dispersion values based on groups defined in the metadata. It can also 
+#' This function calculates beta dispersion for a given distance matrix and conducts ANOVA
+#' on the resulting dispersion values based on groups defined in the metadata. It can also
 #' reorder the levels of the grouping factor in the metadata if specified.
 #'
 #' @param distance_matrix A dissimilarity matrix (object of class 'dist') that contains the pairwise distances between samples.
 #' @param metadata A data frame that includes sample information, with one column defining the grouping of samples for dispersion analysis.
 #' @param column A string indicating the name of the column in `metadata` that represents the groups to compare for beta dispersion.
-#' @param levels A character vector (optional) that defines the desired order of factor levels for the specified column. 
+#' @param levels A character vector (optional) that defines the desired order of factor levels for the specified column.
 #' If provided, the levels will be reordered using `forcats::fct_relevel`.
 #'
 #' @return A list containing:
@@ -35,7 +35,7 @@ calculate_distance_matrix <- function(
 #' metadata <- data.frame(SampleID = rownames(data_matrix), Group = c("A", "A", "B", "B"))
 #' # Calculate beta dispersion
 #' result <- calculate_beta_dispersion(distance_matrix, metadata, column = "Group", levels = c("A", "B"))
-#' 
+#'
 #' @importFrom vegan betadisper
 #' @importFrom dplyr mutate
 #' @importFrom rlang sym
@@ -121,13 +121,13 @@ calculate_pairwise_permanova <- function(distance_matrix, metadata, columns, met
 }
 
 ## calculate PCoA
-calculate_pcoa <- function(distance_matrix, metadata) {
+calculate_pcoa <- function(distance_matrix, metadata, dimensions = 2) {
   # Calculate the PCoA
   pcoa_results <- ape::pcoa(distance_matrix, correction = "cailliez")
 
   # Create a data frame for plotting
-  pcoa_df <- data.frame(pcoa_results$vectors[, 1:2])
-  colnames(pcoa_df) <- c("PCoA1", "PCoA2")
+  pcoa_df <- data.frame(pcoa_results$vectors[, 1:dimensions])
+  colnames(pcoa_df) <- paste("PCoA", 1:dimensions, sep = "")
   pcoa_df$sampleID <- rownames(pcoa_df)
   pcoa_df <- dplyr::inner_join(pcoa_df, metadata, by = "sampleID")
 

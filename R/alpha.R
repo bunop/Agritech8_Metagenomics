@@ -13,6 +13,10 @@ rarefy_alpha <- function(physeq_obj, depth, measures = NULL, rngseed = FALSE) {
   physeq_rarefied <- phyloseq::rarefy_even_depth(
     physeq_obj,
     sample.size = depth,
+    # sample without replacement
+    replace = FALSE,
+    # trim OTUs with zero reads
+    trimOTUs = TRUE,
     rngseed = rngseed,
     verbose = FALSE
   )
