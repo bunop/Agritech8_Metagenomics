@@ -177,10 +177,22 @@ list(
     nov_2023_rarefaction_depth,
     min(sample_sums(nov_2023_phyloseq_obj))
   ),
+  # Generate a sequence of iterations
   tar_target(
-    name = nov_2023_otu_table_matrix,
-    command = get_otu_table(nov_2023_phyloseq_obj)
+    name = thousand_iterations,
+    command = seq_len(1000)
   ),
+  # Perform rarefaction across multiple iterations
+  tar_target(
+    name = nov_2023_phyloseq_obj_rarefied,
+    command = rarefy_phyloseq_object(
+      nov_2023_phyloseq_obj,
+      nov_2023_rarefaction_depth,
+    ),
+    pattern = map(thousand_iterations),
+    iteration = "list"
+  ),
+  # collect sample data to plot sequencing depth
   tar_target(
     name = nov_2023_samples_data,
     command = sort_by_factor_column(
@@ -253,27 +265,17 @@ list(
       tax_show = 20
     )
   ),
+  # collect otu table
+  tar_target(
+    name = nov_2023_otu_table_matrix,
+    command = get_otu_table(nov_2023_phyloseq_obj)
+  ),
   # deal with rarefaction curves
   tar_target(
     name = nov_2023_rarecurve_df,
     command = calculate_rarecurve(nov_2023_otu_table_matrix)
   ),
   # alpha diversity steps
-  # Generate a sequence of iterations
-  tar_target(
-    name = thousand_iterations,
-    command = seq_len(1000)
-  ),
-  # Perform rarefaction across multiple iterations
-  tar_target(
-    name = nov_2023_phyloseq_obj_rarefied,
-    command = rarefy_phyloseq_object(
-      nov_2023_phyloseq_obj,
-      nov_2023_rarefaction_depth,
-    ),
-    pattern = map(thousand_iterations),
-    iteration = "list"
-  ),
   # calculate alpha diversity measures on each rarefied phyloseq object
   tar_target(
     name = nov_2023_samples_rarefaction,
