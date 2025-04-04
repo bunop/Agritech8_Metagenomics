@@ -69,6 +69,52 @@ agglomerate_by_taxa <- function(phyloseq_object, taxrank, sample_order = NULL) {
   return(melted_data)
 }
 
+#' Rarefy a phyloseq object
+#'
+#' Rarefy a phyloseq object to a specified depth. This function uses the
+#' `rarefy_even_depth` function from the `phyloseq` package to perform
+#' rarefaction. The function allows for the option to replace
+#' samples with fewer reads than the specified depth with
+#' samples that have more reads than the specified depth.
+#' This is useful for normalizing the sequencing depth across samples.
+#'
+#' @param physeq_obj a phyloseq object
+#' @param depth the desired sequencing depth to rarefy to (the minimum sample depth
+#' across all samples in the phyloseq object as a default)
+#' @param replace a logical value indicating whether to replace samples with fewer reads
+#' @param trimOTUS a logical value indicating whether to trim OTUs with zero reads
+#' @param rngseed a random seed for reproducibility. Set FALSE to use the current
+#' @param verbose a logical value indicating whether to print verbose output
+#'
+#' @returns a rarefied phyloseq object
+#' @export
+#'
+#' @examples
+#' rarefied_phyloseq_object <- rarefy_phyloseq_object(
+#'  physeq_obj = phyloseq_object,
+#'  depth = 1000,
+#'  replace = FALSE,
+#'  trimOTUS = TRUE,
+#'  rngseed = 123,
+#'  verbose = TRUE)
+rarefy_phyloseq_object <- function(physeq_obj, depth = NULL, replace = FALSE, trimOTUS = TRUE, rngseed = FALSE, verbose = FALSE) {
+  # calculate the minimum sample depth if not provided
+  if (is.null(depth)) {
+    depth <- min(phyloseq::sample_sums(physeq_obj))
+  }
+
+  # Rarefy the phyloseq object
+  physeq_rarefied <- phyloseq::rarefy_even_depth(
+    physeq_obj,
+    sample.size = depth,
+    replace = FALSE,  # Sample without replacement
+    trimOTUs = TRUE,  # Trim OTUs with zero reads
+    rngseed = rngseed,
+    verbose = FALSE
+  )
+  return(physeq_rarefied)
+}
+
 ## convert a phyloseq to ampvis2
 phyloseq_to_ampvis2 <- function(phyloseq_object) {
   return(ampvis2::amp_load(phyloseq_object))

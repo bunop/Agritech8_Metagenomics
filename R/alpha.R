@@ -5,22 +5,8 @@ calculate_rarecurve <- function(otu_table_matrix) {
   return(rarecurve_df)
 }
 
-# Function to rarefy and calculate alpha diversity metrics
-# This function is a wrapper around the rarefy_even_depth and estimate_richness functions
-# from the phyloseq package. It make a single sub sampling like Schloss means
-rarefy_alpha <- function(physeq_obj, depth, measures = NULL, rngseed = FALSE) {
-  # Rarefy the phyloseq object
-  physeq_rarefied <- phyloseq::rarefy_even_depth(
-    physeq_obj,
-    sample.size = depth,
-    # sample without replacement
-    replace = FALSE,
-    # trim OTUs with zero reads
-    trimOTUs = TRUE,
-    rngseed = rngseed,
-    verbose = FALSE
-  )
-
+# Function to calculate alpha diversity metrics
+rarefy_alpha <- function(physeq_rarefied, measures = NULL, rngseed = FALSE) {
   # Calculate alpha diversity metrics
   alpha_div <- phyloseq::estimate_richness(physeq_rarefied, measures = measures)
   alpha_div <- tibble::rownames_to_column(

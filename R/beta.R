@@ -1,14 +1,8 @@
 
-# make rarefaction as discussed by Schloss
-calculate_distance_matrix <- function(
-    otu_table_matrix, min_sequencing_depth, iterations = 1000, dmethod = "bray") {
-  distance_matrix <- vegan::avgdist(
-    otu_table_matrix,
-    sample = min_sequencing_depth,
-    iterations = 1000,
-    dmethod = dmethod
-  )
-
+# make rarefaction on a single rarefied phyloseq object
+calculate_distance_matrix <- function(phyloseq_obj, method = "bray") {
+  otu_table_matrix <- get_otu_table(phyloseq_obj)
+  distance_matrix <- as.matrix(vegan::vegdist(otu_table_matrix, method = method))
   return(distance_matrix)
 }
 

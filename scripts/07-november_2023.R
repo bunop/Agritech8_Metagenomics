@@ -189,11 +189,15 @@ list(
     )
   ),
   tar_target(
+    name = nov_2023_bray_distance_matrices,
+    command = calculate_distance_matrix(nov_2023_phyloseq_obj_rarefied, method = "bray"),
+    pattern = map(nov_2023_phyloseq_obj_rarefied),
+    iteration = "list"
+  ),
+  tar_target(
     name = nov_2023_bray_distance_matrix,
-    command = calculate_distance_matrix(
-      nov_2023_otu_table_matrix,
-      min_sequencing_depth = nov_2023_rarefaction_depth,
-      dmethod = "bray"
+    command = as.dist(
+      Reduce("+", nov_2023_bray_distance_matrices) / length(nov_2023_bray_distance_matrices)
     )
   ),
   tar_target(
@@ -258,12 +262,20 @@ list(
   ),
   # Perform rarefaction across multiple iterations
   tar_target(
-    name = nov_2023_samples_rarefaction,
-    command = rarefy_alpha(
+    name = nov_2023_phyloseq_obj_rarefied,
+    command = rarefy_phyloseq_object(
       nov_2023_phyloseq_obj,
       nov_2023_rarefaction_depth,
+    ),
+    pattern = map(thousand_iterations),
+    iteration = "list"
+  ),
+  tar_target(
+    name = nov_2023_samples_rarefaction,
+    command = rarefy_alpha(
+      nov_2023_phyloseq_obj_rarefied,
       measures = c("Observed", "Shannon", "Simpson", "InvSimpson", "Fisher")),
-    pattern = map(thousand_iterations)
+    pattern = map(nov_2023_phyloseq_obj_rarefied)
   ),
   # now transform rarefaction in a summary table
   tar_target(
@@ -354,11 +366,15 @@ list(
   ),
   # calculate other distance metrics
   tar_target(
+    name = nov_2023_jaccard_distance_matrices,
+    command = calculate_distance_matrix(nov_2023_phyloseq_obj_rarefied, method = "jaccard"),
+    pattern = map(nov_2023_phyloseq_obj_rarefied),
+    iteration = "list"
+  ),
+  tar_target(
     name = nov_2023_jaccard_distance_matrix,
-    command = calculate_distance_matrix(
-      nov_2023_otu_table_matrix,
-      min_sequencing_depth = nov_2023_rarefaction_depth,
-      dmethod = "jaccard"
+    command = as.dist(
+      Reduce("+", nov_2023_jaccard_distance_matrices) / length(nov_2023_jaccard_distance_matrices)
     )
   ),
   # ordinations (beta diversity)
