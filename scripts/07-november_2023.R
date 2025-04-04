@@ -172,6 +172,7 @@ list(
       nov_2023_metadata$sampleID
     )
   ),
+  # determine rarefaction depth
   tar_target(
     nov_2023_rarefaction_depth,
     min(sample_sums(nov_2023_phyloseq_obj))
@@ -188,6 +189,7 @@ list(
       custom_order_date_condition
     )
   ),
+  # calculate bray distances to perform a permanova on technical replicates
   tar_target(
     name = nov_2023_bray_distance_matrices,
     command = calculate_distance_matrix(nov_2023_phyloseq_obj_rarefied, method = "bray"),
@@ -200,6 +202,7 @@ list(
       Reduce("+", nov_2023_bray_distance_matrices) / length(nov_2023_bray_distance_matrices)
     )
   ),
+  # a permanova to test if technical replicates are different
   tar_target(
     name = nov_2023_tech_rep_permanova,
     command = calculate_permanova(
@@ -225,6 +228,7 @@ list(
       sample_order = nov_2023_metadata$sampleID
     )
   ),
+  # and here the heatmaps
   tar_target(
     name = nov_2023_ampvis2_object,
     command = phyloseq_to_ampvis2(nov_2023_phyloseq_obj)
@@ -270,6 +274,7 @@ list(
     pattern = map(thousand_iterations),
     iteration = "list"
   ),
+  # calculate alpha diversity measures on each rarefied phyloseq object
   tar_target(
     name = nov_2023_samples_rarefaction,
     command = rarefy_alpha(
@@ -290,7 +295,7 @@ list(
       by_column = "sample_name"
     )
   ),
-  # make plots
+  # make plots for alpha diversity
   tar_target(
     name = nov_2023_alpha_diversity_by_sample_name,
     command = plot_alpha_diversity(
@@ -377,7 +382,38 @@ list(
       Reduce("+", nov_2023_jaccard_distance_matrices) / length(nov_2023_jaccard_distance_matrices)
     )
   ),
+  tar_target(
+    name = nov_2023_wunifrac_distance_matrices,
+    command = phyloseq::distance(
+      nov_2023_phyloseq_obj_rarefied,
+      method = "wunifrac"
+    ),
+    pattern = map(nov_2023_phyloseq_obj_rarefied),
+    iteration = "list"
+  ),
+  tar_target(
+    name = nov_2023_wunifrac_distance_matrix,
+    command = as.dist(
+      Reduce("+", nov_2023_wunifrac_distance_matrices) / length(nov_2023_wunifrac_distance_matrices)
+    )
+  ),
+  tar_target(
+    name = nov_2023_unifrac_distance_matrices,
+    command = phyloseq::distance(
+      nov_2023_phyloseq_obj_rarefied,
+      method = "unifrac"
+    ),
+    pattern = map(nov_2023_phyloseq_obj_rarefied),
+    iteration = "list"
+  ),
+  tar_target(
+    name = nov_2023_unifrac_distance_matrix,
+    command = as.dist(
+      Reduce("+", nov_2023_unifrac_distance_matrices) / length(nov_2023_unifrac_distance_matrices)
+    )
+  ),
   # ordinations (beta diversity)
+  # PCoA
   tar_target(
     name = nov_2023_bray_pcoa_object,
     command = calculate_pcoa(nov_2023_bray_distance_matrix, nov_2023_metadata)
@@ -387,12 +423,29 @@ list(
     command = calculate_pcoa(nov_2023_jaccard_distance_matrix, nov_2023_metadata)
   ),
   tar_target(
+    name = nov_2023_wunifrac_pcoa_object,
+    command = calculate_pcoa(nov_2023_wunifrac_distance_matrix, nov_2023_metadata)
+  ),
+  tar_target(
+    name = nov_2023_unifrac_pcoa_object,
+    command = calculate_pcoa(nov_2023_unifrac_distance_matrix, nov_2023_metadata)
+  ),
+  # NMDS
+  tar_target(
     name = nov_2023_bray_nmds_object,
     command = calculate_nmds(nov_2023_bray_distance_matrix, nov_2023_metadata)
   ),
   tar_target(
     name = nov_2023_jaccard_nmds_object,
     command = calculate_nmds(nov_2023_jaccard_distance_matrix, nov_2023_metadata)
+  ),
+  tar_target(
+    name = nov_2023_wunifrac_nmds_object,
+    command = calculate_nmds(nov_2023_wunifrac_distance_matrix, nov_2023_metadata)
+  ),
+  tar_target(
+    name = nov_2023_unifrac_nmds_object,
+    command = calculate_nmds(nov_2023_unifrac_distance_matrix, nov_2023_metadata)
   ),
   # calculate distances with and between groups
   tar_target(
