@@ -45,6 +45,8 @@ reshape_rarefaction_data <- function(data, by_column) {
   data_long <- data %>%
     # Select relevant columns: sampleID, by_column, and those ending with '_mean' or '_sd'
     dplyr::select(sampleID, !!sym(by_column), ends_with("_mean"), ends_with("_sd")) %>%
+    # Convert the specified by_column to a factor
+    mutate(!!sym(by_column) := as.factor(!!sym(by_column))) %>%
     tidyr::pivot_longer(
       cols = ends_with("_mean") | ends_with("_sd"),
       names_to = c("Metric", "Measure"),
@@ -55,7 +57,6 @@ reshape_rarefaction_data <- function(data, by_column) {
       names_from = Measure,
       values_from = Value
     )
-
   return(data_long)
 }
 
@@ -75,7 +76,11 @@ calculate_kruskal_wallis <- function(rarefaction_results, alpha_metric, column_n
 
 # Dunn's Kruskal-Wallis Multiple Comparisons
 calculate_dunn_test <- function(rarefaction_results, alpha_metric, column_name, method = "bh") {
-  # define a new formula
+  # Convert the specified column to a factor
+  rarefaction_results <- rarefaction_results %>%
+    dplyr::mutate(!!sym(column_name) := as.factor(!!sym(column_name)))
+
+  # Define a new formula
   dunn_formula <- as.formula(paste(alpha_metric, "~", column_name))
 
   # Perform the Dunn's test
