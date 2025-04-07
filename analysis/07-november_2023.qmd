@@ -105,6 +105,10 @@ targets::tar_load(nov_2023_tech_rep_permanova, store = store_path)
 print(nov_2023_tech_rep_permanova)
 ```
 
+The bad score given by grouping samples by technical replicates should not explain
+biological variability, discarding the hypothesis that biological replicates are 
+different.
+
 ## Barplots
 
 Let's create some barplots to visualize the relative abundance of taxa in the
@@ -317,6 +321,15 @@ nov_2023_rarecurve_df <- nov_2023_metadata %>%
 ggplot(nov_2023_rarecurve_df, aes(x = Sample, y = Species, color = date_condition, group = sampleID)) +
   geom_line() +
   geom_vline(xintercept = nov_2023_rarefaction_depth, linetype = "dashed", color = "red") +  # Add vertical line
+  geom_text(
+    aes(
+      x = nov_2023_rarefaction_depth, 
+      y = max(Species) * 0.9, 
+      label = paste("Depth:", nov_2023_rarefaction_depth)
+    ), 
+    color = "red", 
+    vjust = -0.5
+  ) +  # Add text annotation above the line
   labs(
     title = "Rarefaction Curves for All Samples",
     x = "Number of Individuals Sampled",
@@ -330,6 +343,15 @@ ggplot(nov_2023_rarecurve_df, aes(x = Sample, y = Species, color = date_conditio
 Alpha diversity measures the diversity within a single sample or community.
 It provides insights into the richness and evenness of species in a sample,
 helping to compare diversity between samples or track changes over time.
+
+| Name       | Description                                                                                      |
+|------------|--------------------------------------------------------------------------------------------------|
+| **Observed**   | The total number of unique species observed in a community.                                   |
+| **Shannon**    | Measures species diversity by taking into account both richness and evenness; higher values indicate more diversity. |
+| **Simpson**    | Assesses the probability that two randomly selected individuals belong to the same species; lower values indicate higher diversity. |
+| **InvSimpson** | The inverse of Simpson's index, providing a measure that increases with species richness and evenness; higher values indicate greater diversity. |
+| **Fisher**     | A richness estimator that is particularly sensitive to rare species, providing a measure of species richness based on species abundance distribution. |
+| **FaithPD**    | Measures phylogenetic diversity, calculating the total branch length of the phylogenetic tree representing the species present in a community. |
 
 ### By sample_name
 
@@ -571,6 +593,14 @@ Let's plot the NMDS plot focusing on the technical replicates.
 see [CC187](https://www.youtube.com/watch?v=h7OrVmT7Ja8&ab_channel=RiffomonasProject)
 for more information.
 
+::: {.callout-warning}
+I've received a warning regarding the stress
+value, which is close to 0 and this can be determined by having not enough data,
+even if this value means a good fit for the NMDS.
+I've applied `0.05` of jitter (random noise) to points in order
+to clearly see them in the image. 
+:::
+
 ```{r bray-nmds-plot}
 #| label: bray-nmds-plot
 # count the number of levels in the group column
@@ -599,15 +629,24 @@ nmds_plot_rep <- ggplot2::ggplot(
 print(nmds_plot_rep)
 ```
 
-::: {.callout-warning}
-I've applied `0.05` of jitter (random noise) to points in order
-to clearly see them in the image.
+::: {.callout-tip}
+This type of graph is more informative with indexes which use phylogenetic information:
+take a look at [Unweighted UniFrac - NMDS plot by sample names](#unifrac-nmds-sample-names) 
+and [Weighted UniFrac - NMDS plot by sample names](#wunifrac-nmds-sample-names)
 :::
 
 ##### NMDS plot by date and condition (sample replicates)
 
 Now, let's visualize the NMDS plot but grouping with date and condition
 (which should group sample replicates)
+
+::: {.callout-warning}
+I've received a warning regarding the stress
+value, which is close to 0 and this can be determined by having not enough data,
+even if this value means a good fit for the NMDS.
+I've applied `0.05` of jitter (random noise) to points in order
+to clearly see them in the image. 
+:::
 
 ```{r bray-nmds-date-condition}
 #| label: bray-nmds-date-condition
@@ -630,9 +669,10 @@ nmds_plot <- ggplot2::ggplot(
 print(nmds_plot)
 ```
 
-::: {.callout-warning}
-I've applied `0.05` of jitter (random noise) to points in order
-to clearly see them in the image.
+::: {.callout-tip}
+This type of graph is more informative with indexes which use phylogenetic information:
+take a look at [Unweighted UniFrac - NMDS plot by date and condition](#unifrac-nmds-date_condition) 
+and [Weighted UniFrac - NMDS plot by date and condition](#wunifrac-nmds-date_condition)
 :::
 
 #### Between group distances
@@ -963,6 +1003,14 @@ Let's plot the NMDS plot focusing on the technical replicates.
 see [CC187](https://www.youtube.com/watch?v=h7OrVmT7Ja8&ab_channel=RiffomonasProject)
 for more information.
 
+::: {.callout-warning}
+I've received a warning regarding the stress
+value, which is close to 0 and this can be determined by having not enough data,
+even if this value means a good fit for the NMDS.
+I've applied `0.05` of jitter (random noise) to points in order
+to clearly see them in the image. 
+:::
+
 ```{r jaccard-nmds-plot}
 #| label: jaccard-nmds-plot
 # count the number of levels in the group column
@@ -991,15 +1039,24 @@ nmds_plot_rep <- ggplot2::ggplot(
 print(nmds_plot_rep)
 ```
 
-::: {.callout-warning}
-I've applied `0.05` of jitter (random noise) to points in order
-to clearly see them in the image.
+::: {.callout-tip}
+This type of graph is more informative with indexes which use phylogenetic information:
+take a look at [Unweighted UniFrac - NMDS plot by sample names](#unifrac-nmds-sample-names) 
+and [Weighted UniFrac - NMDS plot by sample names](#wunifrac-nmds-sample-names)
 :::
 
 ##### NMDS plot by date and condition (sample replicates)
 
 Now, let's visualize the NMDS plot but grouping with date and condition
 (which should group sample replicates)
+
+::: {.callout-warning}
+I've received a warning regarding the stress
+value, which is close to 0 and this can be determined by having not enough data,
+even if this value means a good fit for the NMDS.
+I've applied `0.05` of jitter (random noise) to points in order
+to clearly see them in the image. 
+:::
 
 ```{r jaccard-nmds-date-condition}
 #| label: jaccard-nmds-date-condition
@@ -1022,9 +1079,10 @@ nmds_plot <- ggplot2::ggplot(
 print(nmds_plot)
 ```
 
-::: {.callout-warning}
-I've applied `0.05` of jitter (random noise) to points in order
-to clearly see them in the image.
+::: {.callout-tip}
+This type of graph is more informative with indexes which use phylogenetic information:
+take a look at [Unweighted UniFrac - NMDS plot by date and condition](#unifrac-nmds-date_condition) 
+and [Weighted UniFrac - NMDS plot by date and condition](#wunifrac-nmds-date_condition)
 :::
 
 ### Unweighted UniFrac {#unifrac}
@@ -1157,7 +1215,8 @@ targets::tar_load(nov_2023_unifrac_nmds_object, store = store_path)
 # get the tibble object
 nmds_tb <- nov_2023_unifrac_nmds_object$nmds_tb
 ```
-##### NMDS plot by sample names
+
+##### NMDS plot by sample names {#unifrac-nmds-sample-names}
 
 Let's plot the NMDS plot focusing on the technical replicates.
 see [CC187](https://www.youtube.com/watch?v=h7OrVmT7Ja8&ab_channel=RiffomonasProject)
@@ -1191,7 +1250,7 @@ nmds_plot_rep <- ggplot2::ggplot(
 print(nmds_plot_rep)
 ```
 
-##### NMDS plot by date and condition (sample replicates)
+##### NMDS plot by date and condition (sample replicates) {#unifrac-nmds-date_condition}
 
 Now, let's visualize the NMDS plot but grouping with date and condition
 (which should group sample replicates)
@@ -1538,7 +1597,7 @@ targets::tar_load(nov_2023_wunifrac_nmds_object, store = store_path)
 # get the tibble object
 nmds_tb <- nov_2023_wunifrac_nmds_object$nmds_tb
 ```
-##### NMDS plot by sample names
+##### NMDS plot by sample names {#wunifrac-nmds-sample-names}
 
 Let's plot the NMDS plot focusing on the technical replicates.
 see [CC187](https://www.youtube.com/watch?v=h7OrVmT7Ja8&ab_channel=RiffomonasProject)
@@ -1572,7 +1631,7 @@ nmds_plot_rep <- ggplot2::ggplot(
 print(nmds_plot_rep)
 ```
 
-##### NMDS plot by date and condition (sample replicates)
+##### NMDS plot by date and condition (sample replicates) {#wunifrac-nmds-date_condition}
 
 Now, let's visualize the NMDS plot but grouping with date and condition
 (which should group sample replicates)
