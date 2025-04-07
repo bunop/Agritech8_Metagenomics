@@ -641,8 +641,8 @@ to clearly see them in the image.
 
 Plot distances by sample names:
 
-```{r sample_name_distances}
-#| label: sample_name_distances
+```{r bray-sample_name_distances}
+#| label: bray-sample_name_distances
 #| title: Distance matrix by sample names
 #| description: Plot the distance matrix by sample names
 #| fig.width: 10
@@ -661,8 +661,8 @@ Download the full [nov_2023_bray_distance_by_sample_name.xlsx](07-november_2023/
 
 Plot distances by date_condition:
 
-```{r date_condition_distances}
-#| label: date_condition_distances
+```{r bray-date_condition_distances}
+#| label: bray-date_condition_distances
 #| title: Distance matrix by date_condition
 #| description: Plot the distance matrix by date_condition
 #| fig.width: 10
@@ -695,30 +695,33 @@ for more information)
 
 Calculate beta dispersion for *sample_name* column:
 
-```{r sample_name_beta_dispersion}
-#| label: sample_name_beta_dispersion
+```{r bray-sample_name_beta_dispersion}
+#| label: bray-sample_name_beta_dispersion
 #| title: Beta dispersion by sample names
 #| description: Calculate beta dispersion by sample names
-tar_load(nov_2023_sample_name_beta_dispersion, store = store_path)
-print(nov_2023_sample_name_beta_dispersion$anova_result)
+tar_load(nov_2023_bray_sample_name_beta_dispersion, store = store_path)
+print(nov_2023_bray_sample_name_beta_dispersion$anova_result)
 ```
 
 Since we don't see any significant differences in dispersion, we can proceed
 with the PERMANOVA analysis. Plot beta dispersion:
 
-```{r sample_name_beta_dispersion_plot}
-#| label: sample_name_beta_dispersion_plot
+```{r bray-sample_name_beta_dispersion_plot}
+#| label: bray-sample_name_beta_dispersion_plot
 #| title: Beta dispersion plot by sample names
 #| description: Plot beta dispersion by sample names
 #| fig.width: 10
 #| fig.height: 8
 #| fig.align: center
 # Create the boxplot
-ggplot(nov_2023_sample_name_beta_dispersion$beta_disp_df, aes(x = Group, y = Distance, fill = Group)) +
+ggplot(
+    nov_2023_bray_sample_name_beta_dispersion$beta_disp_df, 
+    aes(x = Group, y = Distance, fill = Group)
+  ) +
   geom_boxplot() +
   geom_jitter(width = 0.2, alpha = 0.5) +  # Adds individual data points
   labs(
-    title = "Beta Dispersion by Group",
+    title = "Bray-Curtis Beta Dispersion by Group",
     x = "Group",
     y = "Distance to Centroid"
   ) +
@@ -730,41 +733,41 @@ ggplot(nov_2023_sample_name_beta_dispersion$beta_disp_df, aes(x = Group, y = Dis
 
 Do permanova with *bray-curtis* on *sample_name* column:
 
-```{r sample_name_permanova}
-#| label: sample_name_permanova
+```{r bray-sample_name_permanova}
+#| label: bray-sample_name_permanova
 # load the permanova with targets
-targets::tar_load(nov_2023_sample_name_permanova, store = store_path)
-print(nov_2023_sample_name_permanova)
+targets::tar_load(nov_2023_bray_sample_name_permanova, store = store_path)
+print(nov_2023_bray_sample_name_permanova)
 ```
 
 Load the *pairwise* permanova on the same columns and filter only significant
 values (P.adj < 0.05):
 
-```{r pairwise_sample_name_permanova}
-#| label: pairwise_sample_name_permanova
+```{r bray-pairwise_sample_name_permanova}
+#| label: bray-pairwise_sample_name_permanova
 # load the permanova with targets
-targets::tar_load(nov_2023_pairwise_sample_name_permanova, store = store_path)
-write.xlsx(nov_2023_pairwise_sample_name_permanova, file = here(data_path, "nov_2023_pairwise_sample_name_permanova.xlsx"))
+targets::tar_load(nov_2023_pairwise_bray_sample_name_permanova, store = store_path)
+write.xlsx(nov_2023_pairwise_bray_sample_name_permanova, file = here(data_path, "nov_2023_pairwise_bray_sample_name_permanova.xlsx"))
 
-nov_2023_pairwise_sample_name_permanova %>%
+nov_2023_pairwise_bray_sample_name_permanova %>%
   dplyr::filter(P.adj < 0.05) %>%
   dplyr::arrange(P.adj) %>%
   dplyr::select(Comparison, P.adj, everything())
 ```
 
 No comparison has been filtered for *sample_name* column. 
-Download the full [nov_2023_pairwise_sample_name_permanova.xlsx](07-november_2023/nov_2023_pairwise_sample_name_permanova.xlsx) table.
+Download the full [nov_2023_pairwise_bray_sample_name_permanova.xlsx](07-november_2023/nov_2023_pairwise_bray_sample_name_permanova.xlsx) table.
 
 ##### date_condition permanova
 
 Calculate beta dispersion for *date_condition* column:
 
-```{r date_condition_beta_dispersion}
-#| label: date_condition_beta_dispersion
+```{r bray-date_condition_beta_dispersion}
+#| label: bray-date_condition_beta_dispersion
 #| title: Beta dispersion by sample names
 #| description: Calculate beta dispersion by sample names
-tar_load(nov_2023_date_condition_beta_dispersion, store = store_path)
-print(nov_2023_date_condition_beta_dispersion$anova_result)
+tar_load(nov_2023_bray_date_condition_beta_dispersion, store = store_path)
+print(nov_2023_bray_date_condition_beta_dispersion$anova_result)
 ```
 
 I see significant differences in dispersions: should I trust the `date_condition`
@@ -772,19 +775,22 @@ permanova? The point is also that groups are unbalanced (ie less elements in
 *default* group than the others). Permanova (and also ANOSIM) may suffer in 
 this particular case. Plot beta dispersion:
 
-```{r date_condition_beta_dispersion_plot}
-#| label: date_condition_beta_dispersion_plot
+```{r bray-date_condition_beta_dispersion_plot}
+#| label: bray-date_condition_beta_dispersion_plot
 #| title: Beta dispersion plot by sample names
 #| description: Plot beta dispersion by sample names
 #| fig.width: 10
 #| fig.height: 8
 #| fig.align: center
 # Create the boxplot
-ggplot(nov_2023_date_condition_beta_dispersion$beta_disp_df, aes(x = Group, y = Distance, fill = Group)) +
+ggplot(
+    nov_2023_bray_date_condition_beta_dispersion$beta_disp_df, 
+    aes(x = Group, y = Distance, fill = Group)
+  ) +
   geom_boxplot() +
   geom_jitter(width = 0.2, alpha = 0.5) +  # Adds individual data points
   labs(
-    title = "Beta Dispersion by Group",
+    title = "Bray-Curtis Beta Dispersion by Group",
     x = "Group",
     y = "Distance to Centroid"
   ) +
@@ -796,29 +802,29 @@ ggplot(nov_2023_date_condition_beta_dispersion$beta_disp_df, aes(x = Group, y = 
 
 Do permanova with *bray-curtis* on *date_condition* column:
 
-```{r date_condition_permanova}
-#| label: date_condition_permanova
+```{r bray-date_condition_permanova}
+#| label: bray-date_condition_permanova
 # load the permanova with targets
-targets::tar_load(nov_2023_date_condition_permanova, store = store_path)
-print(nov_2023_date_condition_permanova)
+targets::tar_load(nov_2023_bray_date_condition_permanova, store = store_path)
+print(nov_2023_bray_date_condition_permanova)
 ```
 
 Load the *pairwise* permanova on the same columns and filter only significant
 values (P.adj < 0.05):
 
-```{r pairwise_date_condition_permanova}
-#| label: pairwise_date_condition_permanova
+```{r bray-pairwise_date_condition_permanova}
+#| label: bray-pairwise_date_condition_permanova
 # load the permanova with targets
-targets::tar_load(nov_2023_pairwise_date_condition_permanova, store = store_path)
-write.xlsx(nov_2023_pairwise_date_condition_permanova, file = here(data_path, "nov_2023_pairwise_date_condition_permanova.xlsx"))
+targets::tar_load(nov_2023_pairwise_bray_date_condition_permanova, store = store_path)
+write.xlsx(nov_2023_pairwise_bray_date_condition_permanova, file = here(data_path, "nov_2023_pairwise_bray_date_condition_permanova.xlsx"))
 
-nov_2023_pairwise_date_condition_permanova %>%
+nov_2023_pairwise_bray_date_condition_permanova %>%
   dplyr::filter(P.adj < 0.05) %>%
   dplyr::arrange(P.adj) %>%
   dplyr::select(Comparison, P.adj, everything())
 ```
 
-Download the full [nov_2023_pairwise_date_condition_permanova.xlsx](07-november_2023/nov_2023_pairwise_date_condition_permanova.xlsx) table.
+Download the full [nov_2023_pairwise_bray_date_condition_permanova.xlsx](07-november_2023/nov_2023_pairwise_bray_date_condition_permanova.xlsx) table.
 
 ### Jaccard {#jaccard}
 
@@ -1210,6 +1216,197 @@ nmds_plot <- ggplot2::ggplot(
 
 print(nmds_plot)
 ```
+
+#### Between group distances
+
+##### sample_name distances
+
+Plot distances by sample names:
+
+```{r unifrac-sample_name_distances}
+#| label: unifrac-sample_name_distances
+#| title: Distance matrix by sample names
+#| description: Plot the distance matrix by sample names
+#| fig.width: 10
+#| fig.height: 8
+#| fig.align: center
+tar_load(nov_2023_unifrac_distance_by_sample_name, store = store_path)
+write.xlsx(nov_2023_unifrac_distance_by_sample_name, file = here(data_path, "nov_2023_unifrac_distance_by_sample_name.xlsx"))
+
+tar_load(nov_2023_unifrac_distance_by_sample_name_plot, store = store_path)
+print(nov_2023_unifrac_distance_by_sample_name_plot)
+```
+
+Download the full [nov_2023_unifrac_distance_by_sample_name.xlsx](07-november_2023/nov_2023_unifrac_distance_by_sample_name.xlsx) table.
+
+##### date_condition distances
+
+Plot distances by date_condition:
+
+```{r unifrac-date_condition_distances}
+#| label: unifrac-date_condition_distances
+#| title: Distance matrix by date_condition
+#| description: Plot the distance matrix by date_condition
+#| fig.width: 10
+#| fig.height: 8
+#| fig.align: center
+tar_load(nov_2023_unifrac_distance_by_date_condition, store = store_path)
+write.xlsx(nov_2023_unifrac_distance_by_date_condition, file = here(data_path, "nov_2023_unifrac_distance_by_date_condition.xlsx"))
+
+tar_load(nov_2023_unifrac_distance_by_date_condition_plot, store = store_path)
+print(nov_2023_unifrac_distance_by_date_condition_plot)
+```
+
+Download the full [nov_2023_unifrac_distance_by_date_condition.xlsx](07-november_2023/nov_2023_unifrac_distance_by_date_condition.xlsx) table.
+
+#### Permanova
+
+Here we will do some analyses on beta diversity. First, we evaluate beta dispersion
+which is essential to ensure the validity of statistical tests, accurately 
+interpret differences in community composition, and select appropriate analytical 
+methods. Neglecting this step can lead to incorrect conclusions about the 
+ecological patterns present in your data. For unbalanced designs PERMANOVA and ANOSIM were
+
+1. too liberal if the smaller group had greater dispersion, and
+2. too conservative if the larger group had greater dispersion.
+
+This result was especially so for ANOSIM (see [here](https://stats.stackexchange.com/a/316386/451801)
+for more information)
+
+##### sample_name permanova
+
+Calculate beta dispersion for *sample_name* column:
+
+```{r unifrac-sample_name_beta_dispersion}
+#| label: unifrac-sample_name_beta_dispersion
+#| title: Beta dispersion by sample names
+#| description: Calculate beta dispersion by sample names
+tar_load(nov_2023_unifrac_sample_name_beta_dispersion, store = store_path)
+print(nov_2023_unifrac_sample_name_beta_dispersion$anova_result)
+```
+
+Since we don't see any significant differences in dispersion, we can proceed
+with the PERMANOVA analysis. Plot beta dispersion:
+
+```{r unifrac-sample_name_beta_dispersion_plot}
+#| label: unifrac-sample_name_beta_dispersion_plot
+#| title: Beta dispersion plot by sample names
+#| description: Plot beta dispersion by sample names
+#| fig.width: 10
+#| fig.height: 8
+#| fig.align: center
+# Create the boxplot
+ggplot(
+    nov_2023_unifrac_sample_name_beta_dispersion$beta_disp_df, 
+    aes(x = Group, y = Distance, fill = Group)
+  ) +
+  geom_boxplot() +
+  geom_jitter(width = 0.2, alpha = 0.5) +  # Adds individual data points
+  labs(
+    title = "unifrac-Curtis Beta Dispersion by Group",
+    x = "Group",
+    y = "Distance to Centroid"
+  ) +
+  theme_minimal() +
+  ggplot2::theme(
+    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
+  )
+```
+
+Do permanova with *unifrac-curtis* on *sample_name* column:
+
+```{r unifrac-sample_name_permanova}
+#| label: unifrac-sample_name_permanova
+# load the permanova with targets
+targets::tar_load(nov_2023_unifrac_sample_name_permanova, store = store_path)
+print(nov_2023_unifrac_sample_name_permanova)
+```
+
+Load the *pairwise* permanova on the same columns and filter only significant
+values (P.adj < 0.05):
+
+```{r unifrac-pairwise_sample_name_permanova}
+#| label: unifrac-pairwise_sample_name_permanova
+# load the permanova with targets
+targets::tar_load(nov_2023_pairwise_unifrac_sample_name_permanova, store = store_path)
+write.xlsx(nov_2023_pairwise_unifrac_sample_name_permanova, file = here(data_path, "nov_2023_pairwise_unifrac_sample_name_permanova.xlsx"))
+
+nov_2023_pairwise_unifrac_sample_name_permanova %>%
+  dplyr::filter(P.adj < 0.05) %>%
+  dplyr::arrange(P.adj) %>%
+  dplyr::select(Comparison, P.adj, everything())
+```
+
+No comparison has been filtered for *sample_name* column. 
+Download the full [nov_2023_pairwise_unifrac_sample_name_permanova.xlsx](07-november_2023/nov_2023_pairwise_unifrac_sample_name_permanova.xlsx) table.
+
+##### date_condition permanova
+
+Calculate beta dispersion for *date_condition* column:
+
+```{r unifrac-date_condition_beta_dispersion}
+#| label: unifrac-date_condition_beta_dispersion
+#| title: Beta dispersion by sample names
+#| description: Calculate beta dispersion by sample names
+tar_load(nov_2023_unifrac_date_condition_beta_dispersion, store = store_path)
+print(nov_2023_unifrac_date_condition_beta_dispersion$anova_result)
+```
+
+I see significant differences in dispersions: should I trust the `date_condition`
+permanova? The point is also that groups are unbalanced (ie less elements in
+*default* group than the others). Permanova (and also ANOSIM) may suffer in 
+this particular case. Plot beta dispersion:
+
+```{r unifrac-date_condition_beta_dispersion_plot}
+#| label: unifrac-date_condition_beta_dispersion_plot
+#| title: Beta dispersion plot by sample names
+#| description: Plot beta dispersion by sample names
+#| fig.width: 10
+#| fig.height: 8
+#| fig.align: center
+# Create the boxplot
+ggplot(
+    nov_2023_unifrac_date_condition_beta_dispersion$beta_disp_df, 
+    aes(x = Group, y = Distance, fill = Group)
+  ) +
+  geom_boxplot() +
+  geom_jitter(width = 0.2, alpha = 0.5) +  # Adds individual data points
+  labs(
+    title = "Unifrac Beta Dispersion by Group",
+    x = "Group",
+    y = "Distance to Centroid"
+  ) +
+  theme_minimal() +
+  ggplot2::theme(
+    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
+  )
+```
+
+Do permanova with *Unifrac* on *date_condition* column:
+
+```{r unifrac-date_condition_permanova}
+#| label: unifrac-date_condition_permanova
+# load the permanova with targets
+targets::tar_load(nov_2023_unifrac_date_condition_permanova, store = store_path)
+print(nov_2023_unifrac_date_condition_permanova)
+```
+
+Load the *pairwise* permanova on the same columns and filter only significant
+values (P.adj < 0.05):
+
+```{r unifrac-pairwise_date_condition_permanova}
+#| label: unifrac-pairwise_date_condition_permanova
+# load the permanova with targets
+targets::tar_load(nov_2023_pairwise_unifrac_date_condition_permanova, store = store_path)
+write.xlsx(nov_2023_pairwise_unifrac_date_condition_permanova, file = here(data_path, "nov_2023_pairwise_unifrac_date_condition_permanova.xlsx"))
+
+nov_2023_pairwise_unifrac_date_condition_permanova %>%
+  dplyr::filter(P.adj < 0.05) %>%
+  dplyr::arrange(P.adj) %>%
+  dplyr::select(Comparison, P.adj, everything())
+```
+
+Download the full [nov_2023_pairwise_unifrac_date_condition_permanova.xlsx](07-november_2023/nov_2023_pairwise_unifrac_date_condition_permanova.xlsx) table.
 
 ### Weighted UniFrac {#wunifrac}
 

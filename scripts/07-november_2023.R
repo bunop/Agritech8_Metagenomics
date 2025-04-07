@@ -451,6 +451,7 @@ list(
     command = calculate_nmds(nov_2023_unifrac_distance_matrix, nov_2023_metadata)
   ),
   # calculate distances with and between groups
+  # bray
   tar_target(
     name = nov_2023_bray_distance_by_sample_name,
     command = get_distances(
@@ -475,9 +476,34 @@ list(
     name = nov_2023_bray_distance_by_date_condition_plot,
     command = plot_distances(nov_2023_bray_distance_by_date_condition, column = "date_condition")
   ),
+  # unifrac
+  tar_target(
+    name = nov_2023_unifrac_distance_by_sample_name,
+    command = get_distances(
+      nov_2023_unifrac_distance_matrix,
+      nov_2023_metadata,
+      column = "sample_name"
+    )
+  ),
+  tar_target(
+    name = nov_2023_unifrac_distance_by_sample_name_plot,
+    command = plot_distances(nov_2023_unifrac_distance_by_sample_name, column = "sample_name")
+  ),
+  tar_target(
+    name = nov_2023_unifrac_distance_by_date_condition,
+    command = get_distances(
+      nov_2023_unifrac_distance_matrix,
+      nov_2023_metadata,
+      column = "date_condition"
+    )
+  ),
+  tar_target(
+    name = nov_2023_unifrac_distance_by_date_condition_plot,
+    command = plot_distances(nov_2023_unifrac_distance_by_date_condition, column = "date_condition")
+  ),
   # calculate beta dispersion
   tar_target(
-    name = nov_2023_sample_name_beta_dispersion,
+    name = nov_2023_bray_sample_name_beta_dispersion,
     command = calculate_beta_dispersion(
       nov_2023_bray_distance_matrix,
       nov_2023_metadata,
@@ -487,7 +513,7 @@ list(
     )
   ),
   tar_target(
-    name = nov_2023_date_condition_beta_dispersion,
+    name = nov_2023_bray_date_condition_beta_dispersion,
     command = calculate_beta_dispersion(
       nov_2023_bray_distance_matrix,
       nov_2023_metadata,
@@ -496,9 +522,30 @@ list(
       levels = custom_order_date_condition
     )
   ),
-  # permanova on distance matrix
   tar_target(
-    name = nov_2023_sample_name_permanova,
+    name = nov_2023_unifrac_sample_name_beta_dispersion,
+    command = calculate_beta_dispersion(
+      nov_2023_unifrac_distance_matrix,
+      nov_2023_metadata,
+      column = "sample_name",
+      bias.adjust = TRUE,
+      levels = custom_order_sample_names
+    )
+  ),
+  tar_target(
+    name = nov_2023_unifrac_date_condition_beta_dispersion,
+    command = calculate_beta_dispersion(
+      nov_2023_unifrac_distance_matrix,
+      nov_2023_metadata,
+      column = "date_condition",
+      bias.adjust = TRUE,
+      levels = custom_order_date_condition
+    )
+  ),
+  # permanova on distance matrix
+  ## Bray
+  tar_target(
+    name = nov_2023_bray_sample_name_permanova,
     command = calculate_permanova(
       nov_2023_bray_distance_matrix,
       nov_2023_metadata,
@@ -506,7 +553,7 @@ list(
     )
   ),
   tar_target(
-    name = nov_2023_pairwise_sample_name_permanova,
+    name = nov_2023_pairwise_bray_sample_name_permanova,
     command = calculate_pairwise_permanova(
       nov_2023_bray_distance_matrix,
       nov_2023_metadata,
@@ -514,7 +561,7 @@ list(
     )
   ),
   tar_target(
-    name = nov_2023_date_condition_permanova,
+    name = nov_2023_bray_date_condition_permanova,
     command = calculate_permanova(
       nov_2023_bray_distance_matrix,
       nov_2023_metadata,
@@ -522,9 +569,42 @@ list(
     )
   ),
   tar_target(
-    name = nov_2023_pairwise_date_condition_permanova,
+    name = nov_2023_pairwise_bray_date_condition_permanova,
     command = calculate_pairwise_permanova(
       nov_2023_bray_distance_matrix,
+      nov_2023_metadata,
+      columns = c("date_condition")
+    )
+  ),
+  ## unifrac
+  tar_target(
+    name = nov_2023_unifrac_sample_name_permanova,
+    command = calculate_permanova(
+      nov_2023_unifrac_distance_matrix,
+      nov_2023_metadata,
+      columns = c("sample_name")
+    )
+  ),
+  tar_target(
+    name = nov_2023_pairwise_unifrac_sample_name_permanova,
+    command = calculate_pairwise_permanova(
+      nov_2023_unifrac_distance_matrix,
+      nov_2023_metadata,
+      columns = c("sample_name")
+    )
+  ),
+  tar_target(
+    name = nov_2023_unifrac_date_condition_permanova,
+    command = calculate_permanova(
+      nov_2023_unifrac_distance_matrix,
+      nov_2023_metadata,
+      columns = c("date_condition")
+    )
+  ),
+  tar_target(
+    name = nov_2023_pairwise_unifrac_date_condition_permanova,
+    command = calculate_pairwise_permanova(
+      nov_2023_unifrac_distance_matrix,
       nov_2023_metadata,
       columns = c("date_condition")
     )
