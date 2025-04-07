@@ -481,6 +481,7 @@ list(
       nov_2023_bray_distance_matrix,
       nov_2023_metadata,
       column = "sample_name",
+      bias.adjust = TRUE,
       levels = custom_order_sample_names
     )
   ),
@@ -490,6 +491,7 @@ list(
       nov_2023_bray_distance_matrix,
       nov_2023_metadata,
       column = "date_condition",
+      bias.adjust = TRUE,
       levels = custom_order_date_condition
     )
   ),
