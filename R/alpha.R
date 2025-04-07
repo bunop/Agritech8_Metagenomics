@@ -7,8 +7,32 @@ calculate_rarecurve <- function(otu_table_matrix) {
 
 # Function to calculate alpha diversity metrics
 rarefy_alpha <- function(physeq_rarefied, measures = NULL, rngseed = FALSE) {
+  FaithPD <- FALSE
+
+  if ("FaithPD" %in% measures) {
+    # remove FaithPD from measures to calculate stuff with phyloseq. Set a flag
+    measures <- measures[measures != "FaithPD"]
+    FaithPD <- TRUE
+  }
+
   # Calculate alpha diversity metrics
   alpha_div <- phyloseq::estimate_richness(physeq_rarefied, measures = measures)
+
+  # modified from https://github.com/joey711/phyloseq/issues/661#issuecomment-402873585
+  if (FaithPD){
+    OTU <- get_otu_table(physeq_rarefied)
+
+    alpha_div["FaithPD"] <- as.vector(
+      t(
+        picante::pd(
+          samp = OTU,
+          tree = phy_tree(physeq_rarefied),
+          include.root = F
+        )
+      )[1,]
+    )
+  }
+
   alpha_div <- tibble::rownames_to_column(
     alpha_div,
     var = "sampleID"

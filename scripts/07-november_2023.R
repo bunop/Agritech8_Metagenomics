@@ -27,6 +27,7 @@ tar_option_set(
     "ape",
     "microViz",
     "vegan",
+    "picante",
     "ape",
     "ampvis2",
     "forcats",
@@ -281,7 +282,7 @@ list(
     name = nov_2023_samples_rarefaction,
     command = rarefy_alpha(
       nov_2023_phyloseq_obj_rarefied,
-      measures = c("Observed", "Shannon", "Simpson", "InvSimpson", "Fisher")),
+      measures = c("Observed", "Shannon", "Simpson", "InvSimpson", "Fisher", "FaithPD")),
     pattern = map(nov_2023_phyloseq_obj_rarefied)
   ),
   # now transform rarefaction in a summary table
