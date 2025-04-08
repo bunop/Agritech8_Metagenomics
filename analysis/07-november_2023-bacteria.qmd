@@ -603,6 +603,9 @@ to clearly see them in the image.
 
 ```{r bray-nmds-plot}
 #| label: bray-nmds-plot
+#| fig.width: 10
+#| fig.height: 8
+
 # count the number of levels in the group column
 num_levels <- length(unique(nov_2023_metadata$sample_group))
 
@@ -1013,6 +1016,9 @@ to clearly see them in the image.
 
 ```{r jaccard-nmds-plot}
 #| label: jaccard-nmds-plot
+#| fig.width: 10
+#| fig.height: 8
+
 # count the number of levels in the group column
 num_levels <- length(unique(nov_2023_metadata$sample_group))
 
@@ -1224,6 +1230,9 @@ for more information.
 
 ```{r unifrac-nmds-plot}
 #| label: unifrac-nmds-plot
+#| fig.width: 10
+#| fig.height: 8
+
 # count the number of levels in the group column
 num_levels <- length(unique(nov_2023_metadata$sample_group))
 
@@ -1605,6 +1614,9 @@ for more information.
 
 ```{r wunifrac-nmds-plot}
 #| label: wunifrac-nmds-plot
+#| fig.width: 10
+#| fig.height: 8
+
 # count the number of levels in the group column
 num_levels <- length(unique(nov_2023_metadata$sample_group))
 
