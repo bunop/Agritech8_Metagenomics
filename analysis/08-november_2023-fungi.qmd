@@ -48,13 +48,13 @@ Let's load the metadata from the November 2023 experiments and try to do some an
 targets::tar_load(nov_2023_metadata, store = store_path)
 
 # write table for metadata
-write.xlsx(nov_2023_metadata, file = here(data_path, "nov_2023_metadata.xlsx"))
+write.xlsx(nov_2023_metadata, file = here(data_path, "nov_2023-fungi_metadata.xlsx"))
 
 # check the new metadata
 nov_2023_metadata
 ```
 
-Download the [nov_2023_metadata.xlsx](08-november_2023-fungi/nov_2023_metadata.xlsx) table.
+Download the [nov_2023-fungi_metadata.xlsx](08-november_2023-fungi/nov_2023-fungi_metadata.xlsx) table.
 
 ```{r load-phyloseq}
 #| label: load-phyloseq
@@ -62,7 +62,7 @@ Download the [nov_2023_metadata.xlsx](08-november_2023-fungi/nov_2023_metadata.x
 targets::tar_load(nov_2023_phyloseq_obj, store = store_path)
 targets::tar_load(nov_2023_samples_data, store = store_path)
 
-write.xlsx(nov_2023_samples_data, file = here(data_path, "nov_2023_samples_data.xlsx"))
+write.xlsx(nov_2023_samples_data, file = here(data_path, "nov_2023-fungi_samples_data.xlsx"))
 ```
 
 ## Checking samples
@@ -87,7 +87,7 @@ depth_plot <- ggplot2::ggplot(
 # Display the plot
 print(depth_plot)
 ```
-Download the full [nov_2023_samples_data.xlsx](08-november_2023-fungi/nov_2023_samples_data.xlsx) table.
+Download the full [nov_2023-fungi_samples_data.xlsx](08-november_2023-fungi/nov_2023-fungi_samples_data.xlsx) table.
 
 ### Permanova
 
@@ -137,7 +137,7 @@ tar_load(nov_2023_melted_phylum, store = store_path)
 taxrank <- "Phylum"
 
 # write table for melted_phylum
-write.xlsx(nov_2023_melted_phylum, file = here(data_path, "nov_2023_melted_phylum.xlsx"))
+write.xlsx(nov_2023_melted_phylum, file = here(data_path, "nov_2023-fungi_melted_phylum.xlsx"))
 
 ggplot2::ggplot(nov_2023_melted_phylum, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
   ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
@@ -152,7 +152,7 @@ ggplot2::ggplot(nov_2023_melted_phylum, ggplot2::aes(x = sampleID, y = Abundance
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
 
-Download the [nov_2023_melted_phylum.xlsx](08-november_2023-fungi/nov_2023_melted_phylum.xlsx) table.
+Download the [nov_2023-fungi_melted_phylum.xlsx](08-november_2023-fungi/nov_2023-fungi_melted_phylum.xlsx) table.
 
 ### By Phylum (>5%)
 
@@ -200,7 +200,7 @@ tar_load(nov_2023_melted_class, store = store_path)
 taxrank <- "Class"
 
 # write table for melted_class
-write.xlsx(nov_2023_melted_class, file = here(data_path, "nov_2023_melted_class.xlsx"))
+write.xlsx(nov_2023_melted_class, file = here(data_path, "nov_2023-fungi_melted_class.xlsx"))
 
 ggplot2::ggplot(nov_2023_melted_class, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
   ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
@@ -215,7 +215,7 @@ ggplot2::ggplot(nov_2023_melted_class, ggplot2::aes(x = sampleID, y = Abundance,
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
 
-Download the [nov_2023_melted_class.xlsx](08-november_2023-fungi/nov_2023_melted_class.xlsx) table.
+Download the [nov_2023-fungi_melted_class.xlsx](08-november_2023-fungi/nov_2023-fungi_melted_class.xlsx) table.
 
 ### By Class (>5%)
 
@@ -263,12 +263,12 @@ taxa at the Phylum level:
 tar_load(nov_2023_heatmap_phylum, store = store_path)
 
 # write a file for heatmap_phylum
-write.xlsx(nov_2023_heatmap_phylum$data, file = here(data_path, "nov_2023_heatmap_phylum.xlsx"))
+write.xlsx(nov_2023_heatmap_phylum$data, file = here(data_path, "nov_2023-fungi_heatmap_phylum.xlsx"))
 
 print(nov_2023_heatmap_phylum)
 ```
 
-Download the [nov_2023_heatmap_phylum.xlsx](08-november_2023-fungi/nov_2023_heatmap_phylum.xlsx) table.
+Download the [nov_2023-fungi_heatmap_phylum.xlsx](08-november_2023-fungi/nov_2023-fungi_heatmap_phylum.xlsx) table.
 
 ### By Class
 
@@ -285,12 +285,12 @@ taxa at the Class level:
 tar_load(nov_2023_heatmap_class, store = store_path)
 
 # write a file for heatmap_class
-write.xlsx(nov_2023_heatmap_class$data, file = here(data_path, "nov_2023_heatmap_class.xlsx"))
+write.xlsx(nov_2023_heatmap_class$data, file = here(data_path, "nov_2023-fungi_heatmap_class.xlsx"))
 
 print(nov_2023_heatmap_class)
 ```
 
-Download the [nov_2023_heatmap_class.xlsx](08-november_2023-fungi/nov_2023_heatmap_class.xlsx) table.
+Download the [nov_2023-fungi_heatmap_class.xlsx](08-november_2023-fungi/nov_2023-fungi_heatmap_class.xlsx) table.
 
 ## Samples Rarefaction
 
@@ -386,14 +386,14 @@ differences between pairs:
 tar_load(nov_2023_dunn_shannon_sample_name, store = store_path)
 
 # write the full table for dunn_shannon_sample_name
-write.xlsx(nov_2023_dunn_shannon_sample_name$res, file = here(data_path, "nov_2023_dunn_shannon_sample_name.xlsx"))
+write.xlsx(nov_2023_dunn_shannon_sample_name$res, file = here(data_path, "nov_2023-fungi_dunn_shannon_sample_name.xlsx"))
 
 nov_2023_dunn_shannon_sample_name$res %>%
   dplyr::filter(P.adj < 0.05) %>%
   dplyr::arrange(P.adj)
 ```
 
-Download the full [nov_2023_dunn_shannon_sample_name.xlsx](08-november_2023-fungi/nov_2023_dunn_shannon_sample_name.xlsx) table.
+Download the full [nov_2023-fungi_dunn_shannon_sample_name.xlsx](08-november_2023-fungi/nov_2023-fungi_dunn_shannon_sample_name.xlsx) table.
 
 ### By date_condition
 
@@ -428,14 +428,14 @@ differences between pairs:
 tar_load(nov_2023_dunn_shannon_date_condition, store = store_path)
 
 # write the full table for dunn_shannon_date_condition
-write.xlsx(nov_2023_dunn_shannon_date_condition$res, file = here(data_path, "nov_2023_dunn_shannon_date_condition.xlsx"))
+write.xlsx(nov_2023_dunn_shannon_date_condition$res, file = here(data_path, "nov_2023-fungi_dunn_shannon_date_condition.xlsx"))
 
 nov_2023_dunn_shannon_date_condition$res %>%
   dplyr::filter(P.adj < 0.05) %>%
   dplyr::arrange(P.adj)
 ```
 
-Download the full [nov_2023_dunn_shannon_date_condition.xlsx](08-november_2023-fungi/nov_2023_dunn_shannon_date_condition.xlsx) table.
+Download the full [nov_2023-fungi_dunn_shannon_date_condition.xlsx](08-november_2023-fungi/nov_2023-fungi_dunn_shannon_date_condition.xlsx) table.
 
 ## Beta Diversity Metrics
 
@@ -689,13 +689,13 @@ Plot distances by sample names:
 #| fig.height: 8
 #| fig.align: center
 tar_load(nov_2023_bray_distance_by_sample_name, store = store_path)
-write.xlsx(nov_2023_bray_distance_by_sample_name, file = here(data_path, "nov_2023_bray_distance_by_sample_name.xlsx"))
+write.xlsx(nov_2023_bray_distance_by_sample_name, file = here(data_path, "nov_2023-fungi_bray_distance_by_sample_name.xlsx"))
 
 tar_load(nov_2023_bray_distance_by_sample_name_plot, store = store_path)
 print(nov_2023_bray_distance_by_sample_name_plot)
 ```
 
-Download the full [nov_2023_bray_distance_by_sample_name.xlsx](08-november_2023-fungi/nov_2023_bray_distance_by_sample_name.xlsx) table.
+Download the full [nov_2023-fungi_bray_distance_by_sample_name.xlsx](08-november_2023-fungi/nov_2023-fungi_bray_distance_by_sample_name.xlsx) table.
 
 ##### date_condition distances
 
@@ -709,13 +709,13 @@ Plot distances by date_condition:
 #| fig.height: 8
 #| fig.align: center
 tar_load(nov_2023_bray_distance_by_date_condition, store = store_path)
-write.xlsx(nov_2023_bray_distance_by_date_condition, file = here(data_path, "nov_2023_bray_distance_by_date_condition.xlsx"))
+write.xlsx(nov_2023_bray_distance_by_date_condition, file = here(data_path, "nov_2023-fungi_bray_distance_by_date_condition.xlsx"))
 
 tar_load(nov_2023_bray_distance_by_date_condition_plot, store = store_path)
 print(nov_2023_bray_distance_by_date_condition_plot)
 ```
 
-Download the full [nov_2023_bray_distance_by_date_condition.xlsx](08-november_2023-fungi/nov_2023_bray_distance_by_date_condition.xlsx) table.
+Download the full [nov_2023-fungi_bray_distance_by_date_condition.xlsx](08-november_2023-fungi/nov_2023-fungi_bray_distance_by_date_condition.xlsx) table.
 
 #### Permanova
 
@@ -787,7 +787,7 @@ values (P.adj < 0.05):
 #| label: bray-pairwise_sample_name_permanova
 # load the permanova with targets
 targets::tar_load(nov_2023_pairwise_bray_sample_name_permanova, store = store_path)
-write.xlsx(nov_2023_pairwise_bray_sample_name_permanova, file = here(data_path, "nov_2023_pairwise_bray_sample_name_permanova.xlsx"))
+write.xlsx(nov_2023_pairwise_bray_sample_name_permanova, file = here(data_path, "nov_2023-fungi_pairwise_bray_sample_name_permanova.xlsx"))
 
 nov_2023_pairwise_bray_sample_name_permanova %>%
   dplyr::filter(P.adj < 0.05) %>%
@@ -796,7 +796,7 @@ nov_2023_pairwise_bray_sample_name_permanova %>%
 ```
 
 No comparison has been filtered for *sample_name* column.
-Download the full [nov_2023_pairwise_bray_sample_name_permanova.xlsx](08-november_2023-fungi/nov_2023_pairwise_bray_sample_name_permanova.xlsx) table.
+Download the full [nov_2023-fungi_pairwise_bray_sample_name_permanova.xlsx](08-november_2023-fungi/nov_2023-fungi_pairwise_bray_sample_name_permanova.xlsx) table.
 
 ##### date_condition permanova
 
@@ -856,7 +856,7 @@ values (P.adj < 0.05):
 #| label: bray-pairwise_date_condition_permanova
 # load the permanova with targets
 targets::tar_load(nov_2023_pairwise_bray_date_condition_permanova, store = store_path)
-write.xlsx(nov_2023_pairwise_bray_date_condition_permanova, file = here(data_path, "nov_2023_pairwise_bray_date_condition_permanova.xlsx"))
+write.xlsx(nov_2023_pairwise_bray_date_condition_permanova, file = here(data_path, "nov_2023-fungi_pairwise_bray_date_condition_permanova.xlsx"))
 
 nov_2023_pairwise_bray_date_condition_permanova %>%
   dplyr::filter(P.adj < 0.05) %>%
@@ -864,7 +864,7 @@ nov_2023_pairwise_bray_date_condition_permanova %>%
   dplyr::select(Comparison, P.adj, everything())
 ```
 
-Download the full [nov_2023_pairwise_bray_date_condition_permanova.xlsx](08-november_2023-fungi/nov_2023_pairwise_bray_date_condition_permanova.xlsx) table.
+Download the full [nov_2023-fungi_pairwise_bray_date_condition_permanova.xlsx](08-november_2023-fungi/nov_2023-fungi_pairwise_bray_date_condition_permanova.xlsx) table.
 
 ### Jaccard {#jaccard}
 
@@ -1290,13 +1290,13 @@ Plot distances by sample names:
 #| fig.height: 8
 #| fig.align: center
 tar_load(nov_2023_unifrac_distance_by_sample_name, store = store_path)
-write.xlsx(nov_2023_unifrac_distance_by_sample_name, file = here(data_path, "nov_2023_unifrac_distance_by_sample_name.xlsx"))
+write.xlsx(nov_2023_unifrac_distance_by_sample_name, file = here(data_path, "nov_2023-fungi_unifrac_distance_by_sample_name.xlsx"))
 
 tar_load(nov_2023_unifrac_distance_by_sample_name_plot, store = store_path)
 print(nov_2023_unifrac_distance_by_sample_name_plot)
 ```
 
-Download the full [nov_2023_unifrac_distance_by_sample_name.xlsx](08-november_2023-fungi/nov_2023_unifrac_distance_by_sample_name.xlsx) table.
+Download the full [nov_2023-fungi_unifrac_distance_by_sample_name.xlsx](08-november_2023-fungi/nov_2023-fungi_unifrac_distance_by_sample_name.xlsx) table.
 
 ##### date_condition distances
 
@@ -1310,13 +1310,13 @@ Plot distances by date_condition:
 #| fig.height: 8
 #| fig.align: center
 tar_load(nov_2023_unifrac_distance_by_date_condition, store = store_path)
-write.xlsx(nov_2023_unifrac_distance_by_date_condition, file = here(data_path, "nov_2023_unifrac_distance_by_date_condition.xlsx"))
+write.xlsx(nov_2023_unifrac_distance_by_date_condition, file = here(data_path, "nov_2023-fungi_unifrac_distance_by_date_condition.xlsx"))
 
 tar_load(nov_2023_unifrac_distance_by_date_condition_plot, store = store_path)
 print(nov_2023_unifrac_distance_by_date_condition_plot)
 ```
 
-Download the full [nov_2023_unifrac_distance_by_date_condition.xlsx](08-november_2023-fungi/nov_2023_unifrac_distance_by_date_condition.xlsx) table.
+Download the full [nov_2023-fungi_unifrac_distance_by_date_condition.xlsx](08-november_2023-fungi/nov_2023-fungi_unifrac_distance_by_date_condition.xlsx) table.
 
 #### Permanova
 
@@ -1388,7 +1388,7 @@ values (P.adj < 0.05):
 #| label: unifrac-pairwise_sample_name_permanova
 # load the permanova with targets
 targets::tar_load(nov_2023_pairwise_unifrac_sample_name_permanova, store = store_path)
-write.xlsx(nov_2023_pairwise_unifrac_sample_name_permanova, file = here(data_path, "nov_2023_pairwise_unifrac_sample_name_permanova.xlsx"))
+write.xlsx(nov_2023_pairwise_unifrac_sample_name_permanova, file = here(data_path, "nov_2023-fungi_pairwise_unifrac_sample_name_permanova.xlsx"))
 
 nov_2023_pairwise_unifrac_sample_name_permanova %>%
   dplyr::filter(P.adj < 0.05) %>%
@@ -1397,7 +1397,7 @@ nov_2023_pairwise_unifrac_sample_name_permanova %>%
 ```
 
 No comparison has been filtered for *sample_name* column.
-Download the full [nov_2023_pairwise_unifrac_sample_name_permanova.xlsx](08-november_2023-fungi/nov_2023_pairwise_unifrac_sample_name_permanova.xlsx) table.
+Download the full [nov_2023-fungi_pairwise_unifrac_sample_name_permanova.xlsx](08-november_2023-fungi/nov_2023-fungi_pairwise_unifrac_sample_name_permanova.xlsx) table.
 
 ##### date_condition permanova
 
@@ -1457,7 +1457,7 @@ values (P.adj < 0.05):
 #| label: unifrac-pairwise_date_condition_permanova
 # load the permanova with targets
 targets::tar_load(nov_2023_pairwise_unifrac_date_condition_permanova, store = store_path)
-write.xlsx(nov_2023_pairwise_unifrac_date_condition_permanova, file = here(data_path, "nov_2023_pairwise_unifrac_date_condition_permanova.xlsx"))
+write.xlsx(nov_2023_pairwise_unifrac_date_condition_permanova, file = here(data_path, "nov_2023-fungi_pairwise_unifrac_date_condition_permanova.xlsx"))
 
 nov_2023_pairwise_unifrac_date_condition_permanova %>%
   dplyr::filter(P.adj < 0.05) %>%
@@ -1465,7 +1465,7 @@ nov_2023_pairwise_unifrac_date_condition_permanova %>%
   dplyr::select(Comparison, P.adj, everything())
 ```
 
-Download the full [nov_2023_pairwise_unifrac_date_condition_permanova.xlsx](08-november_2023-fungi/nov_2023_pairwise_unifrac_date_condition_permanova.xlsx) table.
+Download the full [nov_2023-fungi_pairwise_unifrac_date_condition_permanova.xlsx](08-november_2023-fungi/nov_2023-fungi_pairwise_unifrac_date_condition_permanova.xlsx) table.
 
 ### Weighted UniFrac {#wunifrac}
 
