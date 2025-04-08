@@ -612,7 +612,7 @@ list(
   # render november 2023 quarto document
   tar_quarto(
     name = november_2023,
-    path = "analysis/07-november_2023.qmd",
+    path = "analysis/07-november_2023-bacteria.qmd",
     quiet = TRUE
   )
 )

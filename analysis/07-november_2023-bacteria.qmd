@@ -1,5 +1,5 @@
 ---
-title: "November 2023 Analysis"
+title: "Bacteria - November 2023 Analysis"
 author: "Paolo Cozzi"
 date: today
 toc: true
@@ -27,10 +27,10 @@ library(ampvis2)
 library(openxlsx)
 
 # where I can find artifacts
-store_path <- here::here("stores", "november_2023")
+store_path <- here::here("stores", "november_2023-bacteria")
 
 # a folder in which store data files
-data_path <- here::here("analysis", "07-november_2023")
+data_path <- here::here("analysis", "07-november_2023-bacteria")
 
 if (!dir.exists(data_path)) {
   dir.create(data_path, recursive = TRUE)
@@ -54,7 +54,7 @@ write.xlsx(nov_2023_metadata, file = here(data_path, "nov_2023_metadata.xlsx"))
 nov_2023_metadata
 ```
 
-Download the [nov_2023_metadata.xlsx](07-november_2023/nov_2023_metadata.xlsx) table.
+Download the [nov_2023_metadata.xlsx](07-november_2023-bacteria/nov_2023_metadata.xlsx) table.
 
 ```{r load-phyloseq}
 #| label: load-phyloseq
@@ -87,7 +87,7 @@ depth_plot <- ggplot2::ggplot(
 # Display the plot
 print(depth_plot)
 ```
-Download the full [nov_2023_samples_data.xlsx](07-november_2023/nov_2023_samples_data.xlsx) table.
+Download the full [nov_2023_samples_data.xlsx](07-november_2023-bacteria/nov_2023_samples_data.xlsx) table.
 
 ### Permanova
 
@@ -106,7 +106,7 @@ print(nov_2023_tech_rep_permanova)
 ```
 
 The bad score given by grouping samples by technical replicates should not explain
-biological variability, discarding the hypothesis that biological replicates are 
+biological variability, discarding the hypothesis that biological replicates are
 different.
 
 ## Barplots
@@ -152,7 +152,7 @@ ggplot2::ggplot(nov_2023_melted_phylum, ggplot2::aes(x = sampleID, y = Abundance
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
 
-Download the [nov_2023_melted_phylum.xlsx](07-november_2023/nov_2023_melted_phylum.xlsx) table.
+Download the [nov_2023_melted_phylum.xlsx](07-november_2023-bacteria/nov_2023_melted_phylum.xlsx) table.
 
 ### By Phylum (>5%)
 
@@ -215,7 +215,7 @@ ggplot2::ggplot(nov_2023_melted_class, ggplot2::aes(x = sampleID, y = Abundance,
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
 
-Download the [nov_2023_melted_class.xlsx](07-november_2023/nov_2023_melted_class.xlsx) table.
+Download the [nov_2023_melted_class.xlsx](07-november_2023-bacteria/nov_2023_melted_class.xlsx) table.
 
 ### By Class (>5%)
 
@@ -268,7 +268,7 @@ write.xlsx(nov_2023_heatmap_phylum$data, file = here(data_path, "nov_2023_heatma
 print(nov_2023_heatmap_phylum)
 ```
 
-Download the [nov_2023_heatmap_phylum.xlsx](07-november_2023/nov_2023_heatmap_phylum.xlsx) table.
+Download the [nov_2023_heatmap_phylum.xlsx](07-november_2023-bacteria/nov_2023_heatmap_phylum.xlsx) table.
 
 ### By Class
 
@@ -290,7 +290,7 @@ write.xlsx(nov_2023_heatmap_class$data, file = here(data_path, "nov_2023_heatmap
 print(nov_2023_heatmap_class)
 ```
 
-Download the [nov_2023_heatmap_class.xlsx](07-november_2023/nov_2023_heatmap_class.xlsx) table.
+Download the [nov_2023_heatmap_class.xlsx](07-november_2023-bacteria/nov_2023_heatmap_class.xlsx) table.
 
 ## Samples Rarefaction
 
@@ -323,11 +323,11 @@ ggplot(nov_2023_rarecurve_df, aes(x = Sample, y = Species, color = date_conditio
   geom_vline(xintercept = nov_2023_rarefaction_depth, linetype = "dashed", color = "red") +  # Add vertical line
   geom_text(
     aes(
-      x = nov_2023_rarefaction_depth, 
-      y = max(Species) * 0.9, 
+      x = nov_2023_rarefaction_depth,
+      y = max(Species) * 0.9,
       label = paste("Depth:", nov_2023_rarefaction_depth)
-    ), 
-    color = "red", 
+    ),
+    color = "red",
     vjust = -0.5
   ) +  # Add text annotation above the line
   labs(
@@ -393,7 +393,7 @@ nov_2023_dunn_shannon_sample_name$res %>%
   dplyr::arrange(P.adj)
 ```
 
-Download the full [nov_2023_dunn_shannon_sample_name.xlsx](07-november_2023/nov_2023_dunn_shannon_sample_name.xlsx) table.
+Download the full [nov_2023_dunn_shannon_sample_name.xlsx](07-november_2023-bacteria/nov_2023_dunn_shannon_sample_name.xlsx) table.
 
 ### By date_condition
 
@@ -435,13 +435,13 @@ nov_2023_dunn_shannon_date_condition$res %>%
   dplyr::arrange(P.adj)
 ```
 
-Download the full [nov_2023_dunn_shannon_date_condition.xlsx](07-november_2023/nov_2023_dunn_shannon_date_condition.xlsx) table.
+Download the full [nov_2023_dunn_shannon_date_condition.xlsx](07-november_2023-bacteria/nov_2023_dunn_shannon_date_condition.xlsx) table.
 
 ## Beta Diversity Metrics
 
-Bray-Curtis, Jaccard, and UniFrac metrics are commonly used measures in ecological 
-and microbiological studies to compare the similarity or dissimilarity between 
-communities based on species composition or abundance. Here’s a brief description 
+Bray-Curtis, Jaccard, and UniFrac metrics are commonly used measures in ecological
+and microbiological studies to compare the similarity or dissimilarity between
+communities based on species composition or abundance. Here’s a brief description
 and summary of each:
 
 | **Metric**          | **Description** |
@@ -598,7 +598,7 @@ I've received a warning regarding the stress
 value, which is close to 0 and this can be determined by having not enough data,
 even if this value means a good fit for the NMDS.
 I've applied `0.05` of jitter (random noise) to points in order
-to clearly see them in the image. 
+to clearly see them in the image.
 :::
 
 ```{r bray-nmds-plot}
@@ -631,7 +631,7 @@ print(nmds_plot_rep)
 
 ::: {.callout-tip}
 This type of graph is more informative with indexes which use phylogenetic information:
-take a look at [Unweighted UniFrac - NMDS plot by sample names](#unifrac-nmds-sample-names) 
+take a look at [Unweighted UniFrac - NMDS plot by sample names](#unifrac-nmds-sample-names)
 and [Weighted UniFrac - NMDS plot by sample names](#wunifrac-nmds-sample-names)
 :::
 
@@ -645,7 +645,7 @@ I've received a warning regarding the stress
 value, which is close to 0 and this can be determined by having not enough data,
 even if this value means a good fit for the NMDS.
 I've applied `0.05` of jitter (random noise) to points in order
-to clearly see them in the image. 
+to clearly see them in the image.
 :::
 
 ```{r bray-nmds-date-condition}
@@ -671,7 +671,7 @@ print(nmds_plot)
 
 ::: {.callout-tip}
 This type of graph is more informative with indexes which use phylogenetic information:
-take a look at [Unweighted UniFrac - NMDS plot by date and condition](#unifrac-nmds-date_condition) 
+take a look at [Unweighted UniFrac - NMDS plot by date and condition](#unifrac-nmds-date_condition)
 and [Weighted UniFrac - NMDS plot by date and condition](#wunifrac-nmds-date_condition)
 :::
 
@@ -695,7 +695,7 @@ tar_load(nov_2023_bray_distance_by_sample_name_plot, store = store_path)
 print(nov_2023_bray_distance_by_sample_name_plot)
 ```
 
-Download the full [nov_2023_bray_distance_by_sample_name.xlsx](07-november_2023/nov_2023_bray_distance_by_sample_name.xlsx) table.
+Download the full [nov_2023_bray_distance_by_sample_name.xlsx](07-november_2023-bacteria/nov_2023_bray_distance_by_sample_name.xlsx) table.
 
 ##### date_condition distances
 
@@ -715,14 +715,14 @@ tar_load(nov_2023_bray_distance_by_date_condition_plot, store = store_path)
 print(nov_2023_bray_distance_by_date_condition_plot)
 ```
 
-Download the full [nov_2023_bray_distance_by_date_condition.xlsx](07-november_2023/nov_2023_bray_distance_by_date_condition.xlsx) table.
+Download the full [nov_2023_bray_distance_by_date_condition.xlsx](07-november_2023-bacteria/nov_2023_bray_distance_by_date_condition.xlsx) table.
 
 #### Permanova
 
 Here we will do some analyses on beta diversity. First, we evaluate beta dispersion
-which is essential to ensure the validity of statistical tests, accurately 
-interpret differences in community composition, and select appropriate analytical 
-methods. Neglecting this step can lead to incorrect conclusions about the 
+which is essential to ensure the validity of statistical tests, accurately
+interpret differences in community composition, and select appropriate analytical
+methods. Neglecting this step can lead to incorrect conclusions about the
 ecological patterns present in your data. For unbalanced designs PERMANOVA and ANOSIM were
 
 1. too liberal if the smaller group had greater dispersion, and
@@ -755,7 +755,7 @@ with the PERMANOVA analysis. Plot beta dispersion:
 #| fig.align: center
 # Create the boxplot
 ggplot(
-    nov_2023_bray_sample_name_beta_dispersion$beta_disp_df, 
+    nov_2023_bray_sample_name_beta_dispersion$beta_disp_df,
     aes(x = Group, y = Distance, fill = Group)
   ) +
   geom_boxplot() +
@@ -795,8 +795,8 @@ nov_2023_pairwise_bray_sample_name_permanova %>%
   dplyr::select(Comparison, P.adj, everything())
 ```
 
-No comparison has been filtered for *sample_name* column. 
-Download the full [nov_2023_pairwise_bray_sample_name_permanova.xlsx](07-november_2023/nov_2023_pairwise_bray_sample_name_permanova.xlsx) table.
+No comparison has been filtered for *sample_name* column.
+Download the full [nov_2023_pairwise_bray_sample_name_permanova.xlsx](07-november_2023-bacteria/nov_2023_pairwise_bray_sample_name_permanova.xlsx) table.
 
 ##### date_condition permanova
 
@@ -812,7 +812,7 @@ print(nov_2023_bray_date_condition_beta_dispersion$anova_result)
 
 I see significant differences in dispersions: should I trust the `date_condition`
 permanova? The point is also that groups are unbalanced (ie less elements in
-*default* group than the others). Permanova (and also ANOSIM) may suffer in 
+*default* group than the others). Permanova (and also ANOSIM) may suffer in
 this particular case. Plot beta dispersion:
 
 ```{r bray-date_condition_beta_dispersion_plot}
@@ -824,7 +824,7 @@ this particular case. Plot beta dispersion:
 #| fig.align: center
 # Create the boxplot
 ggplot(
-    nov_2023_bray_date_condition_beta_dispersion$beta_disp_df, 
+    nov_2023_bray_date_condition_beta_dispersion$beta_disp_df,
     aes(x = Group, y = Distance, fill = Group)
   ) +
   geom_boxplot() +
@@ -864,7 +864,7 @@ nov_2023_pairwise_bray_date_condition_permanova %>%
   dplyr::select(Comparison, P.adj, everything())
 ```
 
-Download the full [nov_2023_pairwise_bray_date_condition_permanova.xlsx](07-november_2023/nov_2023_pairwise_bray_date_condition_permanova.xlsx) table.
+Download the full [nov_2023_pairwise_bray_date_condition_permanova.xlsx](07-november_2023-bacteria/nov_2023_pairwise_bray_date_condition_permanova.xlsx) table.
 
 ### Jaccard {#jaccard}
 
@@ -1008,7 +1008,7 @@ I've received a warning regarding the stress
 value, which is close to 0 and this can be determined by having not enough data,
 even if this value means a good fit for the NMDS.
 I've applied `0.05` of jitter (random noise) to points in order
-to clearly see them in the image. 
+to clearly see them in the image.
 :::
 
 ```{r jaccard-nmds-plot}
@@ -1041,7 +1041,7 @@ print(nmds_plot_rep)
 
 ::: {.callout-tip}
 This type of graph is more informative with indexes which use phylogenetic information:
-take a look at [Unweighted UniFrac - NMDS plot by sample names](#unifrac-nmds-sample-names) 
+take a look at [Unweighted UniFrac - NMDS plot by sample names](#unifrac-nmds-sample-names)
 and [Weighted UniFrac - NMDS plot by sample names](#wunifrac-nmds-sample-names)
 :::
 
@@ -1055,7 +1055,7 @@ I've received a warning regarding the stress
 value, which is close to 0 and this can be determined by having not enough data,
 even if this value means a good fit for the NMDS.
 I've applied `0.05` of jitter (random noise) to points in order
-to clearly see them in the image. 
+to clearly see them in the image.
 :::
 
 ```{r jaccard-nmds-date-condition}
@@ -1081,7 +1081,7 @@ print(nmds_plot)
 
 ::: {.callout-tip}
 This type of graph is more informative with indexes which use phylogenetic information:
-take a look at [Unweighted UniFrac - NMDS plot by date and condition](#unifrac-nmds-date_condition) 
+take a look at [Unweighted UniFrac - NMDS plot by date and condition](#unifrac-nmds-date_condition)
 and [Weighted UniFrac - NMDS plot by date and condition](#wunifrac-nmds-date_condition)
 :::
 
@@ -1296,7 +1296,7 @@ tar_load(nov_2023_unifrac_distance_by_sample_name_plot, store = store_path)
 print(nov_2023_unifrac_distance_by_sample_name_plot)
 ```
 
-Download the full [nov_2023_unifrac_distance_by_sample_name.xlsx](07-november_2023/nov_2023_unifrac_distance_by_sample_name.xlsx) table.
+Download the full [nov_2023_unifrac_distance_by_sample_name.xlsx](07-november_2023-bacteria/nov_2023_unifrac_distance_by_sample_name.xlsx) table.
 
 ##### date_condition distances
 
@@ -1316,14 +1316,14 @@ tar_load(nov_2023_unifrac_distance_by_date_condition_plot, store = store_path)
 print(nov_2023_unifrac_distance_by_date_condition_plot)
 ```
 
-Download the full [nov_2023_unifrac_distance_by_date_condition.xlsx](07-november_2023/nov_2023_unifrac_distance_by_date_condition.xlsx) table.
+Download the full [nov_2023_unifrac_distance_by_date_condition.xlsx](07-november_2023-bacteria/nov_2023_unifrac_distance_by_date_condition.xlsx) table.
 
 #### Permanova
 
 Here we will do some analyses on beta diversity. First, we evaluate beta dispersion
-which is essential to ensure the validity of statistical tests, accurately 
-interpret differences in community composition, and select appropriate analytical 
-methods. Neglecting this step can lead to incorrect conclusions about the 
+which is essential to ensure the validity of statistical tests, accurately
+interpret differences in community composition, and select appropriate analytical
+methods. Neglecting this step can lead to incorrect conclusions about the
 ecological patterns present in your data. For unbalanced designs PERMANOVA and ANOSIM were
 
 1. too liberal if the smaller group had greater dispersion, and
@@ -1356,7 +1356,7 @@ with the PERMANOVA analysis. Plot beta dispersion:
 #| fig.align: center
 # Create the boxplot
 ggplot(
-    nov_2023_unifrac_sample_name_beta_dispersion$beta_disp_df, 
+    nov_2023_unifrac_sample_name_beta_dispersion$beta_disp_df,
     aes(x = Group, y = Distance, fill = Group)
   ) +
   geom_boxplot() +
@@ -1396,8 +1396,8 @@ nov_2023_pairwise_unifrac_sample_name_permanova %>%
   dplyr::select(Comparison, P.adj, everything())
 ```
 
-No comparison has been filtered for *sample_name* column. 
-Download the full [nov_2023_pairwise_unifrac_sample_name_permanova.xlsx](07-november_2023/nov_2023_pairwise_unifrac_sample_name_permanova.xlsx) table.
+No comparison has been filtered for *sample_name* column.
+Download the full [nov_2023_pairwise_unifrac_sample_name_permanova.xlsx](07-november_2023-bacteria/nov_2023_pairwise_unifrac_sample_name_permanova.xlsx) table.
 
 ##### date_condition permanova
 
@@ -1413,7 +1413,7 @@ print(nov_2023_unifrac_date_condition_beta_dispersion$anova_result)
 
 I see significant differences in dispersions: should I trust the `date_condition`
 permanova? The point is also that groups are unbalanced (ie less elements in
-*default* group than the others). Permanova (and also ANOSIM) may suffer in 
+*default* group than the others). Permanova (and also ANOSIM) may suffer in
 this particular case. Plot beta dispersion:
 
 ```{r unifrac-date_condition_beta_dispersion_plot}
@@ -1425,7 +1425,7 @@ this particular case. Plot beta dispersion:
 #| fig.align: center
 # Create the boxplot
 ggplot(
-    nov_2023_unifrac_date_condition_beta_dispersion$beta_disp_df, 
+    nov_2023_unifrac_date_condition_beta_dispersion$beta_disp_df,
     aes(x = Group, y = Distance, fill = Group)
   ) +
   geom_boxplot() +
@@ -1465,7 +1465,7 @@ nov_2023_pairwise_unifrac_date_condition_permanova %>%
   dplyr::select(Comparison, P.adj, everything())
 ```
 
-Download the full [nov_2023_pairwise_unifrac_date_condition_permanova.xlsx](07-november_2023/nov_2023_pairwise_unifrac_date_condition_permanova.xlsx) table.
+Download the full [nov_2023_pairwise_unifrac_date_condition_permanova.xlsx](07-november_2023-bacteria/nov_2023_pairwise_unifrac_date_condition_permanova.xlsx) table.
 
 ### Weighted UniFrac {#wunifrac}
 

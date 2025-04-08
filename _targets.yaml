@@ -10,9 +10,9 @@ reactor_vs_algae:
 duckweed_and_box:
   script: scripts/06-duckweed_and_box.R
   store: stores/duckweed_and_box
-november_2023:
-  script: scripts/07-november_2023.R
-  store: stores/november_2023
+november_2023-bacteria:
+  script: scripts/07-november_2023-bacteria.R
+  store: stores/november_2023-bacteria
 november_2023-fungi:
   script: scripts/08-november_2023-fungi.R
   store: stores/november_2023-fungi

@@ -1,6 +1,6 @@
 
 # Start by specifying the project names and their corresponding scripts and stores.
-PROJECTS := technical_replicates plot_iNEXT november_2023 november_2023-fungi reactor_vs_algae duckweed_and_box
+PROJECTS := technical_replicates plot_iNEXT november_2023-bacteria november_2023-fungi reactor_vs_algae duckweed_and_box
 
 # Create a generic rule that sets the TAR_PROJECT environment variable and runs
 # tar_make() for the specified project. This approach eliminates redundancy and
