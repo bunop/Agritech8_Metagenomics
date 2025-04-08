@@ -151,8 +151,10 @@ list(
   tar_target(
     name = nov_2023_metadata,
     command = dplyr::filter(
-      full_nov_2023_metadata,
-      sampleID %in% phyloseq::sample_names(nov_2023_phyloseq_obj_tmp)
+        full_nov_2023_metadata,
+        sampleID %in% phyloseq::sample_names(nov_2023_phyloseq_obj_tmp)
+      ) %>%
+      mutate(sampleID = droplevels(sampleID)
     )
   ),
   # extract the sample names from the metadata in the same order

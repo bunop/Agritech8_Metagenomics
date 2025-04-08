@@ -40,7 +40,12 @@ if (!dir.exists(data_path)) {
 
 ## Metadata
 
-Let's load the metadata from the November 2023 experiments and try to do some analysis.
+Let's load the metadata from the November 2023 experiments and try to do some analysis:
+
+::: {.callout-warning}
+Some fungi samples cannot be sequenced. Metadata and other analysis results are
+not available for these samples.
+:::
 
 ```{r load-metadata}
 #| label: load-metadata
@@ -585,7 +590,6 @@ targets::tar_load(nov_2023_bray_nmds_object, store = store_path)
 
 # get the tibble object
 nmds_tb <- nov_2023_bray_nmds_object$nmds_tb
-jitter <- 0.05
 ```
 ##### NMDS plot by sample names
 
@@ -593,16 +597,10 @@ Let's plot the NMDS plot focusing on the technical replicates.
 see [CC187](https://www.youtube.com/watch?v=h7OrVmT7Ja8&ab_channel=RiffomonasProject)
 for more information.
 
-::: {.callout-warning}
-I've received a warning regarding the stress
-value, which is close to 0 and this can be determined by having not enough data,
-even if this value means a good fit for the NMDS.
-I've applied `0.05` of jitter (random noise) to points in order
-to clearly see them in the image.
-:::
-
 ```{r bray-nmds-plot}
 #| label: bray-nmds-plot
+#| fig.width: 10
+#| fig.height: 8
 # count the number of levels in the group column
 num_levels <- length(unique(nov_2023_metadata$sample_group))
 
@@ -614,7 +612,7 @@ names(color_palette) <- NULL  # Remove any names from the color palette
 nmds_plot_rep <- ggplot2::ggplot(
     nmds_tb,
     ggplot2::aes(x = NMDS1, y = NMDS2, color = sample_name, shape = condition)) +
-  ggplot2::geom_jitter(size = 4, alpha = 0.5, width = jitter, height = jitter) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
   ggplot2::theme_minimal() +
   ggplot2::labs(
     title = "NMDS Plot on distance metrics (Bray-Curtis)",
@@ -629,24 +627,10 @@ nmds_plot_rep <- ggplot2::ggplot(
 print(nmds_plot_rep)
 ```
 
-::: {.callout-tip}
-This type of graph is more informative with indexes which use phylogenetic information:
-take a look at [Unweighted UniFrac - NMDS plot by sample names](#unifrac-nmds-sample-names)
-and [Weighted UniFrac - NMDS plot by sample names](#wunifrac-nmds-sample-names)
-:::
-
 ##### NMDS plot by date and condition (sample replicates)
 
 Now, let's visualize the NMDS plot but grouping with date and condition
 (which should group sample replicates)
-
-::: {.callout-warning}
-I've received a warning regarding the stress
-value, which is close to 0 and this can be determined by having not enough data,
-even if this value means a good fit for the NMDS.
-I've applied `0.05` of jitter (random noise) to points in order
-to clearly see them in the image.
-:::
 
 ```{r bray-nmds-date-condition}
 #| label: bray-nmds-date-condition
@@ -655,7 +639,7 @@ to clearly see them in the image.
 nmds_plot <- ggplot2::ggplot(
     nmds_tb,
     ggplot2::aes(x = NMDS1, y = NMDS2, color = date_condition)) +
-  ggplot2::geom_jitter(size = 4, alpha = 0.5, width = jitter, height = jitter) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
   ggplot2::theme_minimal() +
   ggplot2::labs(
     title = "NMDS Plot on distance metrics (Bray-Curtis)",
@@ -668,12 +652,6 @@ nmds_plot <- ggplot2::ggplot(
 
 print(nmds_plot)
 ```
-
-::: {.callout-tip}
-This type of graph is more informative with indexes which use phylogenetic information:
-take a look at [Unweighted UniFrac - NMDS plot by date and condition](#unifrac-nmds-date_condition)
-and [Weighted UniFrac - NMDS plot by date and condition](#wunifrac-nmds-date_condition)
-:::
 
 #### Between group distances
 
@@ -734,6 +712,10 @@ for more information)
 ##### sample_name permanova
 
 Calculate beta dispersion for *sample_name* column:
+
+::: {.callout-warning}
+some squared distances are negative and changed to zero
+:::
 
 ```{r bray-sample_name_beta_dispersion}
 #| label: bray-sample_name_beta_dispersion
@@ -801,6 +783,10 @@ Download the full [nov_2023-fungi_pairwise_bray_sample_name_permanova.xlsx](08-n
 ##### date_condition permanova
 
 Calculate beta dispersion for *date_condition* column:
+
+::: {.callout-warning}
+some squared distances are negative and changed to zero
+:::
 
 ```{r bray-date_condition_beta_dispersion}
 #| label: bray-date_condition_beta_dispersion
@@ -995,7 +981,6 @@ targets::tar_load(nov_2023_jaccard_nmds_object, store = store_path)
 
 # get the tibble object
 nmds_tb <- nov_2023_jaccard_nmds_object$nmds_tb
-jitter <- 0.05
 ```
 ##### NMDS plot by sample names
 
@@ -1003,16 +988,11 @@ Let's plot the NMDS plot focusing on the technical replicates.
 see [CC187](https://www.youtube.com/watch?v=h7OrVmT7Ja8&ab_channel=RiffomonasProject)
 for more information.
 
-::: {.callout-warning}
-I've received a warning regarding the stress
-value, which is close to 0 and this can be determined by having not enough data,
-even if this value means a good fit for the NMDS.
-I've applied `0.05` of jitter (random noise) to points in order
-to clearly see them in the image.
-:::
-
 ```{r jaccard-nmds-plot}
 #| label: jaccard-nmds-plot
+#| fig.width: 10
+#| fig.height: 8
+
 # count the number of levels in the group column
 num_levels <- length(unique(nov_2023_metadata$sample_group))
 
@@ -1024,7 +1004,7 @@ names(color_palette) <- NULL  # Remove any names from the color palette
 nmds_plot_rep <- ggplot2::ggplot(
     nmds_tb,
     ggplot2::aes(x = NMDS1, y = NMDS2, color = sample_name, shape = condition)) +
-  ggplot2::geom_jitter(size = 4, alpha = 0.5, width = jitter, height = jitter) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
   ggplot2::theme_minimal() +
   ggplot2::labs(
     title = "NMDS Plot on distance metrics (Jaccard)",
@@ -1039,24 +1019,11 @@ nmds_plot_rep <- ggplot2::ggplot(
 print(nmds_plot_rep)
 ```
 
-::: {.callout-tip}
-This type of graph is more informative with indexes which use phylogenetic information:
-take a look at [Unweighted UniFrac - NMDS plot by sample names](#unifrac-nmds-sample-names)
-and [Weighted UniFrac - NMDS plot by sample names](#wunifrac-nmds-sample-names)
-:::
-
 ##### NMDS plot by date and condition (sample replicates)
 
 Now, let's visualize the NMDS plot but grouping with date and condition
 (which should group sample replicates)
 
-::: {.callout-warning}
-I've received a warning regarding the stress
-value, which is close to 0 and this can be determined by having not enough data,
-even if this value means a good fit for the NMDS.
-I've applied `0.05` of jitter (random noise) to points in order
-to clearly see them in the image.
-:::
 
 ```{r jaccard-nmds-date-condition}
 #| label: jaccard-nmds-date-condition
@@ -1065,7 +1032,7 @@ to clearly see them in the image.
 nmds_plot <- ggplot2::ggplot(
     nmds_tb,
     ggplot2::aes(x = NMDS1, y = NMDS2, color = date_condition)) +
-  ggplot2::geom_jitter(size = 4, alpha = 0.5, width = jitter, height = jitter) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
   ggplot2::theme_minimal() +
   ggplot2::labs(
     title = "NMDS Plot on distance metrics (Jaccard)",
@@ -1078,12 +1045,6 @@ nmds_plot <- ggplot2::ggplot(
 
 print(nmds_plot)
 ```
-
-::: {.callout-tip}
-This type of graph is more informative with indexes which use phylogenetic information:
-take a look at [Unweighted UniFrac - NMDS plot by date and condition](#unifrac-nmds-date_condition)
-and [Weighted UniFrac - NMDS plot by date and condition](#wunifrac-nmds-date_condition)
-:::
 
 ### Unweighted UniFrac {#unifrac}
 
@@ -1224,6 +1185,9 @@ for more information.
 
 ```{r unifrac-nmds-plot}
 #| label: unifrac-nmds-plot
+#| fig.width: 10
+#| fig.height: 8
+
 # count the number of levels in the group column
 num_levels <- length(unique(nov_2023_metadata$sample_group))
 
@@ -1344,8 +1308,8 @@ tar_load(nov_2023_unifrac_sample_name_beta_dispersion, store = store_path)
 print(nov_2023_unifrac_sample_name_beta_dispersion$anova_result)
 ```
 
-Since we don't see any significant differences in dispersion, we can proceed
-with the PERMANOVA analysis. Plot beta dispersion:
+I see significant differences in dispersions: should I trust the `sample_name`
+permanova? Plot beta dispersion:
 
 ```{r unifrac-sample_name_beta_dispersion_plot}
 #| label: unifrac-sample_name_beta_dispersion_plot
@@ -1605,6 +1569,9 @@ for more information.
 
 ```{r wunifrac-nmds-plot}
 #| label: wunifrac-nmds-plot
+#| fig.width: 10
+#| fig.height: 8
+
 # count the number of levels in the group column
 num_levels <- length(unique(nov_2023_metadata$sample_group))
 
