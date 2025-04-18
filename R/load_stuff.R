@@ -93,9 +93,13 @@ add_tree_to_phyloseq <- function(phyloseq_object, ...) {
   # collect all the arguments in a list
   args <- list(...)
 
-  # load the tree
+  # here's the path to the newick file
   newick_file_path <- here::here(args)
-  phylogenetic_tree <- ape::read.tree(newick_file_path)
+
+  # load the tree and resolve dicotomies
+  phylogenetic_tree <- ape::multi2di(
+    ape::read.tree(newick_file_path)
+  )
 
   # add the tree to the phyloseq object
   phyloseq::phy_tree(phyloseq_object) <- phylogenetic_tree

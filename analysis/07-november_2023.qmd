@@ -10,7 +10,7 @@ format:
     html-math-method: katex
     df-print: paged
     code-fold: true
-    toc-depth: 4
+    toc-depth: 5
     embed-resources: true  # Embed all resources directly into the HTML file
 editor: source
 ---
@@ -38,7 +38,7 @@ if (!dir.exists(data_path)) {
 }
 ```
 
-## Load metadata from november 2023
+## Metadata
 
 Let's load the metadata from the November 2023 experiments and try to do some analysis.
 
@@ -54,11 +54,11 @@ write.xlsx(nov_2023_metadata, file = here(data_path, "nov_2023_metadata.xlsx"))
 nov_2023_metadata
 ```
 
-Download the [nov_2023_metadata.xlsx](november_2023/nov_2023_metadata.xlsx) table.
-Load other phyloseq stuff
+Download the [nov_2023_metadata.xlsx](07-november_2023/nov_2023_metadata.xlsx) table.
 
 ```{r load-phyloseq}
 #| label: load-phyloseq
+# Load other phyloseq stuff
 targets::tar_load(nov_2023_phyloseq_obj, store = store_path)
 targets::tar_load(nov_2023_samples_data, store = store_path)
 
@@ -87,7 +87,7 @@ depth_plot <- ggplot2::ggplot(
 # Display the plot
 print(depth_plot)
 ```
-Download the full [nov_2023_samples_data.xlsx](november_2023/nov_2023_samples_data.xlsx) table.
+Download the full [nov_2023_samples_data.xlsx](07-november_2023/nov_2023_samples_data.xlsx) table.
 
 ### Permanova
 
@@ -104,6 +104,10 @@ technical replicate similarity:
 targets::tar_load(nov_2023_tech_rep_permanova, store = store_path)
 print(nov_2023_tech_rep_permanova)
 ```
+
+The bad score given by grouping samples by technical replicates should not explain
+biological variability, discarding the hypothesis that biological replicates are 
+different.
 
 ## Barplots
 
@@ -148,7 +152,7 @@ ggplot2::ggplot(nov_2023_melted_phylum, ggplot2::aes(x = sampleID, y = Abundance
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
 
-Download the [nov_2023_melted_phylum.xlsx](november_2023/nov_2023_melted_phylum.xlsx) table.
+Download the [nov_2023_melted_phylum.xlsx](07-november_2023/nov_2023_melted_phylum.xlsx) table.
 
 ### By Phylum (>5%)
 
@@ -211,7 +215,7 @@ ggplot2::ggplot(nov_2023_melted_class, ggplot2::aes(x = sampleID, y = Abundance,
   ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
 ```
 
-Download the [nov_2023_melted_class.xlsx](november_2023/nov_2023_melted_class.xlsx) table.
+Download the [nov_2023_melted_class.xlsx](07-november_2023/nov_2023_melted_class.xlsx) table.
 
 ### By Class (>5%)
 
@@ -264,7 +268,7 @@ write.xlsx(nov_2023_heatmap_phylum$data, file = here(data_path, "nov_2023_heatma
 print(nov_2023_heatmap_phylum)
 ```
 
-Download the [nov_2023_heatmap_phylum.xlsx](november_2023/nov_2023_heatmap_phylum.xlsx) table.
+Download the [nov_2023_heatmap_phylum.xlsx](07-november_2023/nov_2023_heatmap_phylum.xlsx) table.
 
 ### By Class
 
@@ -286,7 +290,7 @@ write.xlsx(nov_2023_heatmap_class$data, file = here(data_path, "nov_2023_heatmap
 print(nov_2023_heatmap_class)
 ```
 
-Download the [nov_2023_heatmap_class.xlsx](november_2023/nov_2023_heatmap_class.xlsx) table.
+Download the [nov_2023_heatmap_class.xlsx](07-november_2023/nov_2023_heatmap_class.xlsx) table.
 
 ## Samples Rarefaction
 
@@ -317,6 +321,15 @@ nov_2023_rarecurve_df <- nov_2023_metadata %>%
 ggplot(nov_2023_rarecurve_df, aes(x = Sample, y = Species, color = date_condition, group = sampleID)) +
   geom_line() +
   geom_vline(xintercept = nov_2023_rarefaction_depth, linetype = "dashed", color = "red") +  # Add vertical line
+  geom_text(
+    aes(
+      x = nov_2023_rarefaction_depth, 
+      y = max(Species) * 0.9, 
+      label = paste("Depth:", nov_2023_rarefaction_depth)
+    ), 
+    color = "red", 
+    vjust = -0.5
+  ) +  # Add text annotation above the line
   labs(
     title = "Rarefaction Curves for All Samples",
     x = "Number of Individuals Sampled",
@@ -331,6 +344,15 @@ Alpha diversity measures the diversity within a single sample or community.
 It provides insights into the richness and evenness of species in a sample,
 helping to compare diversity between samples or track changes over time.
 
+| Name       | Description                                                                                      |
+|------------|--------------------------------------------------------------------------------------------------|
+| **Observed**   | The total number of unique species observed in a community.                                   |
+| **Shannon**    | Measures species diversity by taking into account both richness and evenness; higher values indicate more diversity. |
+| **Simpson**    | Assesses the probability that two randomly selected individuals belong to the same species; lower values indicate higher diversity. |
+| **InvSimpson** | The inverse of Simpson's index, providing a measure that increases with species richness and evenness; higher values indicate greater diversity. |
+| **Fisher**     | A richness estimator that is particularly sensitive to rare species, providing a measure of species richness based on species abundance distribution. |
+| **FaithPD**    | Measures phylogenetic diversity, calculating the total branch length of the phylogenetic tree representing the species present in a community. |
+
 ### By sample_name
 
 ```{r alpha-diversity_sample_name}
@@ -342,6 +364,8 @@ helping to compare diversity between samples or track changes over time.
 tar_load(nov_2023_alpha_diversity_by_sample_name, store = store_path)
 print(nov_2023_alpha_diversity_by_sample_name)
 ```
+
+#### Shannon
 
 Perform Kruskal-Wallis tests to determine if the alpha diversity metrics are
 significantly different between the groups. Run on *shannon* metric:
@@ -369,7 +393,7 @@ nov_2023_dunn_shannon_sample_name$res %>%
   dplyr::arrange(P.adj)
 ```
 
-Download the full [nov_2023_dunn_shannon_sample_name.xlsx](november_2023/nov_2023_dunn_shannon_sample_name.xlsx) table.
+Download the full [nov_2023_dunn_shannon_sample_name.xlsx](07-november_2023/nov_2023_dunn_shannon_sample_name.xlsx) table.
 
 ### By date_condition
 
@@ -382,6 +406,8 @@ Download the full [nov_2023_dunn_shannon_sample_name.xlsx](november_2023/nov_202
 tar_load(nov_2023_alpha_diversity_by_date_condition, store = store_path)
 print(nov_2023_alpha_diversity_by_date_condition)
 ```
+
+#### Shannon
 
 Perform Kruskal-Wallis tests to determine if the alpha diversity metrics are
 significantly different between the groups. Run on shannon metric:
@@ -409,15 +435,31 @@ nov_2023_dunn_shannon_date_condition$res %>%
   dplyr::arrange(P.adj)
 ```
 
-Download the full [nov_2023_dunn_shannon_date_condition.xlsx](november_2023/nov_2023_dunn_shannon_date_condition.xlsx) table.
+Download the full [nov_2023_dunn_shannon_date_condition.xlsx](07-november_2023/nov_2023_dunn_shannon_date_condition.xlsx) table.
 
-## Beta diversity
+## Beta Diversity Metrics
 
-### PCoA plot
+Bray-Curtis, Jaccard, and UniFrac metrics are commonly used measures in ecological 
+and microbiological studies to compare the similarity or dissimilarity between 
+communities based on species composition or abundance. Here’s a brief description 
+and summary of each:
+
+| **Metric**          | **Description** |
+|---------------------|-----------------|
+| [**Bray-Curtis**](#bray-curtis) | Measures the compositional dissimilarity between samples based on abundance counts. |
+| [**Jaccard**](#jaccard)| Measures the proportion of shared species (OTUs/ASVs) between two samples. Ignores abundance. |
+| [**Unweighted UniFrac**](#unifrac) | Considers shared branch length between communities in a phylogenetic tree but ignores abundance. |
+| [**Weighted UniFrac**](#wunifrac) | Similar to unweighted UniFrac but also accounts for species' relative abundances, giving more weight to dominant taxa. |
+
+Let's represent each metric in a section
+
+### Bray-Curtis {#bray-curtis}
+
+#### PCoa Plots
 
 **Principal Coordinates Analysis (PCoA)** is an ordination technique used to visualize patterns in complex, high-dimensional data by projecting samples into a lower-dimensional space based on a distance matrix.
 
-#### Bray-Curtis PCoA plot by sample names
+##### PCoA plot by sample names
 
 Now we will plot a Bray-Curtis PCoA plot to visualize the technical replicates. See
 [CC186](https://www.youtube.com/watch?v=G5Qckqq5Erw) for more information.
@@ -466,7 +508,7 @@ pcoa_plot_rep <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = samp
 print(pcoa_plot_rep)
 ```
 
-#### Bray-Curtis PCoA plot by date and condition (sample replicates)
+##### PCoA plot by date and condition (sample replicates)
 
 Visualize the same plot but grouping with date and condition (which should group sample replicates)
 
@@ -506,8 +548,8 @@ explained by each principal component, allowing you to determine the optimal
 number of components to retain. The red line in the plot is at y=2, which is the
 number of components used when plotting a 2D PCoA plot.
 
-```{r scree-plot}
-#| label: scree-plot
+```{r bray-scree-plot}
+#| label: bray-scree-plot
 # Determine which cumulative eigenvalues to use
 if ("Cum_corr_eig" %in% colnames(pcoa_results$values)) {
   cumulative_eig <- pcoa_results$values$Cum_corr_eig * 100
@@ -528,12 +570,305 @@ ggplot(plot_data, aes(x = axis, y = pe)) +
   labs(
     x = "Principal Coordinate Axis",
     y = "Cumulative Percentage of Variance Explained",
-    title = "Scree Plot of PCoA"
+    title = "Scree Plot of PCoA (Bray-Curtis)",
   ) +
   theme_minimal()
 ```
 
-#### Jaccard PCoA plot by sample names
+#### NMDS plot
+
+Non-metric Multidimensional Scaling (**NMDS**) is an ordination technique used to visualize the similarity or dissimilarity between samples in complex, multidimensional datasets. Unlike metric methods, NMDS focuses on preserving the rank order of distances rather than the actual distance values, making it particularly useful for ecological and environmental data where relationships may be non-linear.
+
+```{r bray-nmds}
+#| label: bray-nmds
+targets::tar_load(nov_2023_bray_nmds_object, store = store_path)
+
+# get the tibble object
+nmds_tb <- nov_2023_bray_nmds_object$nmds_tb
+jitter <- 0.05
+```
+##### NMDS plot by sample names
+
+Let's plot the NMDS plot focusing on the technical replicates.
+see [CC187](https://www.youtube.com/watch?v=h7OrVmT7Ja8&ab_channel=RiffomonasProject)
+for more information.
+
+::: {.callout-warning}
+I've received a warning regarding the stress
+value, which is close to 0 and this can be determined by having not enough data,
+even if this value means a good fit for the NMDS.
+I've applied `0.05` of jitter (random noise) to points in order
+to clearly see them in the image. 
+:::
+
+```{r bray-nmds-plot}
+#| label: bray-nmds-plot
+# count the number of levels in the group column
+num_levels <- length(unique(nov_2023_metadata$sample_group))
+
+# Get the color palette
+color_palette <- Polychrome::palette36.colors(num_levels)
+names(color_palette) <- NULL  # Remove any names from the color palette
+
+# Use palette36 from Polychrome, which supports up to 36 colors
+nmds_plot_rep <- ggplot2::ggplot(
+    nmds_tb,
+    ggplot2::aes(x = NMDS1, y = NMDS2, color = sample_name, shape = condition)) +
+  ggplot2::geom_jitter(size = 4, alpha = 0.5, width = jitter, height = jitter) +
+  ggplot2::theme_minimal() +
+  ggplot2::labs(
+    title = "NMDS Plot on distance metrics (Bray-Curtis)",
+    color = NULL,
+    shape = NULL) +
+  ggplot2::scale_color_manual(values = color_palette) +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+print(nmds_plot_rep)
+```
+
+::: {.callout-tip}
+This type of graph is more informative with indexes which use phylogenetic information:
+take a look at [Unweighted UniFrac - NMDS plot by sample names](#unifrac-nmds-sample-names) 
+and [Weighted UniFrac - NMDS plot by sample names](#wunifrac-nmds-sample-names)
+:::
+
+##### NMDS plot by date and condition (sample replicates)
+
+Now, let's visualize the NMDS plot but grouping with date and condition
+(which should group sample replicates)
+
+::: {.callout-warning}
+I've received a warning regarding the stress
+value, which is close to 0 and this can be determined by having not enough data,
+even if this value means a good fit for the NMDS.
+I've applied `0.05` of jitter (random noise) to points in order
+to clearly see them in the image. 
+:::
+
+```{r bray-nmds-date-condition}
+#| label: bray-nmds-date-condition
+
+# Plot the NMDS
+nmds_plot <- ggplot2::ggplot(
+    nmds_tb,
+    ggplot2::aes(x = NMDS1, y = NMDS2, color = date_condition)) +
+  ggplot2::geom_jitter(size = 4, alpha = 0.5, width = jitter, height = jitter) +
+  ggplot2::theme_minimal() +
+  ggplot2::labs(
+    title = "NMDS Plot on distance metrics (Bray-Curtis)",
+    color = NULL) +
+  ggplot2::scale_color_brewer(palette = "Set1") +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+print(nmds_plot)
+```
+
+::: {.callout-tip}
+This type of graph is more informative with indexes which use phylogenetic information:
+take a look at [Unweighted UniFrac - NMDS plot by date and condition](#unifrac-nmds-date_condition) 
+and [Weighted UniFrac - NMDS plot by date and condition](#wunifrac-nmds-date_condition)
+:::
+
+#### Between group distances
+
+##### sample_name distances
+
+Plot distances by sample names:
+
+```{r bray-sample_name_distances}
+#| label: bray-sample_name_distances
+#| title: Distance matrix by sample names
+#| description: Plot the distance matrix by sample names
+#| fig.width: 10
+#| fig.height: 8
+#| fig.align: center
+tar_load(nov_2023_bray_distance_by_sample_name, store = store_path)
+write.xlsx(nov_2023_bray_distance_by_sample_name, file = here(data_path, "nov_2023_bray_distance_by_sample_name.xlsx"))
+
+tar_load(nov_2023_bray_distance_by_sample_name_plot, store = store_path)
+print(nov_2023_bray_distance_by_sample_name_plot)
+```
+
+Download the full [nov_2023_bray_distance_by_sample_name.xlsx](07-november_2023/nov_2023_bray_distance_by_sample_name.xlsx) table.
+
+##### date_condition distances
+
+Plot distances by date_condition:
+
+```{r bray-date_condition_distances}
+#| label: bray-date_condition_distances
+#| title: Distance matrix by date_condition
+#| description: Plot the distance matrix by date_condition
+#| fig.width: 10
+#| fig.height: 8
+#| fig.align: center
+tar_load(nov_2023_bray_distance_by_date_condition, store = store_path)
+write.xlsx(nov_2023_bray_distance_by_date_condition, file = here(data_path, "nov_2023_bray_distance_by_date_condition.xlsx"))
+
+tar_load(nov_2023_bray_distance_by_date_condition_plot, store = store_path)
+print(nov_2023_bray_distance_by_date_condition_plot)
+```
+
+Download the full [nov_2023_bray_distance_by_date_condition.xlsx](07-november_2023/nov_2023_bray_distance_by_date_condition.xlsx) table.
+
+#### Permanova
+
+Here we will do some analyses on beta diversity. First, we evaluate beta dispersion
+which is essential to ensure the validity of statistical tests, accurately 
+interpret differences in community composition, and select appropriate analytical 
+methods. Neglecting this step can lead to incorrect conclusions about the 
+ecological patterns present in your data. For unbalanced designs PERMANOVA and ANOSIM were
+
+1. too liberal if the smaller group had greater dispersion, and
+2. too conservative if the larger group had greater dispersion.
+
+This result was especially so for ANOSIM (see [here](https://stats.stackexchange.com/a/316386/451801)
+for more information)
+
+##### sample_name permanova
+
+Calculate beta dispersion for *sample_name* column:
+
+```{r bray-sample_name_beta_dispersion}
+#| label: bray-sample_name_beta_dispersion
+#| title: Beta dispersion by sample names
+#| description: Calculate beta dispersion by sample names
+tar_load(nov_2023_bray_sample_name_beta_dispersion, store = store_path)
+print(nov_2023_bray_sample_name_beta_dispersion$anova_result)
+```
+
+Since we don't see any significant differences in dispersion, we can proceed
+with the PERMANOVA analysis. Plot beta dispersion:
+
+```{r bray-sample_name_beta_dispersion_plot}
+#| label: bray-sample_name_beta_dispersion_plot
+#| title: Beta dispersion plot by sample names
+#| description: Plot beta dispersion by sample names
+#| fig.width: 10
+#| fig.height: 8
+#| fig.align: center
+# Create the boxplot
+ggplot(
+    nov_2023_bray_sample_name_beta_dispersion$beta_disp_df, 
+    aes(x = Group, y = Distance, fill = Group)
+  ) +
+  geom_boxplot() +
+  geom_jitter(width = 0.2, alpha = 0.5) +  # Adds individual data points
+  labs(
+    title = "Bray-Curtis Beta Dispersion by Group",
+    x = "Group",
+    y = "Distance to Centroid"
+  ) +
+  theme_minimal() +
+  ggplot2::theme(
+    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
+  )
+```
+
+Do permanova with *bray-curtis* on *sample_name* column:
+
+```{r bray-sample_name_permanova}
+#| label: bray-sample_name_permanova
+# load the permanova with targets
+targets::tar_load(nov_2023_bray_sample_name_permanova, store = store_path)
+print(nov_2023_bray_sample_name_permanova)
+```
+
+Load the *pairwise* permanova on the same columns and filter only significant
+values (P.adj < 0.05):
+
+```{r bray-pairwise_sample_name_permanova}
+#| label: bray-pairwise_sample_name_permanova
+# load the permanova with targets
+targets::tar_load(nov_2023_pairwise_bray_sample_name_permanova, store = store_path)
+write.xlsx(nov_2023_pairwise_bray_sample_name_permanova, file = here(data_path, "nov_2023_pairwise_bray_sample_name_permanova.xlsx"))
+
+nov_2023_pairwise_bray_sample_name_permanova %>%
+  dplyr::filter(P.adj < 0.05) %>%
+  dplyr::arrange(P.adj) %>%
+  dplyr::select(Comparison, P.adj, everything())
+```
+
+No comparison has been filtered for *sample_name* column. 
+Download the full [nov_2023_pairwise_bray_sample_name_permanova.xlsx](07-november_2023/nov_2023_pairwise_bray_sample_name_permanova.xlsx) table.
+
+##### date_condition permanova
+
+Calculate beta dispersion for *date_condition* column:
+
+```{r bray-date_condition_beta_dispersion}
+#| label: bray-date_condition_beta_dispersion
+#| title: Beta dispersion by sample names
+#| description: Calculate beta dispersion by sample names
+tar_load(nov_2023_bray_date_condition_beta_dispersion, store = store_path)
+print(nov_2023_bray_date_condition_beta_dispersion$anova_result)
+```
+
+I see significant differences in dispersions: should I trust the `date_condition`
+permanova? The point is also that groups are unbalanced (ie less elements in
+*default* group than the others). Permanova (and also ANOSIM) may suffer in 
+this particular case. Plot beta dispersion:
+
+```{r bray-date_condition_beta_dispersion_plot}
+#| label: bray-date_condition_beta_dispersion_plot
+#| title: Beta dispersion plot by sample names
+#| description: Plot beta dispersion by sample names
+#| fig.width: 10
+#| fig.height: 8
+#| fig.align: center
+# Create the boxplot
+ggplot(
+    nov_2023_bray_date_condition_beta_dispersion$beta_disp_df, 
+    aes(x = Group, y = Distance, fill = Group)
+  ) +
+  geom_boxplot() +
+  geom_jitter(width = 0.2, alpha = 0.5) +  # Adds individual data points
+  labs(
+    title = "Bray-Curtis Beta Dispersion by Group",
+    x = "Group",
+    y = "Distance to Centroid"
+  ) +
+  theme_minimal() +
+  ggplot2::theme(
+    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
+  )
+```
+
+Do permanova with *bray-curtis* on *date_condition* column:
+
+```{r bray-date_condition_permanova}
+#| label: bray-date_condition_permanova
+# load the permanova with targets
+targets::tar_load(nov_2023_bray_date_condition_permanova, store = store_path)
+print(nov_2023_bray_date_condition_permanova)
+```
+
+Load the *pairwise* permanova on the same columns and filter only significant
+values (P.adj < 0.05):
+
+```{r bray-pairwise_date_condition_permanova}
+#| label: bray-pairwise_date_condition_permanova
+# load the permanova with targets
+targets::tar_load(nov_2023_pairwise_bray_date_condition_permanova, store = store_path)
+write.xlsx(nov_2023_pairwise_bray_date_condition_permanova, file = here(data_path, "nov_2023_pairwise_bray_date_condition_permanova.xlsx"))
+
+nov_2023_pairwise_bray_date_condition_permanova %>%
+  dplyr::filter(P.adj < 0.05) %>%
+  dplyr::arrange(P.adj) %>%
+  dplyr::select(Comparison, P.adj, everything())
+```
+
+Download the full [nov_2023_pairwise_bray_date_condition_permanova.xlsx](07-november_2023/nov_2023_pairwise_bray_date_condition_permanova.xlsx) table.
+
+### Jaccard {#jaccard}
+
+#### PCoA plot by sample names
 
 Now we will plot a Jaccard PCoA plot to visualize the technical replicates. See
 [CC186](https://www.youtube.com/watch?v=G5Qckqq5Erw) for more information.
@@ -582,7 +917,7 @@ pcoa_plot_rep <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = samp
 print(pcoa_plot_rep)
 ```
 
-#### Jaccard PCoA plot by date and condition (sample replicates)
+#### PCoA plot by date and condition (sample replicates)
 
 Visualize the same plot but grouping with date and condition (which should group sample replicates)
 
@@ -615,26 +950,69 @@ In this image there's a clear separation from *reactor samples* from *default*.
 *Box* samples are closer togheter but distant from *reactor* conditions and closer
 to *default* than reactor.
 
-### NMDS plot
+#### Scree plot
+
+The scree plot is a graphical representation of the eigenvalues of the principal
+components in a PCA or PCoA analysis. It helps visualize the proportion of variance
+explained by each principal component, allowing you to determine the optimal
+number of components to retain. The red line in the plot is at y=2, which is the
+number of components used when plotting a 2D PCoA plot.
+
+```{r jaccard-scree-plot}
+#| label: jaccard-scree-plot
+# Determine which cumulative eigenvalues to use
+if ("Cum_corr_eig" %in% colnames(pcoa_results$values)) {
+  cumulative_eig <- pcoa_results$values$Cum_corr_eig * 100
+} else {
+  cumulative_eig <- pcoa_results$values$Cumul_eig * 100
+}
+
+# Create a tibble for plotting
+plot_data <- tibble(
+  pe = cumulative_eig,
+  axis = seq_along(cumulative_eig)
+)
+
+# Generate the plot
+ggplot(plot_data, aes(x = axis, y = pe)) +
+  geom_line() +
+  geom_vline(xintercept = 2, color = "red") +
+  labs(
+    x = "Principal Coordinate Axis",
+    y = "Cumulative Percentage of Variance Explained",
+    title = "Scree Plot of PCoA (Jaccard)",
+  ) +
+  theme_minimal()
+```
+
+#### NMDS plot
 
 Non-metric Multidimensional Scaling (**NMDS**) is an ordination technique used to visualize the similarity or dissimilarity between samples in complex, multidimensional datasets. Unlike metric methods, NMDS focuses on preserving the rank order of distances rather than the actual distance values, making it particularly useful for ecological and environmental data where relationships may be non-linear.
 
-```{r bray-nmds}
-#| label: bray-nmds
-targets::tar_load(nov_2023_bray_nmds_object, store = store_path)
+```{r jaccard-nmds}
+#| label: jaccard-nmds
+targets::tar_load(nov_2023_jaccard_nmds_object, store = store_path)
 
 # get the tibble object
-nmds_tb <- nov_2023_bray_nmds_object$nmds_tb
+nmds_tb <- nov_2023_jaccard_nmds_object$nmds_tb
 jitter <- 0.05
 ```
-#### NMDS plot by sample names
+##### NMDS plot by sample names
 
 Let's plot the NMDS plot focusing on the technical replicates.
 see [CC187](https://www.youtube.com/watch?v=h7OrVmT7Ja8&ab_channel=RiffomonasProject)
 for more information.
 
-```{r bray-nmds-plot}
-#| label: bray-nmds-plot
+::: {.callout-warning}
+I've received a warning regarding the stress
+value, which is close to 0 and this can be determined by having not enough data,
+even if this value means a good fit for the NMDS.
+I've applied `0.05` of jitter (random noise) to points in order
+to clearly see them in the image. 
+:::
+
+```{r jaccard-nmds-plot}
+#| label: jaccard-nmds-plot
 # count the number of levels in the group column
 num_levels <- length(unique(nov_2023_metadata$sample_group))
 
@@ -649,7 +1027,7 @@ nmds_plot_rep <- ggplot2::ggplot(
   ggplot2::geom_jitter(size = 4, alpha = 0.5, width = jitter, height = jitter) +
   ggplot2::theme_minimal() +
   ggplot2::labs(
-    title = "NMDS Plot on distance metrics (Bray-Curtis)",
+    title = "NMDS Plot on distance metrics (Jaccard)",
     color = NULL,
     shape = NULL) +
   ggplot2::scale_color_manual(values = color_palette) +
@@ -661,18 +1039,27 @@ nmds_plot_rep <- ggplot2::ggplot(
 print(nmds_plot_rep)
 ```
 
-::: {.callout-warning}
-I've applied `0.05` of jitter (random noise) to points in order
-to clearly see them in the image.
+::: {.callout-tip}
+This type of graph is more informative with indexes which use phylogenetic information:
+take a look at [Unweighted UniFrac - NMDS plot by sample names](#unifrac-nmds-sample-names) 
+and [Weighted UniFrac - NMDS plot by sample names](#wunifrac-nmds-sample-names)
 :::
 
-#### NMDS plot by date and condition (sample replicates)
+##### NMDS plot by date and condition (sample replicates)
 
 Now, let's visualize the NMDS plot but grouping with date and condition
 (which should group sample replicates)
 
-```{r nmds-date-condition}
-#| label: nmds-date-condition
+::: {.callout-warning}
+I've received a warning regarding the stress
+value, which is close to 0 and this can be determined by having not enough data,
+even if this value means a good fit for the NMDS.
+I've applied `0.05` of jitter (random noise) to points in order
+to clearly see them in the image. 
+:::
+
+```{r jaccard-nmds-date-condition}
+#| label: jaccard-nmds-date-condition
 
 # Plot the NMDS
 nmds_plot <- ggplot2::ggplot(
@@ -681,7 +1068,7 @@ nmds_plot <- ggplot2::ggplot(
   ggplot2::geom_jitter(size = 4, alpha = 0.5, width = jitter, height = jitter) +
   ggplot2::theme_minimal() +
   ggplot2::labs(
-    title = "NMDS Plot on distance metrics (Bray-Curtis)",
+    title = "NMDS Plot on distance metrics (Jaccard)",
     color = NULL) +
   ggplot2::scale_color_brewer(palette = "Set1") +
   ggplot2::theme(
@@ -692,54 +1079,246 @@ nmds_plot <- ggplot2::ggplot(
 print(nmds_plot)
 ```
 
-::: {.callout-warning}
-I've applied `0.05` of jitter (random noise) to points in order
-to clearly see them in the image.
+::: {.callout-tip}
+This type of graph is more informative with indexes which use phylogenetic information:
+take a look at [Unweighted UniFrac - NMDS plot by date and condition](#unifrac-nmds-date_condition) 
+and [Weighted UniFrac - NMDS plot by date and condition](#wunifrac-nmds-date_condition)
 :::
 
-### Between group distances
+### Unweighted UniFrac {#unifrac}
 
-#### sample_name distances
+#### PCoA plot by sample names
+
+Now we will plot a Unweighted Unifrac PCoA plot to visualize the technical replicates. See
+[CC186](https://www.youtube.com/watch?v=G5Qckqq5Erw) for more information.
+
+```{r unifrac-pcoa}
+#| label: unifrac-pcoa
+# retrieve the PCoA object from targets
+targets::tar_load(nov_2023_unifrac_pcoa_object, store = store_path)
+
+pcoa_results <- nov_2023_unifrac_pcoa_object$pcoa_results
+percent_explained <- nov_2023_unifrac_pcoa_object$percent_explained
+pcoa_df <- nov_2023_unifrac_pcoa_object$pcoa_df
+```
+
+In the following pictures we are grouping by technical replicates
+
+```{r unifrac-pcoa-plot}
+#| label: unifrac-pcoa-plot
+# count the number of levels in the group column
+num_levels <- length(unique(nov_2023_metadata$sample_group))
+
+# Get the color palette
+color_palette <- Polychrome::palette36.colors(num_levels)
+names(color_palette) <- NULL  # Remove any names from the color palette
+
+# try to annotate plot
+pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
+labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
+            glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
+
+# plot the PCoA
+pcoa_plot_rep <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = sample_name)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
+  ggplot2::ggtitle("PCoA Plot on Distance Metrics (Unweighted Unifrac)") +
+  ggplot2::labs(title = "PCoA of Unweighted Unifrac Distance Matrix",
+       color = NULL,
+       x = labels[1],
+       y = labels[2]) +
+  ggplot2::scale_color_manual(values = color_palette) +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+print(pcoa_plot_rep)
+```
+
+#### PCoA plot by date and condition (sample replicates)
+
+Visualize the same plot but grouping with date and condition (which should group sample replicates)
+
+```{r unifrac-pcoa-date-condition}
+#| label: unifrac-pcoa-date-condition
+# try to annotate plot
+pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
+labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
+            glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
+
+# plot the PCoA
+pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = date_condition)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
+  ggplot2::ggtitle("PCoA Plot on Distance Metrics (Weigthed Unifrac)") +
+  ggplot2::labs(title = "PCoA of Unweighted Unifrac Distance Matrix",
+       color = NULL,
+       x = labels[1],
+       y = labels[2]) +
+  ggplot2::scale_color_brewer(palette = "Set1") +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+pcoa_plot
+```
+
+In this image there's a clear separation from *reactor samples* from *default*.
+*Box* samples are closer togheter but distant from *reactor* conditions and closer
+to *default* than reactor.
+
+#### Scree plot
+
+The scree plot is a graphical representation of the eigenvalues of the principal
+components in a PCA or PCoA analysis. It helps visualize the proportion of variance
+explained by each principal component, allowing you to determine the optimal
+number of components to retain. The red line in the plot is at y=2, which is the
+number of components used when plotting a 2D PCoA plot.
+
+```{r unifrac-scree-plot}
+#| label: unifrac-scree-plot
+# Determine which cumulative eigenvalues to use
+if ("Cum_corr_eig" %in% colnames(pcoa_results$values)) {
+  cumulative_eig <- pcoa_results$values$Cum_corr_eig * 100
+} else {
+  cumulative_eig <- pcoa_results$values$Cumul_eig * 100
+}
+
+# Create a tibble for plotting
+plot_data <- tibble(
+  pe = cumulative_eig,
+  axis = seq_along(cumulative_eig)
+)
+
+# Generate the plot
+ggplot(plot_data, aes(x = axis, y = pe)) +
+  geom_line() +
+  geom_vline(xintercept = 2, color = "red") +
+  labs(
+    x = "Principal Coordinate Axis",
+    y = "Cumulative Percentage of Variance Explained",
+    title = "Scree Plot of PCoA (Unweighted Unifrac)",
+  ) +
+  theme_minimal()
+```
+
+#### NMDS plot
+
+Non-metric Multidimensional Scaling (**NMDS**) is an ordination technique used to visualize the similarity or dissimilarity between samples in complex, multidimensional datasets. Unlike metric methods, NMDS focuses on preserving the rank order of distances rather than the actual distance values, making it particularly useful for ecological and environmental data where relationships may be non-linear.
+
+```{r unifrac-nmds}
+#| label: unifrac-nmds
+targets::tar_load(nov_2023_unifrac_nmds_object, store = store_path)
+
+# get the tibble object
+nmds_tb <- nov_2023_unifrac_nmds_object$nmds_tb
+```
+
+##### NMDS plot by sample names {#unifrac-nmds-sample-names}
+
+Let's plot the NMDS plot focusing on the technical replicates.
+see [CC187](https://www.youtube.com/watch?v=h7OrVmT7Ja8&ab_channel=RiffomonasProject)
+for more information.
+
+```{r unifrac-nmds-plot}
+#| label: unifrac-nmds-plot
+# count the number of levels in the group column
+num_levels <- length(unique(nov_2023_metadata$sample_group))
+
+# Get the color palette
+color_palette <- Polychrome::palette36.colors(num_levels)
+names(color_palette) <- NULL  # Remove any names from the color palette
+
+# Use palette36 from Polychrome, which supports up to 36 colors
+nmds_plot_rep <- ggplot2::ggplot(
+    nmds_tb,
+    ggplot2::aes(x = NMDS1, y = NMDS2, color = sample_name, shape = condition)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
+  ggplot2::labs(
+    title = "NMDS Plot on distance metrics (Unweigthed Unifrac)",
+    color = NULL,
+    shape = NULL) +
+  ggplot2::scale_color_manual(values = color_palette) +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+print(nmds_plot_rep)
+```
+
+##### NMDS plot by date and condition (sample replicates) {#unifrac-nmds-date_condition}
+
+Now, let's visualize the NMDS plot but grouping with date and condition
+(which should group sample replicates)
+
+```{r unifrac-nmds-date-condition}
+#| label: unifrac-nmds-date-condition
+
+# Plot the NMDS
+nmds_plot <- ggplot2::ggplot(
+    nmds_tb,
+    ggplot2::aes(x = NMDS1, y = NMDS2, color = date_condition)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
+  ggplot2::labs(
+    title = "NMDS Plot on distance metrics (Unweigthed Unifrac)",
+    color = NULL) +
+  ggplot2::scale_color_brewer(palette = "Set1") +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+print(nmds_plot)
+```
+
+#### Between group distances
+
+##### sample_name distances
 
 Plot distances by sample names:
 
-```{r sample_name_distances}
-#| label: sample_name_distances
+```{r unifrac-sample_name_distances}
+#| label: unifrac-sample_name_distances
 #| title: Distance matrix by sample names
 #| description: Plot the distance matrix by sample names
 #| fig.width: 10
 #| fig.height: 8
 #| fig.align: center
-tar_load(nov_2023_bray_distance_by_sample_name, store = store_path)
-write.xlsx(nov_2023_bray_distance_by_sample_name, file = here(data_path, "nov_2023_bray_distance_by_sample_name.xlsx"))
+tar_load(nov_2023_unifrac_distance_by_sample_name, store = store_path)
+write.xlsx(nov_2023_unifrac_distance_by_sample_name, file = here(data_path, "nov_2023_unifrac_distance_by_sample_name.xlsx"))
 
-tar_load(nov_2023_bray_distance_by_sample_name_plot, store = store_path)
-print(nov_2023_bray_distance_by_sample_name_plot)
+tar_load(nov_2023_unifrac_distance_by_sample_name_plot, store = store_path)
+print(nov_2023_unifrac_distance_by_sample_name_plot)
 ```
 
-Download the full [nov_2023_bray_distance_by_sample_name.xlsx](november_2023/nov_2023_bray_distance_by_sample_name.xlsx) table.
+Download the full [nov_2023_unifrac_distance_by_sample_name.xlsx](07-november_2023/nov_2023_unifrac_distance_by_sample_name.xlsx) table.
 
-#### date_condition distances
+##### date_condition distances
 
 Plot distances by date_condition:
 
-```{r date_condition_distances}
-#| label: date_condition_distances
+```{r unifrac-date_condition_distances}
+#| label: unifrac-date_condition_distances
 #| title: Distance matrix by date_condition
 #| description: Plot the distance matrix by date_condition
 #| fig.width: 10
 #| fig.height: 8
 #| fig.align: center
-tar_load(nov_2023_bray_distance_by_date_condition, store = store_path)
-write.xlsx(nov_2023_bray_distance_by_date_condition, file = here(data_path, "nov_2023_bray_distance_by_date_condition.xlsx"))
+tar_load(nov_2023_unifrac_distance_by_date_condition, store = store_path)
+write.xlsx(nov_2023_unifrac_distance_by_date_condition, file = here(data_path, "nov_2023_unifrac_distance_by_date_condition.xlsx"))
 
-tar_load(nov_2023_bray_distance_by_date_condition_plot, store = store_path)
-print(nov_2023_bray_distance_by_date_condition_plot)
+tar_load(nov_2023_unifrac_distance_by_date_condition_plot, store = store_path)
+print(nov_2023_unifrac_distance_by_date_condition_plot)
 ```
 
-Download the full [nov_2023_bray_distance_by_date_condition.xlsx](november_2023/nov_2023_bray_distance_by_date_condition.xlsx) table.
+Download the full [nov_2023_unifrac_distance_by_date_condition.xlsx](07-november_2023/nov_2023_unifrac_distance_by_date_condition.xlsx) table.
 
-### Permanova
+#### Permanova
 
 Here we will do some analyses on beta diversity. First, we evaluate beta dispersion
 which is essential to ensure the validity of statistical tests, accurately 
@@ -753,34 +1332,37 @@ ecological patterns present in your data. For unbalanced designs PERMANOVA and A
 This result was especially so for ANOSIM (see [here](https://stats.stackexchange.com/a/316386/451801)
 for more information)
 
-#### sample_name permanova
+##### sample_name permanova
 
 Calculate beta dispersion for *sample_name* column:
 
-```{r sample_name_beta_dispersion}
-#| label: sample_name_beta_dispersion
+```{r unifrac-sample_name_beta_dispersion}
+#| label: unifrac-sample_name_beta_dispersion
 #| title: Beta dispersion by sample names
 #| description: Calculate beta dispersion by sample names
-tar_load(nov_2023_sample_name_beta_dispersion, store = store_path)
-print(nov_2023_sample_name_beta_dispersion$anova_result)
+tar_load(nov_2023_unifrac_sample_name_beta_dispersion, store = store_path)
+print(nov_2023_unifrac_sample_name_beta_dispersion$anova_result)
 ```
 
 Since we don't see any significant differences in dispersion, we can proceed
 with the PERMANOVA analysis. Plot beta dispersion:
 
-```{r sample_name_beta_dispersion_plot}
-#| label: sample_name_beta_dispersion_plot
+```{r unifrac-sample_name_beta_dispersion_plot}
+#| label: unifrac-sample_name_beta_dispersion_plot
 #| title: Beta dispersion plot by sample names
 #| description: Plot beta dispersion by sample names
 #| fig.width: 10
 #| fig.height: 8
 #| fig.align: center
 # Create the boxplot
-ggplot(nov_2023_sample_name_beta_dispersion$beta_disp_df, aes(x = Group, y = Distance, fill = Group)) +
+ggplot(
+    nov_2023_unifrac_sample_name_beta_dispersion$beta_disp_df, 
+    aes(x = Group, y = Distance, fill = Group)
+  ) +
   geom_boxplot() +
   geom_jitter(width = 0.2, alpha = 0.5) +  # Adds individual data points
   labs(
-    title = "Beta Dispersion by Group",
+    title = "unifrac-Curtis Beta Dispersion by Group",
     x = "Group",
     y = "Distance to Centroid"
   ) +
@@ -790,43 +1372,43 @@ ggplot(nov_2023_sample_name_beta_dispersion$beta_disp_df, aes(x = Group, y = Dis
   )
 ```
 
-Do permanova with *bray-curtis* on *sample_name* column:
+Do permanova with *unifrac-curtis* on *sample_name* column:
 
-```{r sample_name_permanova}
-#| label: sample_name_permanova
+```{r unifrac-sample_name_permanova}
+#| label: unifrac-sample_name_permanova
 # load the permanova with targets
-targets::tar_load(nov_2023_sample_name_permanova, store = store_path)
-print(nov_2023_sample_name_permanova)
+targets::tar_load(nov_2023_unifrac_sample_name_permanova, store = store_path)
+print(nov_2023_unifrac_sample_name_permanova)
 ```
 
 Load the *pairwise* permanova on the same columns and filter only significant
 values (P.adj < 0.05):
 
-```{r pairwise_sample_name_permanova}
-#| label: pairwise_sample_name_permanova
+```{r unifrac-pairwise_sample_name_permanova}
+#| label: unifrac-pairwise_sample_name_permanova
 # load the permanova with targets
-targets::tar_load(nov_2023_pairwise_sample_name_permanova, store = store_path)
-write.xlsx(nov_2023_pairwise_sample_name_permanova, file = here(data_path, "nov_2023_pairwise_sample_name_permanova.xlsx"))
+targets::tar_load(nov_2023_pairwise_unifrac_sample_name_permanova, store = store_path)
+write.xlsx(nov_2023_pairwise_unifrac_sample_name_permanova, file = here(data_path, "nov_2023_pairwise_unifrac_sample_name_permanova.xlsx"))
 
-nov_2023_pairwise_sample_name_permanova %>%
+nov_2023_pairwise_unifrac_sample_name_permanova %>%
   dplyr::filter(P.adj < 0.05) %>%
   dplyr::arrange(P.adj) %>%
   dplyr::select(Comparison, P.adj, everything())
 ```
 
 No comparison has been filtered for *sample_name* column. 
-Download the full [nov_2023_pairwise_sample_name_permanova.xlsx](november_2023/nov_2023_pairwise_sample_name_permanova.xlsx) table.
+Download the full [nov_2023_pairwise_unifrac_sample_name_permanova.xlsx](07-november_2023/nov_2023_pairwise_unifrac_sample_name_permanova.xlsx) table.
 
-#### date_condition permanova
+##### date_condition permanova
 
 Calculate beta dispersion for *date_condition* column:
 
-```{r date_condition_beta_dispersion}
-#| label: date_condition_beta_dispersion
+```{r unifrac-date_condition_beta_dispersion}
+#| label: unifrac-date_condition_beta_dispersion
 #| title: Beta dispersion by sample names
 #| description: Calculate beta dispersion by sample names
-tar_load(nov_2023_date_condition_beta_dispersion, store = store_path)
-print(nov_2023_date_condition_beta_dispersion$anova_result)
+tar_load(nov_2023_unifrac_date_condition_beta_dispersion, store = store_path)
+print(nov_2023_unifrac_date_condition_beta_dispersion$anova_result)
 ```
 
 I see significant differences in dispersions: should I trust the `date_condition`
@@ -834,19 +1416,22 @@ permanova? The point is also that groups are unbalanced (ie less elements in
 *default* group than the others). Permanova (and also ANOSIM) may suffer in 
 this particular case. Plot beta dispersion:
 
-```{r date_condition_beta_dispersion_plot}
-#| label: date_condition_beta_dispersion_plot
+```{r unifrac-date_condition_beta_dispersion_plot}
+#| label: unifrac-date_condition_beta_dispersion_plot
 #| title: Beta dispersion plot by sample names
 #| description: Plot beta dispersion by sample names
 #| fig.width: 10
 #| fig.height: 8
 #| fig.align: center
 # Create the boxplot
-ggplot(nov_2023_date_condition_beta_dispersion$beta_disp_df, aes(x = Group, y = Distance, fill = Group)) +
+ggplot(
+    nov_2023_unifrac_date_condition_beta_dispersion$beta_disp_df, 
+    aes(x = Group, y = Distance, fill = Group)
+  ) +
   geom_boxplot() +
   geom_jitter(width = 0.2, alpha = 0.5) +  # Adds individual data points
   labs(
-    title = "Beta Dispersion by Group",
+    title = "Unifrac Beta Dispersion by Group",
     x = "Group",
     y = "Distance to Centroid"
   ) +
@@ -856,28 +1441,218 @@ ggplot(nov_2023_date_condition_beta_dispersion$beta_disp_df, aes(x = Group, y = 
   )
 ```
 
-Do permanova with *bray-curtis* on *date_condition* column:
+Do permanova with *Unifrac* on *date_condition* column:
 
-```{r date_condition_permanova}
-#| label: date_condition_permanova
+```{r unifrac-date_condition_permanova}
+#| label: unifrac-date_condition_permanova
 # load the permanova with targets
-targets::tar_load(nov_2023_date_condition_permanova, store = store_path)
-print(nov_2023_date_condition_permanova)
+targets::tar_load(nov_2023_unifrac_date_condition_permanova, store = store_path)
+print(nov_2023_unifrac_date_condition_permanova)
 ```
 
 Load the *pairwise* permanova on the same columns and filter only significant
 values (P.adj < 0.05):
 
-```{r pairwise_date_condition_permanova}
-#| label: pairwise_date_condition_permanova
+```{r unifrac-pairwise_date_condition_permanova}
+#| label: unifrac-pairwise_date_condition_permanova
 # load the permanova with targets
-targets::tar_load(nov_2023_pairwise_date_condition_permanova, store = store_path)
-write.xlsx(nov_2023_pairwise_date_condition_permanova, file = here(data_path, "nov_2023_pairwise_date_condition_permanova.xlsx"))
+targets::tar_load(nov_2023_pairwise_unifrac_date_condition_permanova, store = store_path)
+write.xlsx(nov_2023_pairwise_unifrac_date_condition_permanova, file = here(data_path, "nov_2023_pairwise_unifrac_date_condition_permanova.xlsx"))
 
-nov_2023_pairwise_date_condition_permanova %>%
+nov_2023_pairwise_unifrac_date_condition_permanova %>%
   dplyr::filter(P.adj < 0.05) %>%
   dplyr::arrange(P.adj) %>%
   dplyr::select(Comparison, P.adj, everything())
 ```
 
-Download the full [nov_2023_pairwise_date_condition_permanova.xlsx](november_2023/nov_2023_pairwise_date_condition_permanova.xlsx) table.
+Download the full [nov_2023_pairwise_unifrac_date_condition_permanova.xlsx](07-november_2023/nov_2023_pairwise_unifrac_date_condition_permanova.xlsx) table.
+
+### Weighted UniFrac {#wunifrac}
+
+#### PCoA plot by sample names
+
+Now we will plot a Weighted Unifrac PCoA plot to visualize the technical replicates. See
+[CC186](https://www.youtube.com/watch?v=G5Qckqq5Erw) for more information.
+
+```{r wunifrac-pcoa}
+#| label: wunifrac-pcoa
+# retrieve the PCoA object from targets
+targets::tar_load(nov_2023_wunifrac_pcoa_object, store = store_path)
+
+pcoa_results <- nov_2023_wunifrac_pcoa_object$pcoa_results
+percent_explained <- nov_2023_wunifrac_pcoa_object$percent_explained
+pcoa_df <- nov_2023_wunifrac_pcoa_object$pcoa_df
+```
+
+In the following pictures we are grouping by technical replicates
+
+```{r wunifrac-pcoa-plot}
+#| label: wunifrac-pcoa-plot
+# count the number of levels in the group column
+num_levels <- length(unique(nov_2023_metadata$sample_group))
+
+# Get the color palette
+color_palette <- Polychrome::palette36.colors(num_levels)
+names(color_palette) <- NULL  # Remove any names from the color palette
+
+# try to annotate plot
+pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
+labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
+            glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
+
+# plot the PCoA
+pcoa_plot_rep <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = sample_name)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
+  ggplot2::ggtitle("PCoA Plot on Distance Metrics (Weighted Unifrac)") +
+  ggplot2::labs(title = "PCoA of Weighted Unifrac Distance Matrix",
+       color = NULL,
+       x = labels[1],
+       y = labels[2]) +
+  ggplot2::scale_color_manual(values = color_palette) +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+print(pcoa_plot_rep)
+```
+
+#### PCoA plot by date and condition (sample replicates)
+
+Visualize the same plot but grouping with date and condition (which should group sample replicates)
+
+```{r wunifrac-pcoa-date-condition}
+#| label: wunifrac-pcoa-date-condition
+# try to annotate plot
+pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
+labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
+            glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
+
+# plot the PCoA
+pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = date_condition)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
+  ggplot2::ggtitle("PCoA Plot on Distance Metrics (Weigthed Unifrac)") +
+  ggplot2::labs(title = "PCoA of Weighted Unifrac Distance Matrix",
+       color = NULL,
+       x = labels[1],
+       y = labels[2]) +
+  ggplot2::scale_color_brewer(palette = "Set1") +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+pcoa_plot
+```
+
+In this image there's a clear separation from *reactor samples* from *default*.
+*Box* samples are closer togheter but distant from *reactor* conditions and closer
+to *default* than reactor.
+
+#### Scree plot
+
+The scree plot is a graphical representation of the eigenvalues of the principal
+components in a PCA or PCoA analysis. It helps visualize the proportion of variance
+explained by each principal component, allowing you to determine the optimal
+number of components to retain. The red line in the plot is at y=2, which is the
+number of components used when plotting a 2D PCoA plot.
+
+```{r wunifrac-scree-plot}
+#| label: wunifrac-scree-plot
+# Determine which cumulative eigenvalues to use
+if ("Cum_corr_eig" %in% colnames(pcoa_results$values)) {
+  cumulative_eig <- pcoa_results$values$Cum_corr_eig * 100
+} else {
+  cumulative_eig <- pcoa_results$values$Cumul_eig * 100
+}
+
+# Create a tibble for plotting
+plot_data <- tibble(
+  pe = cumulative_eig,
+  axis = seq_along(cumulative_eig)
+)
+
+# Generate the plot
+ggplot(plot_data, aes(x = axis, y = pe)) +
+  geom_line() +
+  geom_vline(xintercept = 2, color = "red") +
+  labs(
+    x = "Principal Coordinate Axis",
+    y = "Cumulative Percentage of Variance Explained",
+    title = "Scree Plot of PCoA (Weighted Unifrac)",
+  ) +
+  theme_minimal()
+```
+
+#### NMDS plot
+
+Non-metric Multidimensional Scaling (**NMDS**) is an ordination technique used to visualize the similarity or dissimilarity between samples in complex, multidimensional datasets. Unlike metric methods, NMDS focuses on preserving the rank order of distances rather than the actual distance values, making it particularly useful for ecological and environmental data where relationships may be non-linear.
+
+```{r wunifrac-nmds}
+#| label: wunifrac-nmds
+targets::tar_load(nov_2023_wunifrac_nmds_object, store = store_path)
+
+# get the tibble object
+nmds_tb <- nov_2023_wunifrac_nmds_object$nmds_tb
+```
+##### NMDS plot by sample names {#wunifrac-nmds-sample-names}
+
+Let's plot the NMDS plot focusing on the technical replicates.
+see [CC187](https://www.youtube.com/watch?v=h7OrVmT7Ja8&ab_channel=RiffomonasProject)
+for more information.
+
+```{r wunifrac-nmds-plot}
+#| label: wunifrac-nmds-plot
+# count the number of levels in the group column
+num_levels <- length(unique(nov_2023_metadata$sample_group))
+
+# Get the color palette
+color_palette <- Polychrome::palette36.colors(num_levels)
+names(color_palette) <- NULL  # Remove any names from the color palette
+
+# Use palette36 from Polychrome, which supports up to 36 colors
+nmds_plot_rep <- ggplot2::ggplot(
+    nmds_tb,
+    ggplot2::aes(x = NMDS1, y = NMDS2, color = sample_name, shape = condition)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
+  ggplot2::labs(
+    title = "NMDS Plot on distance metrics (Weigthed Unifrac)",
+    color = NULL,
+    shape = NULL) +
+  ggplot2::scale_color_manual(values = color_palette) +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+print(nmds_plot_rep)
+```
+
+##### NMDS plot by date and condition (sample replicates) {#wunifrac-nmds-date_condition}
+
+Now, let's visualize the NMDS plot but grouping with date and condition
+(which should group sample replicates)
+
+```{r wunifrac-nmds-date-condition}
+#| label: wunifrac-nmds-date-condition
+
+# Plot the NMDS
+nmds_plot <- ggplot2::ggplot(
+    nmds_tb,
+    ggplot2::aes(x = NMDS1, y = NMDS2, color = date_condition)) +
+  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::theme_minimal() +
+  ggplot2::labs(
+    title = "NMDS Plot on distance metrics (Weigthed Unifrac)",
+    color = NULL) +
+  ggplot2::scale_color_brewer(palette = "Set1") +
+  ggplot2::theme(
+    legend.position = "bottom",       # Position the legend at the bottom
+    legend.box = "horizontal",        # Arrange legend items horizontally without a title
+  )
+
+print(nmds_plot)
+```

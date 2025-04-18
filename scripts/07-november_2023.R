@@ -27,6 +27,7 @@ tar_option_set(
     "ape",
     "microViz",
     "vegan",
+    "picante",
     "ape",
     "ampvis2",
     "forcats",
@@ -172,14 +173,27 @@ list(
       nov_2023_metadata$sampleID
     )
   ),
+  # determine rarefaction depth
   tar_target(
     nov_2023_rarefaction_depth,
     min(sample_sums(nov_2023_phyloseq_obj))
   ),
+  # Generate a sequence of iterations
   tar_target(
-    name = nov_2023_otu_table_matrix,
-    command = get_otu_table(nov_2023_phyloseq_obj)
+    name = thousand_iterations,
+    command = seq_len(1000)
   ),
+  # Perform rarefaction across multiple iterations
+  tar_target(
+    name = nov_2023_phyloseq_obj_rarefied,
+    command = rarefy_phyloseq_object(
+      nov_2023_phyloseq_obj,
+      nov_2023_rarefaction_depth,
+    ),
+    pattern = map(thousand_iterations),
+    iteration = "list"
+  ),
+  # collect sample data to plot sequencing depth
   tar_target(
     name = nov_2023_samples_data,
     command = sort_by_factor_column(
@@ -188,14 +202,20 @@ list(
       custom_order_date_condition
     )
   ),
+  # calculate bray distances to perform a permanova on technical replicates
+  tar_target(
+    name = nov_2023_bray_distance_matrices,
+    command = calculate_distance_matrix(nov_2023_phyloseq_obj_rarefied, method = "bray"),
+    pattern = map(nov_2023_phyloseq_obj_rarefied),
+    iteration = "list"
+  ),
   tar_target(
     name = nov_2023_bray_distance_matrix,
-    command = calculate_distance_matrix(
-      nov_2023_otu_table_matrix,
-      min_sequencing_depth = nov_2023_rarefaction_depth,
-      dmethod = "bray"
+    command = as.dist(
+      Reduce("+", nov_2023_bray_distance_matrices) / length(nov_2023_bray_distance_matrices)
     )
   ),
+  # a permanova to test if technical replicates are different
   tar_target(
     name = nov_2023_tech_rep_permanova,
     command = calculate_permanova(
@@ -221,6 +241,7 @@ list(
       sample_order = nov_2023_metadata$sampleID
     )
   ),
+  # and here the heatmaps
   tar_target(
     name = nov_2023_ampvis2_object,
     command = phyloseq_to_ampvis2(nov_2023_phyloseq_obj)
@@ -245,25 +266,24 @@ list(
       tax_show = 20
     )
   ),
+  # collect otu table
+  tar_target(
+    name = nov_2023_otu_table_matrix,
+    command = get_otu_table(nov_2023_phyloseq_obj)
+  ),
   # deal with rarefaction curves
   tar_target(
     name = nov_2023_rarecurve_df,
     command = calculate_rarecurve(nov_2023_otu_table_matrix)
   ),
   # alpha diversity steps
-  # Generate a sequence of iterations
-  tar_target(
-    name = thousand_iterations,
-    command = seq_len(1000)
-  ),
-  # Perform rarefaction across multiple iterations
+  # calculate alpha diversity measures on each rarefied phyloseq object
   tar_target(
     name = nov_2023_samples_rarefaction,
     command = rarefy_alpha(
-      nov_2023_phyloseq_obj,
-      nov_2023_rarefaction_depth,
-      measures = c("Observed", "Shannon", "Simpson", "InvSimpson", "Fisher")),
-    pattern = map(thousand_iterations)
+      nov_2023_phyloseq_obj_rarefied,
+      measures = c("Observed", "Shannon", "Simpson", "InvSimpson", "Fisher", "FaithPD")),
+    pattern = map(nov_2023_phyloseq_obj_rarefied)
   ),
   # now transform rarefaction in a summary table
   tar_target(
@@ -278,7 +298,7 @@ list(
       by_column = "sample_name"
     )
   ),
-  # make plots
+  # make plots for alpha diversity
   tar_target(
     name = nov_2023_alpha_diversity_by_sample_name,
     command = plot_alpha_diversity(
@@ -354,14 +374,49 @@ list(
   ),
   # calculate other distance metrics
   tar_target(
+    name = nov_2023_jaccard_distance_matrices,
+    command = calculate_distance_matrix(nov_2023_phyloseq_obj_rarefied, method = "jaccard"),
+    pattern = map(nov_2023_phyloseq_obj_rarefied),
+    iteration = "list"
+  ),
+  tar_target(
     name = nov_2023_jaccard_distance_matrix,
-    command = calculate_distance_matrix(
-      nov_2023_otu_table_matrix,
-      min_sequencing_depth = nov_2023_rarefaction_depth,
-      dmethod = "jaccard"
+    command = as.dist(
+      Reduce("+", nov_2023_jaccard_distance_matrices) / length(nov_2023_jaccard_distance_matrices)
+    )
+  ),
+  tar_target(
+    name = nov_2023_wunifrac_distance_matrices,
+    command = phyloseq::distance(
+      nov_2023_phyloseq_obj_rarefied,
+      method = "wunifrac"
+    ),
+    pattern = map(nov_2023_phyloseq_obj_rarefied),
+    iteration = "list"
+  ),
+  tar_target(
+    name = nov_2023_wunifrac_distance_matrix,
+    command = as.dist(
+      Reduce("+", nov_2023_wunifrac_distance_matrices) / length(nov_2023_wunifrac_distance_matrices)
+    )
+  ),
+  tar_target(
+    name = nov_2023_unifrac_distance_matrices,
+    command = phyloseq::distance(
+      nov_2023_phyloseq_obj_rarefied,
+      method = "unifrac"
+    ),
+    pattern = map(nov_2023_phyloseq_obj_rarefied),
+    iteration = "list"
+  ),
+  tar_target(
+    name = nov_2023_unifrac_distance_matrix,
+    command = as.dist(
+      Reduce("+", nov_2023_unifrac_distance_matrices) / length(nov_2023_unifrac_distance_matrices)
     )
   ),
   # ordinations (beta diversity)
+  # PCoA
   tar_target(
     name = nov_2023_bray_pcoa_object,
     command = calculate_pcoa(nov_2023_bray_distance_matrix, nov_2023_metadata)
@@ -371,6 +426,15 @@ list(
     command = calculate_pcoa(nov_2023_jaccard_distance_matrix, nov_2023_metadata)
   ),
   tar_target(
+    name = nov_2023_wunifrac_pcoa_object,
+    command = calculate_pcoa(nov_2023_wunifrac_distance_matrix, nov_2023_metadata)
+  ),
+  tar_target(
+    name = nov_2023_unifrac_pcoa_object,
+    command = calculate_pcoa(nov_2023_unifrac_distance_matrix, nov_2023_metadata)
+  ),
+  # NMDS
+  tar_target(
     name = nov_2023_bray_nmds_object,
     command = calculate_nmds(nov_2023_bray_distance_matrix, nov_2023_metadata)
   ),
@@ -378,7 +442,16 @@ list(
     name = nov_2023_jaccard_nmds_object,
     command = calculate_nmds(nov_2023_jaccard_distance_matrix, nov_2023_metadata)
   ),
+  tar_target(
+    name = nov_2023_wunifrac_nmds_object,
+    command = calculate_nmds(nov_2023_wunifrac_distance_matrix, nov_2023_metadata)
+  ),
+  tar_target(
+    name = nov_2023_unifrac_nmds_object,
+    command = calculate_nmds(nov_2023_unifrac_distance_matrix, nov_2023_metadata)
+  ),
   # calculate distances with and between groups
+  # bray
   tar_target(
     name = nov_2023_bray_distance_by_sample_name,
     command = get_distances(
@@ -403,28 +476,76 @@ list(
     name = nov_2023_bray_distance_by_date_condition_plot,
     command = plot_distances(nov_2023_bray_distance_by_date_condition, column = "date_condition")
   ),
+  # unifrac
+  tar_target(
+    name = nov_2023_unifrac_distance_by_sample_name,
+    command = get_distances(
+      nov_2023_unifrac_distance_matrix,
+      nov_2023_metadata,
+      column = "sample_name"
+    )
+  ),
+  tar_target(
+    name = nov_2023_unifrac_distance_by_sample_name_plot,
+    command = plot_distances(nov_2023_unifrac_distance_by_sample_name, column = "sample_name")
+  ),
+  tar_target(
+    name = nov_2023_unifrac_distance_by_date_condition,
+    command = get_distances(
+      nov_2023_unifrac_distance_matrix,
+      nov_2023_metadata,
+      column = "date_condition"
+    )
+  ),
+  tar_target(
+    name = nov_2023_unifrac_distance_by_date_condition_plot,
+    command = plot_distances(nov_2023_unifrac_distance_by_date_condition, column = "date_condition")
+  ),
   # calculate beta dispersion
   tar_target(
-    name = nov_2023_sample_name_beta_dispersion,
+    name = nov_2023_bray_sample_name_beta_dispersion,
     command = calculate_beta_dispersion(
       nov_2023_bray_distance_matrix,
       nov_2023_metadata,
       column = "sample_name",
+      bias.adjust = TRUE,
       levels = custom_order_sample_names
     )
   ),
   tar_target(
-    name = nov_2023_date_condition_beta_dispersion,
+    name = nov_2023_bray_date_condition_beta_dispersion,
     command = calculate_beta_dispersion(
       nov_2023_bray_distance_matrix,
       nov_2023_metadata,
       column = "date_condition",
+      bias.adjust = TRUE,
+      levels = custom_order_date_condition
+    )
+  ),
+  tar_target(
+    name = nov_2023_unifrac_sample_name_beta_dispersion,
+    command = calculate_beta_dispersion(
+      nov_2023_unifrac_distance_matrix,
+      nov_2023_metadata,
+      column = "sample_name",
+      bias.adjust = TRUE,
+      levels = custom_order_sample_names
+    )
+  ),
+  tar_target(
+    name = nov_2023_unifrac_date_condition_beta_dispersion,
+    command = calculate_beta_dispersion(
+      nov_2023_unifrac_distance_matrix,
+      nov_2023_metadata,
+      column = "date_condition",
+      bias.adjust = TRUE,
       levels = custom_order_date_condition
     )
   ),
   # permanova on distance matrix
+  ## Bray
   tar_target(
-    name = nov_2023_sample_name_permanova,
+    name = nov_2023_bray_sample_name_permanova,
     command = calculate_permanova(
       nov_2023_bray_distance_matrix,
       nov_2023_metadata,
@@ -432,7 +553,7 @@ list(
     )
   ),
   tar_target(
-    name = nov_2023_pairwise_sample_name_permanova,
+    name = nov_2023_pairwise_bray_sample_name_permanova,
     command = calculate_pairwise_permanova(
       nov_2023_bray_distance_matrix,
       nov_2023_metadata,
@@ -440,7 +561,7 @@ list(
     )
   ),
   tar_target(
-    name = nov_2023_date_condition_permanova,
+    name = nov_2023_bray_date_condition_permanova,
     command = calculate_permanova(
       nov_2023_bray_distance_matrix,
       nov_2023_metadata,
@@ -448,9 +569,42 @@ list(
     )
   ),
   tar_target(
-    name = nov_2023_pairwise_date_condition_permanova,
+    name = nov_2023_pairwise_bray_date_condition_permanova,
     command = calculate_pairwise_permanova(
       nov_2023_bray_distance_matrix,
+      nov_2023_metadata,
+      columns = c("date_condition")
+    )
+  ),
+  ## unifrac
+  tar_target(
+    name = nov_2023_unifrac_sample_name_permanova,
+    command = calculate_permanova(
+      nov_2023_unifrac_distance_matrix,
+      nov_2023_metadata,
+      columns = c("sample_name")
+    )
+  ),
+  tar_target(
+    name = nov_2023_pairwise_unifrac_sample_name_permanova,
+    command = calculate_pairwise_permanova(
+      nov_2023_unifrac_distance_matrix,
+      nov_2023_metadata,
+      columns = c("sample_name")
+    )
+  ),
+  tar_target(
+    name = nov_2023_unifrac_date_condition_permanova,
+    command = calculate_permanova(
+      nov_2023_unifrac_distance_matrix,
+      nov_2023_metadata,
+      columns = c("date_condition")
+    )
+  ),
+  tar_target(
+    name = nov_2023_pairwise_unifrac_date_condition_permanova,
+    command = calculate_pairwise_permanova(
+      nov_2023_unifrac_distance_matrix,
       nov_2023_metadata,
       columns = c("date_condition")
     )

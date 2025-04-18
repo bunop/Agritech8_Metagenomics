@@ -5,24 +5,34 @@ calculate_rarecurve <- function(otu_table_matrix) {
   return(rarecurve_df)
 }
 
-# Function to rarefy and calculate alpha diversity metrics
-# This function is a wrapper around the rarefy_even_depth and estimate_richness functions
-# from the phyloseq package. It make a single sub sampling like Schloss means
-rarefy_alpha <- function(physeq_obj, depth, measures = NULL, rngseed = FALSE) {
-  # Rarefy the phyloseq object
-  physeq_rarefied <- phyloseq::rarefy_even_depth(
-    physeq_obj,
-    sample.size = depth,
-    # sample without replacement
-    replace = FALSE,
-    # trim OTUs with zero reads
-    trimOTUs = TRUE,
-    rngseed = rngseed,
-    verbose = FALSE
-  )
+# Function to calculate alpha diversity metrics
+rarefy_alpha <- function(physeq_rarefied, measures = NULL, rngseed = FALSE) {
+  FaithPD <- FALSE
+
+  if ("FaithPD" %in% measures) {
+    # remove FaithPD from measures to calculate stuff with phyloseq. Set a flag
+    measures <- measures[measures != "FaithPD"]
+    FaithPD <- TRUE
+  }
 
   # Calculate alpha diversity metrics
   alpha_div <- phyloseq::estimate_richness(physeq_rarefied, measures = measures)
+
+  # modified from https://github.com/joey711/phyloseq/issues/661#issuecomment-402873585
+  if (FaithPD){
+    OTU <- get_otu_table(physeq_rarefied)
+
+    alpha_div["FaithPD"] <- as.vector(
+      t(
+        picante::pd(
+          samp = OTU,
+          tree = phy_tree(physeq_rarefied),
+          include.root = F
+        )
+      )[1,]
+    )
+  }
+
   alpha_div <- tibble::rownames_to_column(
     alpha_div,
     var = "sampleID"
@@ -45,6 +55,8 @@ reshape_rarefaction_data <- function(data, by_column) {
   data_long <- data %>%
     # Select relevant columns: sampleID, by_column, and those ending with '_mean' or '_sd'
     dplyr::select(sampleID, !!sym(by_column), ends_with("_mean"), ends_with("_sd")) %>%
+    # Convert the specified by_column to a factor
+    mutate(!!sym(by_column) := as.factor(!!sym(by_column))) %>%
     tidyr::pivot_longer(
       cols = ends_with("_mean") | ends_with("_sd"),
       names_to = c("Metric", "Measure"),
@@ -55,7 +67,6 @@ reshape_rarefaction_data <- function(data, by_column) {
       names_from = Measure,
       values_from = Value
     )
-
   return(data_long)
 }
 
@@ -75,7 +86,11 @@ calculate_kruskal_wallis <- function(rarefaction_results, alpha_metric, column_n
 
 # Dunn's Kruskal-Wallis Multiple Comparisons
 calculate_dunn_test <- function(rarefaction_results, alpha_metric, column_name, method = "bh") {
-  # define a new formula
+  # Convert the specified column to a factor
+  rarefaction_results <- rarefaction_results %>%
+    dplyr::mutate(!!sym(column_name) := as.factor(!!sym(column_name)))
+
+  # Define a new formula
   dunn_formula <- as.formula(paste(alpha_metric, "~", column_name))
 
   # Perform the Dunn's test

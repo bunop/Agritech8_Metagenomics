@@ -1,14 +1,8 @@
 
-# make rarefaction as discussed by Schloss
-calculate_distance_matrix <- function(
-    otu_table_matrix, min_sequencing_depth, iterations = 1000, dmethod = "bray") {
-  distance_matrix <- vegan::avgdist(
-    otu_table_matrix,
-    sample = min_sequencing_depth,
-    iterations = 1000,
-    dmethod = dmethod
-  )
-
+# make rarefaction on a single rarefied phyloseq object
+calculate_distance_matrix <- function(phyloseq_obj, method = "bray") {
+  otu_table_matrix <- get_otu_table(phyloseq_obj)
+  distance_matrix <- as.matrix(vegan::vegdist(otu_table_matrix, method = method))
   return(distance_matrix)
 }
 
@@ -21,6 +15,7 @@ calculate_distance_matrix <- function(
 #' @param distance_matrix A dissimilarity matrix (object of class 'dist') that contains the pairwise distances between samples.
 #' @param metadata A data frame that includes sample information, with one column defining the grouping of samples for dispersion analysis.
 #' @param column A string indicating the name of the column in `metadata` that represents the groups to compare for beta dispersion.
+#' @param bias.adjust A logical value indicating whether to apply bias adjustment to the beta dispersion calculation. Default is FALSE.
 #' @param levels A character vector (optional) that defines the desired order of factor levels for the specified column.
 #' If provided, the levels will be reordered using `forcats::fct_relevel`.
 #'
@@ -41,9 +36,14 @@ calculate_distance_matrix <- function(
 #' @importFrom rlang sym
 #' @importFrom forcats fct_relevel
 #' @importFrom stats anova
-calculate_beta_dispersion <- function(distance_matrix, metadata, column, levels=NULL) {
+calculate_beta_dispersion <- function(
+    distance_matrix, metadata, column, bias.adjust = FALSE, levels=NULL) {
   # calculate beta dispersion
-  beta_disp <- vegan::betadisper(distance_matrix, metadata[[column]])
+  beta_disp <- vegan::betadisper(
+    distance_matrix,
+    metadata[[column]],
+    bias.adjust = bias.adjust
+  )
 
   # Perform ANOVA on dispersion
   anova_result <- stats::anova(beta_disp)

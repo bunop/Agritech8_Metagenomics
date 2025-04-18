@@ -2260,6 +2260,19 @@
       ],
       "Hash": "3ec12cd576d3b45c6d262763f3203301"
     },
+    "picante": {
+      "Package": "picante",
+      "Version": "1.8.2",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Requirements": [
+        "ape",
+        "methods",
+        "nlme",
+        "vegan"
+      ],
+      "Hash": "8932db8f246df2fc3ff4bd425aab6774"
+    },
     "pillar": {
       "Package": "pillar",
       "Version": "1.9.0",
@@ -3289,7 +3302,7 @@
     },
     "xfun": {
       "Package": "xfun",
-      "Version": "0.49",
+      "Version": "0.52",
       "Source": "Repository",
       "Repository": "CRAN",
       "Requirements": [
@@ -3298,7 +3311,7 @@
         "stats",
         "tools"
       ],
-      "Hash": "8687398773806cfff9401a2feca96298"
+      "Hash": "652ce36fe7d57688e6786819b09d9190"
     },
     "xml2": {
       "Package": "xml2",
