@@ -81,7 +81,7 @@ tar_source()
 list(
   tar_target(
     name = metadata_path,
-    command = here::here("data", "metadata_bacteria_fix.tsv"),
+    command = here::here("data", "metadata_fungi_fix.tsv"),
     format = "file"
   ),
   tar_target(
@@ -107,26 +107,17 @@ list(
     )
   ),
   tar_target(
-    name = nov_2023_metadata,
+    name = full_nov_2023_metadata,
     command = sort_by_factor_column(
       nov_2023_metadata_tmp,
       "date_condition",
       custom_order_date_condition
     )
   ),
-  # extract the sample names from the metadata in the same order
-  # of date_condition
-  tar_target(
-    name = custom_order_sample_names,
-    command = nov_2023_metadata %>%
-      dplyr::distinct(sample_name) %>%
-      dplyr::pull(sample_name) %>%
-      as.character()
-  ),
   # open the phyloseq object
   tar_target(
     name = phyloseq_path,
-    command = here::here("results-bacteria", "phyloseq", "dada2_phyloseq.rds"),
+    command = here::here("results-fungi", "phyloseq", "dada2_phyloseq.rds"),
     format = "file"
   ),
   tar_target(
@@ -137,7 +128,7 @@ list(
   tar_target(
     name = tree_path,
     command = here::here(
-      "results-bacteria",
+      "results-fungi",
       "qiime2",
       "phylogenetic_tree",
       "tree.nwk"
@@ -148,22 +139,33 @@ list(
     name = phyloseq_obj_with_tree,
     command = add_tree_to_phyloseq(phyloseq_obj, tree_path)
   ),
-  # remove chloroplast from data
-  tar_target(
-    name = phyloseq_obj_pruned,
-    command = prune_phyloseq(
-      phyloseq_obj_with_tree,
-      rank = "Phylum",
-      items = ("Cyanobacteria")
-    )
-  ),
   # subsetting samples from phyloseq object
   tar_target(
     name = nov_2023_phyloseq_obj_tmp,
     command = phyloseq::subset_samples(
-      phyloseq_obj_pruned,
+      phyloseq_obj_with_tree,
       date == "nov 23"
     )
+  ),
+  # now we need to filter out metadata samples that are not in the phyloseq object
+  tar_target(
+    name = nov_2023_metadata,
+    command = dplyr::filter(
+        full_nov_2023_metadata,
+        sampleID %in% phyloseq::sample_names(nov_2023_phyloseq_obj_tmp)
+      ) %>%
+      mutate(sampleID = droplevels(sampleID)
+    )
+  ),
+  # extract the sample names from the metadata in the same order
+  # of date_condition: beware there are some samples that are not
+  # in the phyloseq object, so we need to filter them out
+  tar_target(
+    name = custom_order_sample_names,
+    command = nov_2023_metadata %>%
+      dplyr::distinct(sample_name) %>%
+      dplyr::pull(sample_name) %>%
+      as.character()
   ),
   # now order the samples in the phyloseq object using the sorted_metadata
   tar_target(
@@ -612,7 +614,7 @@ list(
   # render november 2023 quarto document
   tar_quarto(
     name = november_2023,
-    path = "analysis/07-november_2023.qmd",
+    path = "analysis/08-november_2023-fungi.qmd",
     quiet = TRUE
   )
 )
