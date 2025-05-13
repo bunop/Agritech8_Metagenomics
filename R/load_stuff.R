@@ -39,6 +39,17 @@ load_metadata <- function(...) {
     )
   ))
 
+  # create a custom column for labels
+  metadata <- metadata %>%
+    mutate(label = factor(case_when(
+      condition == "default" ~ "T0",
+      condition == "reactor" ~ "NA",
+      condition == "box" ~ "NP",
+      condition == "reactor+cs" ~ "CS",
+      condition == "box+dw" ~ "LM"
+    ), levels = c("T0", "NA", "NP", "CS", "LM"))
+  )
+
   return(metadata)
 }
 
