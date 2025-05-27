@@ -834,8 +834,8 @@ Calculate beta dispersion for *labels* column:
 
 ```{r bray-labels_beta_dispersion}
 #| label: bray-labels_beta_dispersion
-#| title: Beta dispersion by sample names
-#| description: Calculate beta dispersion by sample names
+#| title: Beta dispersion by labels
+#| description: Calculate beta dispersion by labels
 tar_load(nov_2023_bray_labels_beta_dispersion, store = store_path)
 print(nov_2023_bray_labels_beta_dispersion$anova_result)
 ```
