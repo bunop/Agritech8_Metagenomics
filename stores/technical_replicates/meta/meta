@@ -49,7 +49,6 @@ merged_phyloseq_object|stem|59c6a389203af6ae|07afa9bdd01ede5a|d1a8933dfbde0e99|1
 metadata|stem|2a3ea6a8f0a364d9|68d74dab361444a6|9539da6e9fb2fce0|-1204988447||t20074.6930802152s|00af1f101fa25ffd|1437|rds|local|vector|||1.48||
 metadata_path|stem|88151cb444d0705c|66a41174dc2d47b2|2c530c1562a7fbd1|-1761454659|/home/paolo/Projects/Agritech8_Metagenomics/data/metadata_bacteria_fix.tsv|t20057.7232387354s|dfcc40f65ef32e48|5765|file|local|vector|||10.051||
 nmds_object|stem|3c95e5d978e9352f|94d25a38fc4621dd|fa8bc3fa0da9ece2|1812068040||t20074.6930802152s|935da56090735421|16430|rds|local|vector|||0.229||
-object|object|a85c84dcb467c615|||||||||||||||
 observed_features_by_sample_name|stem|0c13877368f81c4b|9dd0191c0a93449d|b1244690d3fc76c2|-2025424482||t20074.6930802152s|0462e23a43ebef72|85429|rds|local|vector|||12.085||
 observed_features_by_sample_name_path|stem|9873569bcf67fe79|7606bc37fe9ccd26|2c530c1562a7fbd1|-165477207|/home/paolo/Projects/Agritech8_Metagenomics/results-bacteria/qiime2/alpha-rarefaction/observed_features.csv|t20057.7514198258s|6978bb3534add9ef|522799|file|local|vector|||10.097||
 otu_table_matrix|stem|2adff00db94101be|4fbe22024f54ec1f|e32554d451cc94a8|1067928734||t20074.6930802152s|05de280fdfca7fe2|330210|rds|local|vector|||0.017||
