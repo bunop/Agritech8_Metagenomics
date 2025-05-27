@@ -45,7 +45,6 @@ metadata|stem|2a3ea6a8f0a364d9|68d74dab361444a6|9539da6e9fb2fce0|-1204988447||t2
 metadata_path|stem|88151cb444d0705c|66a41174dc2d47b2|2c530c1562a7fbd1|-1761454659|/home/paolo/Projects/Agritech8_Metagenomics/data/metadata_bacteria_fix.tsv|t20057.7232387354s|dfcc40f65ef32e48|5765|file|local|vector|||5.87||
 metadata_subset|stem|21b81a53c3f96456|6b234bd39f0ef4cf|1c667ac3ea17e932|-1929594058||t20074.6930784096s|4cf3ac8d774f0829|949|rds|local|vector|||0.024||
 nmds_object|stem|d8394e3556476243|b9821a2c34d82d8a|1daf1a1187c83b8d|1812068040||t20074.6930784096s|337bc91d1972337e|5918|rds|local|vector|||0.233|stress is nearly zero you may have insufficient data|
-object|object|a85c84dcb467c615|||||||||||||||
 otu_table_matrix|stem|c618e17ac3c98f9a|2859f4617881abdb|da83ff7ff3d82d00|1067928734||t20074.6930784096s|2ff2992f8e48527b|223542|rds|local|vector|||0.005||
 pairwise_date_condition_permanova|stem|5cc3ade60f5b35b8|dceb8cf96db7d3ec|9300ea778e57abff|-1688808087||t20074.6930784096s|f247d143044ef25b|457|rds|local|vector|||0.138||
 pairwise_sample_name_permanova|stem|cb07957e0d289a81|7efe42a06776ad49|9300ea778e57abff|-557304184||t20074.6930784096s|b77589e6a0fabb27|1405|rds|local|vector|||1.565||

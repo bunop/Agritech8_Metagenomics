@@ -4,6 +4,7 @@ author: "Paolo Cozzi"
 date: today
 toc: true
 number-sections: true
+cache: true
 format:
   html:
     code-line-numbers: true
@@ -12,6 +13,9 @@ format:
     code-fold: true
     toc-depth: 5
     embed-resources: true  # Embed all resources directly into the HTML file
+knitr:
+  opts_chunk:
+    dpi: 300
 editor: source
 ---
 
@@ -36,6 +40,10 @@ if (!dir.exists(data_path)) {
   dir.create(data_path, recursive = TRUE)
   cat("Directory created:", data_path, "\n")
 }
+
+# set the default font size
+theme_set(theme_minimal(base_size = 32))
+theme_set(theme_bw(base_size = 32))
 ```
 
 ## Metadata
@@ -81,13 +89,19 @@ Try to see sample depths and other information about the samples:
 # Create the bar plot
 depth_plot <- ggplot2::ggplot(
   nov_2023_samples_data,
-  aes(x = sampleID, y = sequencing_depth, fill = date_condition)) +
+  aes(x = sampleID, y = sequencing_depth, fill = label)) +
   geom_bar(stat = "identity", position = "dodge", color = "black") +
+  theme_minimal() +
   labs(title = "Sequencing Depth per Sample",
        x = "Sample",
-       y = "Number of Reads") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+       y = "Number of Reads",
+       fill = "Group") + # legend name for fill color
+  theme(axis.text.x = element_text(
+    angle = 90, 
+    hjust = 1, 
+    vjust = 0.5,
+    margin = ggplot2::margin(b = 7)
+  ))
 
 # Display the plot
 print(depth_plot)
@@ -133,10 +147,9 @@ by sampleID.
 ```{r barplot-phylum}
 #| label: barplot-phylum
 #| description: Create a barplot of the relative abundance of Phylum in the dataset.
-#| fig-width: 10
-#| fig-height: 8
 #| fig-caption: "Barplot of Phylum"
 #| fig-align: center
+#| fig-width: 12
 # load the melted data
 tar_load(nov_2023_melted_phylum, store = store_path)
 taxrank <- "Phylum"
@@ -147,14 +160,19 @@ write.xlsx(nov_2023_melted_phylum, file = here(data_path, "nov_2023-fungi_melted
 ggplot2::ggplot(nov_2023_melted_phylum, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
   ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
   # need a sorted object like the one used in agglomerate_by_taxa
-  ggplot2::scale_x_discrete(labels = nov_2023_metadata$date_condition) +
+  ggplot2::scale_x_discrete(labels = nov_2023_metadata$label) +
   ggplot2::labs(
     title = glue::glue("Microbial composition at {taxrank} level"),
     x = "Sample",
     y = "Relative Abundance"
   ) +
   ggplot2::theme_bw() +
-  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
+  ggplot2::theme(axis.text.x = ggplot2::element_text(
+    angle = 90, 
+    hjust = -1,
+    vjust = 0.5, 
+    margin = ggplot2::margin(b = 10)
+  ))
 ```
 
 Download the [nov_2023-fungi_melted_phylum.xlsx](08-november_2023-fungi/nov_2023-fungi_melted_phylum.xlsx) table.
@@ -162,13 +180,13 @@ Download the [nov_2023-fungi_melted_phylum.xlsx](08-november_2023-fungi/nov_2023
 ### By Phylum (>5%)
 
 Same as before, but this time let's group the taxa with less than 5% abundance
+in the *Other taxa*
 
 ```{r barplot-phylum-grouped}
 #| label: barplot-phylum-grouped
 #| description: Create a barplot of the relative abundance of Phylum in the dataset grouping taxa with less than 5% abundance.
-#| fig-width: 10
-#| fig-height: 8
 #| fig-caption: "Barplot of Phylum grouped (>5% abundance)"
+#| fig-width: 12
 taxrank <- "Phylum"
 nov_2023_melted_phylum_grouped <- nov_2023_melted_phylum %>%
   dplyr::mutate(!!rlang::sym(taxrank) := ifelse(Abundance < 0.05, "Other Taxa", !!rlang::sym(taxrank))) %>%
@@ -178,14 +196,19 @@ nov_2023_melted_phylum_grouped <- nov_2023_melted_phylum %>%
 ggplot2::ggplot(nov_2023_melted_phylum_grouped, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
   ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
   # need a sorted object like the one used in agglomerate_by_taxa
-  ggplot2::scale_x_discrete(labels = nov_2023_metadata$date_condition) +
+  ggplot2::scale_x_discrete(labels = nov_2023_metadata$label) +
   ggplot2::labs(
     title = glue::glue("Microbial composition at {taxrank} level grouped (>5% abundance)"),
     x = "Sample",
     y = "Relative Abundance"
   ) +
   ggplot2::theme_bw() +
-  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
+  ggplot2::theme(axis.text.x = ggplot2::element_text(
+    angle = 90,
+    hjust = -1,
+    vjust = 0.5,
+    margin = ggplot2::margin(b = 10)
+  ))
 ```
 
 ### By Class
@@ -196,8 +219,7 @@ by sampleID.
 ```{r barplot-class}
 #| label: barplot-class
 #| description: Create a barplot of the relative abundance of class in the dataset.
-#| fig-width: 10
-#| fig-height: 8
+#| fig-width: 15
 #| fig-caption: "Barplot of Class"
 #| fig-align: center
 # load the melted data
@@ -210,14 +232,19 @@ write.xlsx(nov_2023_melted_class, file = here(data_path, "nov_2023-fungi_melted_
 ggplot2::ggplot(nov_2023_melted_class, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
   ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
   # need a sorted object like the one used in agglomerate_by_taxa
-  ggplot2::scale_x_discrete(labels = nov_2023_metadata$date_condition) +
+  ggplot2::scale_x_discrete(labels = nov_2023_metadata$label) +
   ggplot2::labs(
     title = glue::glue("Microbial composition at {taxrank} level"),
     x = "Sample",
     y = "Relative Abundance"
   ) +
   ggplot2::theme_bw() +
-  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
+  ggplot2::theme(axis.text.x = ggplot2::element_text(
+    angle = 90,
+    hjust = -1,
+    vjust = 0.5,
+    margin = ggplot2::margin(b = 10)
+  ))
 ```
 
 Download the [nov_2023-fungi_melted_class.xlsx](08-november_2023-fungi/nov_2023-fungi_melted_class.xlsx) table.
@@ -229,9 +256,8 @@ Same as before, but this time let's group the taxa with less than 5% abundance
 ```{r barplot-class-grouped}
 #| label: barplot-class-grouped
 #| description: Create a barplot of the relative abundance of Class in the dataset grouping taxa with less than 5% abundance.
-#| fig-width: 10
-#| fig-height: 8
 #| fig-caption: "Barplot of Class grouped (>5% abundance)"
+#| fig-width: 12
 taxrank <- "Class"
 nov_2023_melted_class_grouped <- nov_2023_melted_class %>%
   dplyr::mutate(!!rlang::sym(taxrank) := ifelse(Abundance < 0.05, "Other Taxa", !!rlang::sym(taxrank))) %>%
@@ -241,14 +267,19 @@ nov_2023_melted_class_grouped <- nov_2023_melted_class %>%
 ggplot2::ggplot(nov_2023_melted_class_grouped, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
   ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
   # need a sorted object like the one used in agglomerate_by_taxa
-  ggplot2::scale_x_discrete(labels = nov_2023_metadata$date_condition) +
+  ggplot2::scale_x_discrete(labels = nov_2023_metadata$label) +
   ggplot2::labs(
     title = glue::glue("Microbial composition at {taxrank} level grouped (>5% abundance)"),
     x = "Sample",
     y = "Relative Abundance"
   ) +
   ggplot2::theme_bw() +
-  ggplot2::theme(axis.text.x = ggplot2::element_text(angle = 90, vjust = 0.5, hjust = 1))
+  ggplot2::theme(axis.text.x = ggplot2::element_text(
+    angle = 90,
+    vjust = 0.5,
+    hjust = -1,
+    margin = ggplot2::margin(b = 10)
+  ))
 ```
 
 ## Heatmaps
@@ -310,8 +341,6 @@ is the sequencing depth used in rarefaction step.
 #| label: rarefaction
 #| description: Perform rarefaction analysis on the OTU table
 #|  and visualize the results.
-#| fig-width: 10
-#| fig-height: 8
 #| fig-caption: "Rarefaction curves with vegan"
 # load calculated rarefaction data
 tar_load(nov_2023_rarecurve_df, store = store_path)
@@ -319,18 +348,19 @@ tar_load(nov_2023_rarefaction_depth, store = store_path)
 
 # Add metadata to the rarecurve_df
 nov_2023_rarecurve_df <- nov_2023_metadata %>%
-  select(sampleID, sample_name, date_condition) %>%
+  select(sampleID, sample_name, label) %>%
   inner_join(nov_2023_rarecurve_df, by = c("sampleID" = "Site"))
 
 # draw the plot
-ggplot(nov_2023_rarecurve_df, aes(x = Sample, y = Species, color = date_condition, group = sampleID)) +
+ggplot(nov_2023_rarecurve_df, aes(x = Sample, y = Species, color = label, group = sampleID)) +
   geom_line() +
   geom_vline(xintercept = nov_2023_rarefaction_depth, linetype = "dashed", color = "red") +  # Add vertical line
   geom_text(
     aes(
       x = nov_2023_rarefaction_depth,
       y = max(Species) * 0.9,
-      label = paste("Depth:", nov_2023_rarefaction_depth)
+      label = paste("Depth:", nov_2023_rarefaction_depth),
+      angle = 90
     ),
     color = "red",
     vjust = -0.5
@@ -338,7 +368,8 @@ ggplot(nov_2023_rarecurve_df, aes(x = Sample, y = Species, color = date_conditio
   labs(
     title = "Rarefaction Curves for All Samples",
     x = "Number of Individuals Sampled",
-    y = "Number of Species Observed"
+    y = "Number of Species Observed",
+    color = "Group"
   ) +
   theme_bw()
 ```
@@ -363,8 +394,6 @@ helping to compare diversity between samples or track changes over time.
 ```{r alpha-diversity_sample_name}
 #| label: alpha-diversity_sample_name
 #| description: Calculate and visualize alpha diversity metrics for the samples.
-#| fig-width: 10
-#| fig-height: 8
 #| fig-caption: "Alpha diversity metrics for the samples"
 tar_load(nov_2023_alpha_diversity_by_sample_name, store = store_path)
 print(nov_2023_alpha_diversity_by_sample_name)
@@ -400,16 +429,14 @@ nov_2023_dunn_shannon_sample_name$res %>%
 
 Download the full [nov_2023-fungi_dunn_shannon_sample_name.xlsx](08-november_2023-fungi/nov_2023-fungi_dunn_shannon_sample_name.xlsx) table.
 
-### By date_condition
+### By label
 
-```{r alpha-diversity_date_condition}
-#| label: alpha-diversity_date_condition
-#| description: Calculate and visualize alpha diversity metrics for date-condition.
-#| fig-width: 10
-#| fig-height: 8
-#| fig-caption: "Alpha diversity metrics for date-condition"
-tar_load(nov_2023_alpha_diversity_by_date_condition, store = store_path)
-print(nov_2023_alpha_diversity_by_date_condition)
+```{r alpha-diversity_labels}
+#| label: alpha-diversity_labels
+#| description: Calculate and visualize alpha diversity metrics for labels.
+#| fig-caption: "Alpha diversity metrics for label"
+tar_load(nov_2023_alpha_diversity_by_labels, store = store_path)
+print(nov_2023_alpha_diversity_by_labels)
 ```
 
 #### Shannon
@@ -417,30 +444,30 @@ print(nov_2023_alpha_diversity_by_date_condition)
 Perform Kruskal-Wallis tests to determine if the alpha diversity metrics are
 significantly different between the groups. Run on shannon metric:
 
-```{r kruscal_shannon_date_condition}
-#| label: kruscal_shannon_date_condition
-#| description: Perform Kruskal-Wallis tests on the Shannon ~ date_condition
-tar_load(nov_2023_kruscal_shannon_date_condition, store = store_path)
-print(nov_2023_kruscal_shannon_date_condition)
+```{r kruscal_shannon_labels}
+#| label: kruscal_shannon_labels
+#| description: Perform Kruskal-Wallis tests on the Shannon ~ label
+tar_load(nov_2023_kruscal_shannon_labels, store = store_path)
+print(nov_2023_kruscal_shannon_labels)
 ```
 
 This means that *at least* one group is significantly different in terms of
 Shannon diversity. Let's do a post-hoc test with Dunn's test to find significant
 differences between pairs:
 
-```{r dunn_shannon_date_condition}
-#| label: dunn_shannon_date_condition
-tar_load(nov_2023_dunn_shannon_date_condition, store = store_path)
+```{r dunn_shannon_labels}
+#| label: dunn_shannon_labels
+tar_load(nov_2023_dunn_shannon_labels, store = store_path)
 
-# write the full table for dunn_shannon_date_condition
-write.xlsx(nov_2023_dunn_shannon_date_condition$res, file = here(data_path, "nov_2023-fungi_dunn_shannon_date_condition.xlsx"))
+# write the full table for dunn_shannon_labels
+write.xlsx(nov_2023_dunn_shannon_labels$res, file = here(data_path, "nov_2023-fungi_dunn_shannon_labels.xlsx"))
 
-nov_2023_dunn_shannon_date_condition$res %>%
+nov_2023_dunn_shannon_labels$res %>%
   dplyr::filter(P.adj < 0.05) %>%
   dplyr::arrange(P.adj)
 ```
 
-Download the full [nov_2023-fungi_dunn_shannon_date_condition.xlsx](08-november_2023-fungi/nov_2023-fungi_dunn_shannon_date_condition.xlsx) table.
+Download the full [nov_2023-fungi_dunn_shannon_labels.xlsx](08-november_2023-fungi/nov_2023-fungi_dunn_shannon_labels.xlsx) table.
 
 ## Beta Diversity Metrics
 
@@ -513,19 +540,19 @@ pcoa_plot_rep <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = samp
 print(pcoa_plot_rep)
 ```
 
-##### PCoA plot by date and condition (sample replicates)
+##### PCoA plot by labels (sample replicates)
 
-Visualize the same plot but grouping with date and condition (which should group sample replicates)
+Visualize the same plot but grouping by labels (which should group sample replicates)
 
-```{r bray-pcoa-date-condition}
-#| label: bray-pcoa-date-condition
+```{r bray-pcoa-labels}
+#| label: bray-pcoa-labels
 # try to annotate plot
 pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
 labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
             glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
 
 # plot the PCoA
-pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = date_condition)) +
+pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = label)) +
   ggplot2::geom_point(size = 4, alpha = 0.5) +
   ggplot2::theme_minimal() +
   ggplot2::ggtitle("PCoA Plot on Distance Metrics (Bray-Curtis)") +
@@ -601,6 +628,7 @@ for more information.
 #| label: bray-nmds-plot
 #| fig.width: 10
 #| fig.height: 8
+
 # count the number of levels in the group column
 num_levels <- length(unique(nov_2023_metadata$sample_group))
 
@@ -627,18 +655,18 @@ nmds_plot_rep <- ggplot2::ggplot(
 print(nmds_plot_rep)
 ```
 
-##### NMDS plot by date and condition (sample replicates)
+##### NMDS plot by labels (sample replicates)
 
-Now, let's visualize the NMDS plot but grouping with date and condition
+Now, let's visualize the NMDS plot but grouping by labels
 (which should group sample replicates)
 
-```{r bray-nmds-date-condition}
-#| label: bray-nmds-date-condition
+```{r bray-nmds-labels}
+#| label: bray-nmds-labels
 
 # Plot the NMDS
 nmds_plot <- ggplot2::ggplot(
     nmds_tb,
-    ggplot2::aes(x = NMDS1, y = NMDS2, color = date_condition)) +
+    ggplot2::aes(x = NMDS1, y = NMDS2, color = label)) +
   ggplot2::geom_point(size = 4, alpha = 0.5) +
   ggplot2::theme_minimal() +
   ggplot2::labs(
@@ -675,25 +703,25 @@ print(nov_2023_bray_distance_by_sample_name_plot)
 
 Download the full [nov_2023-fungi_bray_distance_by_sample_name.xlsx](08-november_2023-fungi/nov_2023-fungi_bray_distance_by_sample_name.xlsx) table.
 
-##### date_condition distances
+##### labels distances
 
-Plot distances by date_condition:
+Plot distances by labels:
 
-```{r bray-date_condition_distances}
-#| label: bray-date_condition_distances
-#| title: Distance matrix by date_condition
-#| description: Plot the distance matrix by date_condition
+```{r bray-labels_distances}
+#| label: bray-labels_distances
+#| title: Distance matrix by labels
+#| description: Plot the distance matrix by labels
 #| fig.width: 10
 #| fig.height: 8
 #| fig.align: center
-tar_load(nov_2023_bray_distance_by_date_condition, store = store_path)
-write.xlsx(nov_2023_bray_distance_by_date_condition, file = here(data_path, "nov_2023-fungi_bray_distance_by_date_condition.xlsx"))
+tar_load(nov_2023_bray_distance_by_labels, store = store_path)
+write.xlsx(nov_2023_bray_distance_by_labels, file = here(data_path, "nov_2023-fungi_bray_distance_by_labels.xlsx"))
 
-tar_load(nov_2023_bray_distance_by_date_condition_plot, store = store_path)
-print(nov_2023_bray_distance_by_date_condition_plot)
+tar_load(nov_2023_bray_distance_by_labels_plot, store = store_path)
+print(nov_2023_bray_distance_by_labels_plot)
 ```
 
-Download the full [nov_2023-fungi_bray_distance_by_date_condition.xlsx](08-november_2023-fungi/nov_2023-fungi_bray_distance_by_date_condition.xlsx) table.
+Download the full [nov_2023-fungi_bray_distance_by_labels.xlsx](08-november_2023-fungi/nov_2023-fungi_bray_distance_by_labels.xlsx) table.
 
 #### Permanova
 
@@ -780,29 +808,29 @@ nov_2023_pairwise_bray_sample_name_permanova %>%
 No comparison has been filtered for *sample_name* column.
 Download the full [nov_2023-fungi_pairwise_bray_sample_name_permanova.xlsx](08-november_2023-fungi/nov_2023-fungi_pairwise_bray_sample_name_permanova.xlsx) table.
 
-##### date_condition permanova
+##### labels permanova
 
-Calculate beta dispersion for *date_condition* column:
+Calculate beta dispersion for *labels* column:
 
 ::: {.callout-warning}
 some squared distances are negative and changed to zero
 :::
 
-```{r bray-date_condition_beta_dispersion}
-#| label: bray-date_condition_beta_dispersion
-#| title: Beta dispersion by sample names
-#| description: Calculate beta dispersion by sample names
-tar_load(nov_2023_bray_date_condition_beta_dispersion, store = store_path)
-print(nov_2023_bray_date_condition_beta_dispersion$anova_result)
+```{r bray-labels_beta_dispersion}
+#| label: bray-labels_beta_dispersion
+#| title: Beta dispersion by labels
+#| description: Calculate beta dispersion by labels
+tar_load(nov_2023_bray_labels_beta_dispersion, store = store_path)
+print(nov_2023_bray_labels_beta_dispersion$anova_result)
 ```
 
-I see significant differences in dispersions: should I trust the `date_condition`
+I see significant differences in dispersions: should I trust the `labels`
 permanova? The point is also that groups are unbalanced (ie less elements in
 *default* group than the others). Permanova (and also ANOSIM) may suffer in
 this particular case. Plot beta dispersion:
 
-```{r bray-date_condition_beta_dispersion_plot}
-#| label: bray-date_condition_beta_dispersion_plot
+```{r bray-labels_beta_dispersion_plot}
+#| label: bray-labels_beta_dispersion_plot
 #| title: Beta dispersion plot by sample names
 #| description: Plot beta dispersion by sample names
 #| fig.width: 10
@@ -810,7 +838,7 @@ this particular case. Plot beta dispersion:
 #| fig.align: center
 # Create the boxplot
 ggplot(
-    nov_2023_bray_date_condition_beta_dispersion$beta_disp_df,
+    nov_2023_bray_labels_beta_dispersion$beta_disp_df,
     aes(x = Group, y = Distance, fill = Group)
   ) +
   geom_boxplot() +
@@ -826,31 +854,31 @@ ggplot(
   )
 ```
 
-Do permanova with *bray-curtis* on *date_condition* column:
+Do permanova with *bray-curtis* on *label* column:
 
-```{r bray-date_condition_permanova}
-#| label: bray-date_condition_permanova
+```{r bray-labels_permanova}
+#| label: bray-labels_permanova
 # load the permanova with targets
-targets::tar_load(nov_2023_bray_date_condition_permanova, store = store_path)
-print(nov_2023_bray_date_condition_permanova)
+targets::tar_load(nov_2023_bray_labels_permanova, store = store_path)
+print(nov_2023_bray_labels_permanova)
 ```
 
 Load the *pairwise* permanova on the same columns and filter only significant
 values (P.adj < 0.05):
 
-```{r bray-pairwise_date_condition_permanova}
-#| label: bray-pairwise_date_condition_permanova
+```{r bray-pairwise_labels_permanova}
+#| label: bray-pairwise_labels_permanova
 # load the permanova with targets
-targets::tar_load(nov_2023_pairwise_bray_date_condition_permanova, store = store_path)
-write.xlsx(nov_2023_pairwise_bray_date_condition_permanova, file = here(data_path, "nov_2023-fungi_pairwise_bray_date_condition_permanova.xlsx"))
+targets::tar_load(nov_2023_pairwise_bray_labels_permanova, store = store_path)
+write.xlsx(nov_2023_pairwise_bray_labels_permanova, file = here(data_path, "nov_2023-fungi_pairwise_bray_labels_permanova.xlsx"))
 
-nov_2023_pairwise_bray_date_condition_permanova %>%
+nov_2023_pairwise_bray_labels_permanova %>%
   dplyr::filter(P.adj < 0.05) %>%
   dplyr::arrange(P.adj) %>%
   dplyr::select(Comparison, P.adj, everything())
 ```
 
-Download the full [nov_2023-fungi_pairwise_bray_date_condition_permanova.xlsx](08-november_2023-fungi/nov_2023-fungi_pairwise_bray_date_condition_permanova.xlsx) table.
+Download the full [nov_2023-fungi_pairwise_bray_labels_permanova.xlsx](08-november_2023-fungi/nov_2023-fungi_pairwise_bray_labels_permanova.xlsx) table.
 
 ### Jaccard {#jaccard}
 
@@ -903,19 +931,19 @@ pcoa_plot_rep <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = samp
 print(pcoa_plot_rep)
 ```
 
-#### PCoA plot by date and condition (sample replicates)
+#### PCoA plot by labels (sample replicates)
 
-Visualize the same plot but grouping with date and condition (which should group sample replicates)
+Visualize the same plot but grouping with labels (which should group sample replicates)
 
-```{r jaccard-pcoa-date-condition}
-#| label: jaccard-pcoa-date-condition
+```{r jaccard-pcoa-labels}
+#| label: jaccard-pcoa-labels
 # try to annotate plot
 pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
 labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
             glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
 
 # plot the PCoA
-pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = date_condition)) +
+pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = label)) +
   ggplot2::geom_point(size = 4, alpha = 0.5) +
   ggplot2::theme_minimal() +
   ggplot2::ggtitle("PCoA Plot on Distance Metrics (Jaccard)") +
@@ -1019,19 +1047,18 @@ nmds_plot_rep <- ggplot2::ggplot(
 print(nmds_plot_rep)
 ```
 
-##### NMDS plot by date and condition (sample replicates)
+##### NMDS plot by labels (sample replicates)
 
-Now, let's visualize the NMDS plot but grouping with date and condition
+Now, let's visualize the NMDS plot but grouping with labels
 (which should group sample replicates)
 
-
-```{r jaccard-nmds-date-condition}
-#| label: jaccard-nmds-date-condition
+```{r jaccard-nmds-labels}
+#| label: jaccard-nmds-labels
 
 # Plot the NMDS
 nmds_plot <- ggplot2::ggplot(
     nmds_tb,
-    ggplot2::aes(x = NMDS1, y = NMDS2, color = date_condition)) +
+    ggplot2::aes(x = NMDS1, y = NMDS2, color = label)) +
   ggplot2::geom_point(size = 4, alpha = 0.5) +
   ggplot2::theme_minimal() +
   ggplot2::labs(
@@ -1097,19 +1124,19 @@ pcoa_plot_rep <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = samp
 print(pcoa_plot_rep)
 ```
 
-#### PCoA plot by date and condition (sample replicates)
+#### PCoA plot by labels (sample replicates)
 
-Visualize the same plot but grouping with date and condition (which should group sample replicates)
+Visualize the same plot but grouping with labels (which should group sample replicates)
 
-```{r unifrac-pcoa-date-condition}
-#| label: unifrac-pcoa-date-condition
+```{r unifrac-pcoa-labels}
+#| label: unifrac-pcoa-labels
 # try to annotate plot
 pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
 labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
             glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
 
 # plot the PCoA
-pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = date_condition)) +
+pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = label)) +
   ggplot2::geom_point(size = 4, alpha = 0.5) +
   ggplot2::theme_minimal() +
   ggplot2::ggtitle("PCoA Plot on Distance Metrics (Weigthed Unifrac)") +
@@ -1214,18 +1241,18 @@ nmds_plot_rep <- ggplot2::ggplot(
 print(nmds_plot_rep)
 ```
 
-##### NMDS plot by date and condition (sample replicates) {#unifrac-nmds-date_condition}
+##### NMDS plot by labels (sample replicates) {#unifrac-nmds-labels}
 
-Now, let's visualize the NMDS plot but grouping with date and condition
+Now, let's visualize the NMDS plot but grouping with labels
 (which should group sample replicates)
 
-```{r unifrac-nmds-date-condition}
-#| label: unifrac-nmds-date-condition
+```{r unifrac-nmds-labels}
+#| label: unifrac-nmds-labels
 
 # Plot the NMDS
 nmds_plot <- ggplot2::ggplot(
     nmds_tb,
-    ggplot2::aes(x = NMDS1, y = NMDS2, color = date_condition)) +
+    ggplot2::aes(x = NMDS1, y = NMDS2, color = label)) +
   ggplot2::geom_point(size = 4, alpha = 0.5) +
   ggplot2::theme_minimal() +
   ggplot2::labs(
@@ -1262,25 +1289,25 @@ print(nov_2023_unifrac_distance_by_sample_name_plot)
 
 Download the full [nov_2023-fungi_unifrac_distance_by_sample_name.xlsx](08-november_2023-fungi/nov_2023-fungi_unifrac_distance_by_sample_name.xlsx) table.
 
-##### date_condition distances
+##### labels distances
 
-Plot distances by date_condition:
+Plot distances by labels:
 
-```{r unifrac-date_condition_distances}
-#| label: unifrac-date_condition_distances
-#| title: Distance matrix by date_condition
-#| description: Plot the distance matrix by date_condition
+```{r unifrac-labels_distances}
+#| label: unifrac-labels_distances
+#| title: Distance matrix by labels
+#| description: Plot the distance matrix by labels
 #| fig.width: 10
 #| fig.height: 8
 #| fig.align: center
-tar_load(nov_2023_unifrac_distance_by_date_condition, store = store_path)
-write.xlsx(nov_2023_unifrac_distance_by_date_condition, file = here(data_path, "nov_2023-fungi_unifrac_distance_by_date_condition.xlsx"))
+tar_load(nov_2023_unifrac_distance_by_labels, store = store_path)
+write.xlsx(nov_2023_unifrac_distance_by_labels, file = here(data_path, "nov_2023-fungi_unifrac_distance_by_labels.xlsx"))
 
-tar_load(nov_2023_unifrac_distance_by_date_condition_plot, store = store_path)
-print(nov_2023_unifrac_distance_by_date_condition_plot)
+tar_load(nov_2023_unifrac_distance_by_labels_plot, store = store_path)
+print(nov_2023_unifrac_distance_by_labels_plot)
 ```
 
-Download the full [nov_2023-fungi_unifrac_distance_by_date_condition.xlsx](08-november_2023-fungi/nov_2023-fungi_unifrac_distance_by_date_condition.xlsx) table.
+Download the full [nov_2023-fungi_unifrac_distance_by_labels.xlsx](08-november_2023-fungi/nov_2023-fungi_unifrac_distance_by_labels.xlsx) table.
 
 #### Permanova
 
@@ -1363,25 +1390,25 @@ nov_2023_pairwise_unifrac_sample_name_permanova %>%
 No comparison has been filtered for *sample_name* column.
 Download the full [nov_2023-fungi_pairwise_unifrac_sample_name_permanova.xlsx](08-november_2023-fungi/nov_2023-fungi_pairwise_unifrac_sample_name_permanova.xlsx) table.
 
-##### date_condition permanova
+##### labels permanova
 
-Calculate beta dispersion for *date_condition* column:
+Calculate beta dispersion for *labels* column:
 
-```{r unifrac-date_condition_beta_dispersion}
-#| label: unifrac-date_condition_beta_dispersion
+```{r unifrac-labels_beta_dispersion}
+#| label: unifrac-labels_beta_dispersion
 #| title: Beta dispersion by sample names
 #| description: Calculate beta dispersion by sample names
-tar_load(nov_2023_unifrac_date_condition_beta_dispersion, store = store_path)
-print(nov_2023_unifrac_date_condition_beta_dispersion$anova_result)
+tar_load(nov_2023_unifrac_labels_beta_dispersion, store = store_path)
+print(nov_2023_unifrac_labels_beta_dispersion$anova_result)
 ```
 
-I see significant differences in dispersions: should I trust the `date_condition`
+I see significant differences in dispersions: should I trust the `labels`
 permanova? The point is also that groups are unbalanced (ie less elements in
 *default* group than the others). Permanova (and also ANOSIM) may suffer in
 this particular case. Plot beta dispersion:
 
-```{r unifrac-date_condition_beta_dispersion_plot}
-#| label: unifrac-date_condition_beta_dispersion_plot
+```{r unifrac-labels_beta_dispersion_plot}
+#| label: unifrac-labels_beta_dispersion_plot
 #| title: Beta dispersion plot by sample names
 #| description: Plot beta dispersion by sample names
 #| fig.width: 10
@@ -1389,7 +1416,7 @@ this particular case. Plot beta dispersion:
 #| fig.align: center
 # Create the boxplot
 ggplot(
-    nov_2023_unifrac_date_condition_beta_dispersion$beta_disp_df,
+    nov_2023_unifrac_labels_beta_dispersion$beta_disp_df,
     aes(x = Group, y = Distance, fill = Group)
   ) +
   geom_boxplot() +
@@ -1405,31 +1432,31 @@ ggplot(
   )
 ```
 
-Do permanova with *Unifrac* on *date_condition* column:
+Do permanova with *Unifrac* on *labels* column:
 
-```{r unifrac-date_condition_permanova}
-#| label: unifrac-date_condition_permanova
+```{r unifrac-labels_permanova}
+#| label: unifrac-labels_permanova
 # load the permanova with targets
-targets::tar_load(nov_2023_unifrac_date_condition_permanova, store = store_path)
-print(nov_2023_unifrac_date_condition_permanova)
+targets::tar_load(nov_2023_unifrac_labels_permanova, store = store_path)
+print(nov_2023_unifrac_labels_permanova)
 ```
 
 Load the *pairwise* permanova on the same columns and filter only significant
 values (P.adj < 0.05):
 
-```{r unifrac-pairwise_date_condition_permanova}
-#| label: unifrac-pairwise_date_condition_permanova
+```{r unifrac-pairwise_labels_permanova}
+#| label: unifrac-pairwise_labels_permanova
 # load the permanova with targets
-targets::tar_load(nov_2023_pairwise_unifrac_date_condition_permanova, store = store_path)
-write.xlsx(nov_2023_pairwise_unifrac_date_condition_permanova, file = here(data_path, "nov_2023-fungi_pairwise_unifrac_date_condition_permanova.xlsx"))
+targets::tar_load(nov_2023_pairwise_unifrac_labels_permanova, store = store_path)
+write.xlsx(nov_2023_pairwise_unifrac_labels_permanova, file = here(data_path, "nov_2023-fungi_pairwise_unifrac_labels_permanova.xlsx"))
 
-nov_2023_pairwise_unifrac_date_condition_permanova %>%
+nov_2023_pairwise_unifrac_labels_permanova %>%
   dplyr::filter(P.adj < 0.05) %>%
   dplyr::arrange(P.adj) %>%
   dplyr::select(Comparison, P.adj, everything())
 ```
 
-Download the full [nov_2023-fungi_pairwise_unifrac_date_condition_permanova.xlsx](08-november_2023-fungi/nov_2023-fungi_pairwise_unifrac_date_condition_permanova.xlsx) table.
+Download the full [nov_2023-fungi_pairwise_unifrac_labels_permanova.xlsx](08-november_2023-fungi/nov_2023-fungi_pairwise_unifrac_labels_permanova.xlsx) table.
 
 ### Weighted UniFrac {#wunifrac}
 
@@ -1482,19 +1509,19 @@ pcoa_plot_rep <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = samp
 print(pcoa_plot_rep)
 ```
 
-#### PCoA plot by date and condition (sample replicates)
+#### PCoA plot by labels (sample replicates)
 
-Visualize the same plot but grouping with date and condition (which should group sample replicates)
+Visualize the same plot but grouping with labels (which should group sample replicates)
 
-```{r wunifrac-pcoa-date-condition}
-#| label: wunifrac-pcoa-date-condition
+```{r wunifrac-pcoa-labels}
+#| label: wunifrac-pcoa-labels
 # try to annotate plot
 pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
 labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
             glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
 
 # plot the PCoA
-pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = date_condition)) +
+pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = label)) +
   ggplot2::geom_point(size = 4, alpha = 0.5) +
   ggplot2::theme_minimal() +
   ggplot2::ggtitle("PCoA Plot on Distance Metrics (Weigthed Unifrac)") +
@@ -1598,18 +1625,18 @@ nmds_plot_rep <- ggplot2::ggplot(
 print(nmds_plot_rep)
 ```
 
-##### NMDS plot by date and condition (sample replicates) {#wunifrac-nmds-date_condition}
+##### NMDS plot by labels (sample replicates) {#wunifrac-nmds-labels}
 
-Now, let's visualize the NMDS plot but grouping with date and condition
+Now, let's visualize the NMDS plot but grouping with labels
 (which should group sample replicates)
 
-```{r wunifrac-nmds-date-condition}
-#| label: wunifrac-nmds-date-condition
+```{r wunifrac-nmds-labels}
+#| label: wunifrac-nmds-labels
 
 # Plot the NMDS
 nmds_plot <- ggplot2::ggplot(
     nmds_tb,
-    ggplot2::aes(x = NMDS1, y = NMDS2, color = date_condition)) +
+    ggplot2::aes(x = NMDS1, y = NMDS2, color = label)) +
   ggplot2::geom_point(size = 4, alpha = 0.5) +
   ggplot2::theme_minimal() +
   ggplot2::labs(
