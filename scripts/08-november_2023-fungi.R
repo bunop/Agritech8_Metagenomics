@@ -94,24 +94,21 @@ list(
     command = metadata %>%
       dplyr::filter(date == "nov 23")
   ),
-  # attempt to order metadata and phyloseq object using date_condition column
+  # attempt to order metadata and phyloseq object using label column
   # and a custom levels order
   tar_target(
-    name = custom_order_date_condition,
-    command = c(
-      "default_nov23",
-      "reactor_nov23",
-      "reactor+cs_nov23",
-      "box_nov23",
-      "box+dw_nov23"
-    )
+    name = custom_order_labels,
+    command = c("T0", "NA", "NP", "CS", "LM")
   ),
+  # read the metadata: there are samples that haven't been sequenced, but we
+  # have metadata for them. Those record will be removed in the nov_2023_metadata
+  # step
   tar_target(
     name = full_nov_2023_metadata,
     command = sort_by_factor_column(
       nov_2023_metadata_tmp,
-      "date_condition",
-      custom_order_date_condition
+      "label",
+      custom_order_labels
     )
   ),
   # open the phyloseq object
@@ -139,6 +136,7 @@ list(
     name = phyloseq_obj_with_tree,
     command = add_tree_to_phyloseq(phyloseq_obj, tree_path)
   ),
+  # no chloroplast to remove
   # subsetting samples from phyloseq object
   tar_target(
     name = nov_2023_phyloseq_obj_tmp,
@@ -148,6 +146,7 @@ list(
     )
   ),
   # now we need to filter out metadata samples that are not in the phyloseq object
+  # (cause they cannot be sequenced)
   tar_target(
     name = nov_2023_metadata,
     command = dplyr::filter(
@@ -158,8 +157,7 @@ list(
     )
   ),
   # extract the sample names from the metadata in the same order
-  # of date_condition: beware there are some samples that are not
-  # in the phyloseq object, so we need to filter them out
+  # of custom labels
   tar_target(
     name = custom_order_sample_names,
     command = nov_2023_metadata %>%
@@ -200,8 +198,8 @@ list(
     name = nov_2023_samples_data,
     command = sort_by_factor_column(
       get_samples_data(nov_2023_phyloseq_obj),
-      "date_condition",
-      custom_order_date_condition
+      "label",
+      custom_order_labels
     )
   ),
   # calculate bray distances to perform a permanova on technical replicates
@@ -252,8 +250,8 @@ list(
     name = nov_2023_heatmap_phylum,
     command = custom_heatmap(
       nov_2023_ampvis2_object,
-      group_by = "date_condition",
-      order_x_by = custom_order_date_condition,
+      group_by = "label",
+      order_x_by = custom_order_labels,
       showRemainingTaxa = TRUE
     )
   ),
@@ -261,8 +259,8 @@ list(
     name = nov_2023_heatmap_class,
     command = custom_heatmap(
       nov_2023_ampvis2_object,
-      group_by = "date_condition",
-      order_x_by = custom_order_date_condition,
+      group_by = "label",
+      order_x_by = custom_order_labels,
       showRemainingTaxa = TRUE,
       tax_add = "Class",
       tax_show = 20
@@ -333,45 +331,45 @@ list(
       "sample_name"
     )
   ),
-  # pivot data and group by date_condition
+  # pivot data and group by labels
   tar_target(
-    name = nov_2023_rarefaction_by_date_condition,
+    name = nov_2023_rarefaction_by_labels,
     command = reshape_rarefaction_data(
       nov_2023_rarefaction_results,
-      by_column = "date_condition"
+      by_column = "label"
     )
   ),
   # make plots
   tar_target(
-    name = nov_2023_alpha_diversity_by_date_condition,
+    name = nov_2023_alpha_diversity_by_labels,
     command = plot_alpha_diversity(
-      data = nov_2023_rarefaction_by_date_condition,
-      x = "date_condition",
+      data = nov_2023_rarefaction_by_labels,
+      x = "label",
       y = "mean",
-      fill = "date_condition",
+      fill = "label",
       facet = "Metric",
       title = "Alpha Diversity Metrics Across Groups",
       xlab = "Sample Name",
       ylab = "Alpha Diversity Measure",
-      custom_order = custom_order_date_condition
+      custom_order = custom_order_labels
     )
   ),
   # do the Kruskall-Wallis test
   tar_target(
-    name = nov_2023_kruscal_shannon_date_condition,
+    name = nov_2023_kruscal_shannon_labels,
     command = calculate_kruskal_wallis(
       nov_2023_rarefaction_results,
       "Shannon_mean",
-      "date_condition"
+      "label"
     )
   ),
   # do the post-hoc tests
   tar_target(
-    name = nov_2023_dunn_shannon_date_condition,
+    name = nov_2023_dunn_shannon_labels,
     command = calculate_dunn_test(
       nov_2023_rarefaction_results,
       "Shannon_mean",
-      "date_condition"
+      "label"
     )
   ),
   # calculate other distance metrics
@@ -467,16 +465,16 @@ list(
     command = plot_distances(nov_2023_bray_distance_by_sample_name, column = "sample_name")
   ),
   tar_target(
-    name = nov_2023_bray_distance_by_date_condition,
+    name = nov_2023_bray_distance_by_labels,
     command = get_distances(
       nov_2023_bray_distance_matrix,
       nov_2023_metadata,
-      column = "date_condition"
+      column = "label"
     )
   ),
   tar_target(
-    name = nov_2023_bray_distance_by_date_condition_plot,
-    command = plot_distances(nov_2023_bray_distance_by_date_condition, column = "date_condition")
+    name = nov_2023_bray_distance_by_labels_plot,
+    command = plot_distances(nov_2023_bray_distance_by_labels, column = "label")
   ),
   # unifrac
   tar_target(
@@ -492,16 +490,16 @@ list(
     command = plot_distances(nov_2023_unifrac_distance_by_sample_name, column = "sample_name")
   ),
   tar_target(
-    name = nov_2023_unifrac_distance_by_date_condition,
+    name = nov_2023_unifrac_distance_by_labels,
     command = get_distances(
       nov_2023_unifrac_distance_matrix,
       nov_2023_metadata,
-      column = "date_condition"
+      column = "label"
     )
   ),
   tar_target(
-    name = nov_2023_unifrac_distance_by_date_condition_plot,
-    command = plot_distances(nov_2023_unifrac_distance_by_date_condition, column = "date_condition")
+    name = nov_2023_unifrac_distance_by_labels_plot,
+    command = plot_distances(nov_2023_unifrac_distance_by_labels, column = "label")
   ),
   # calculate beta dispersion
   tar_target(
@@ -515,13 +513,13 @@ list(
     )
   ),
   tar_target(
-    name = nov_2023_bray_date_condition_beta_dispersion,
+    name = nov_2023_bray_labels_beta_dispersion,
     command = calculate_beta_dispersion(
       nov_2023_bray_distance_matrix,
       nov_2023_metadata,
-      column = "date_condition",
+      column = "label",
       bias.adjust = TRUE,
-      levels = custom_order_date_condition
+      levels = custom_order_labels
     )
   ),
   tar_target(
@@ -535,13 +533,13 @@ list(
     )
   ),
   tar_target(
-    name = nov_2023_unifrac_date_condition_beta_dispersion,
+    name = nov_2023_unifrac_labels_beta_dispersion,
     command = calculate_beta_dispersion(
       nov_2023_unifrac_distance_matrix,
       nov_2023_metadata,
-      column = "date_condition",
+      column = "label",
       bias.adjust = TRUE,
-      levels = custom_order_date_condition
+      levels = custom_order_labels
     )
   ),
   # permanova on distance matrix
@@ -563,19 +561,19 @@ list(
     )
   ),
   tar_target(
-    name = nov_2023_bray_date_condition_permanova,
+    name = nov_2023_bray_labels_permanova,
     command = calculate_permanova(
       nov_2023_bray_distance_matrix,
       nov_2023_metadata,
-      columns = c("date_condition")
+      columns = c("label")
     )
   ),
   tar_target(
-    name = nov_2023_pairwise_bray_date_condition_permanova,
+    name = nov_2023_pairwise_bray_labels_permanova,
     command = calculate_pairwise_permanova(
       nov_2023_bray_distance_matrix,
       nov_2023_metadata,
-      columns = c("date_condition")
+      columns = c("label")
     )
   ),
   ## unifrac
@@ -596,19 +594,19 @@ list(
     )
   ),
   tar_target(
-    name = nov_2023_unifrac_date_condition_permanova,
+    name = nov_2023_unifrac_labels_permanova,
     command = calculate_permanova(
       nov_2023_unifrac_distance_matrix,
       nov_2023_metadata,
-      columns = c("date_condition")
+      columns = c("label")
     )
   ),
   tar_target(
-    name = nov_2023_pairwise_unifrac_date_condition_permanova,
+    name = nov_2023_pairwise_unifrac_labels_permanova,
     command = calculate_pairwise_permanova(
       nov_2023_unifrac_distance_matrix,
       nov_2023_metadata,
-      columns = c("date_condition")
+      columns = c("label")
     )
   ),
   # render november 2023 quarto document
