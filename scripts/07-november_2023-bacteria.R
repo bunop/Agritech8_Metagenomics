@@ -228,6 +228,47 @@ list(
       columns = c("sample_group", "technical_rep")
     )
   ),
+  # merge technical replicates
+  # first update metadata for merged samples
+  tar_target(
+    name = nov_2023_metadata_merged,
+    command = merge_metadata(
+      nov_2023_metadata,
+      column = "sample_group"
+    )
+  ),
+  # then merge phyloseq object
+  tar_target(
+    name = nov_2023_phyloseq_obj_merged,
+    command = merge_technical_replicates(
+      nov_2023_phyloseq_obj,
+      nov_2023_metadata_merged
+    )
+  ),
+  # determine rarefaction depth for merged data
+  tar_target(
+    nov_2023_merged_rarefaction_depth,
+    min(sample_sums(nov_2023_phyloseq_obj_merged))
+  ),
+  # Perform rarefaction on merged data
+  tar_target(
+    name = nov_2023_phyloseq_obj_merged_rarefied,
+    command = rarefy_phyloseq_object(
+      nov_2023_phyloseq_obj_merged,
+      nov_2023_merged_rarefaction_depth,
+    ),
+    pattern = map(thousand_iterations),
+    iteration = "list"
+  ),
+  # collect sample data to plot sequencing depth for merged data
+  tar_target(
+    name = nov_2023_samples_data_merged,
+    command = sort_by_factor_column(
+      get_samples_data(nov_2023_phyloseq_obj_merged),
+      "label",
+      custom_order_labels
+    )
+  ),
   # here are barplots
   tar_target(
     name = nov_2023_melted_phylum,

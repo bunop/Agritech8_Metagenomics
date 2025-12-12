@@ -93,7 +93,7 @@ calculate_technical_replicate_distances <- function(distance_matrix, metadata, g
 }
 
 ## merge metadata relying on technical replicates
-merge_metadata <- function(metadata) {
+merge_metadata <- function(metadata, column = "sample_group") {
   # merging those columns make no sense
   tmp <- metadata %>%
     dplyr::select(-sample_number, -replica)
@@ -102,12 +102,12 @@ merge_metadata <- function(metadata) {
   numeric_cols <- names(tmp)[sapply(tmp, is.numeric)]
   non_numeric_cols <- names(tmp)[!sapply(tmp, is.numeric)]
 
-  # Remove 'sample_group' from non-numeric columns since will be
+  # Remove _column_ from non-numeric columns since will be
   # removed when grouping by 'sample_group'
-  non_numeric_cols <- setdiff(non_numeric_cols, "sample_group")
+  non_numeric_cols <- setdiff(non_numeric_cols, column)
 
   merged_metadata <- tmp %>%
-    dplyr::group_by(sample_group) %>%
+    dplyr::group_by(!!sym(column)) %>%
     dplyr::summarize(
       dplyr::across(all_of(numeric_cols), ~ mean(.x, na.rm = TRUE)),
       dplyr::across(all_of(non_numeric_cols), ~ first(.x)),
@@ -126,7 +126,7 @@ merge_metadata <- function(metadata) {
 # and divide the ASV abundances by the number of replicates to get the mean
 merge_technical_replicates <- function(phyloseq_object, merged_metadata) {
   # Merge samples by replicate group, summing ASV abundances
-  merged_phyloseq_object <- merge_samples(phyloseq_object, group = "sample_name")
+  merged_phyloseq_object <- phyloseq::merge_samples(phyloseq_object, group = "sample_name")
 
   # replace the metadata
   phyloseq::sample_data(merged_phyloseq_object) <- phyloseq::sample_data(merged_metadata)
@@ -140,7 +140,7 @@ merge_technical_replicates <- function(phyloseq_object, merged_metadata) {
   otu_mat_floored <- floor(otu_mat)
 
   # Convert the matrix back to an otu_table object
-  phyloseq::otu_table(merged_phyloseq_object) <- otu_table(
+  phyloseq::otu_table(merged_phyloseq_object) <- phyloseq::otu_table(
     otu_mat_floored,
     taxa_are_rows = phyloseq::taxa_are_rows(
       phyloseq::otu_table(phyloseq_object)

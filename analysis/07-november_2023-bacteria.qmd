@@ -75,6 +75,9 @@ write.xlsx(nov_2023_samples_data, file = here(data_path, "nov_2023-bacteria_samp
 
 ## Checking samples
 
+The idea behind this section is to check how similar technical replicates are
+before merging them into a single biological replicate.
+
 ### Display number of samples
 
 Try to see sample depths and other information about the samples:
@@ -125,7 +128,8 @@ different.
 
 ### Technical Replicate Similarity (Bray-Curtis distances)
 
-Check how similar technical replicates are within each biological group using Bray-Curtis distances:
+Check how similar technical replicates are within each biological group
+using Bray-Curtis distances:
 
 ```{r tech-rep-distances}
 #| label: tech-rep-distances
@@ -135,12 +139,14 @@ nov_2023_tech_rep_distances |>
   dplyr::arrange(desc(mean_distance))
 ```
 
-**Low mean distance** (<0.2–0.3) indicates technical replicates are highly similar and can be merged.
-**High mean distance** (>0.5) suggests technical variability or issues.
+**Low mean distance** (<0.2–0.3) indicates technical replicates are highly similar
+and can be merged. **High mean distance** (>0.5) suggests technical variability
+or issues. For those data distance is low enough to proceed with merging.
 
 ### Technical Replicate Similarity
 
-Check how similar technical replicates are within each biological replicate using beta-dispersion on Bray-Curtis distances:
+Check how similar technical replicates are within each biological replicate
+using beta-dispersion on Bray-Curtis distances:
 
 ```{r tech-rep-beta-dispersion}
 #| label: tech-rep-beta-dispersion
@@ -169,8 +175,10 @@ print(nov_2023_bray_sample_name_beta_dispersion$anova_result)
 ```
 
 **Interpretation:**
-- **Non-significant ANOVA** (p > 0.05): technical variability is homogeneous across biological replicates → good, proceed with merging
-- **Significant ANOVA** (p < 0.05): some biological replicates have more technical variability than others → investigate which ones before merging
+- **Non-significant ANOVA** (p > 0.05): technical variability is homogeneous
+across biological replicates → good, proceed with merging
+- **Significant ANOVA** (p < 0.05): some biological replicates have more technical
+variability than others → investigate which ones before merging
 
 **Overall Assessment:**
 - **Low mean distance** (<0.2) + **non-significant ANOVA**: ✅ safe to merge all technical replicates
@@ -204,6 +212,12 @@ ggplot(
   )
 ```
 
+:::{.callout-important}
+from the analysis of technical replicates similarity, we can conclude that
+merging technical replicates into biological replicates is appropriate for
+this dataset. From now on, we will work with merged biological replicates.
+:::
+
 ## Barplots
 
 Let's create some barplots to visualize the relative abundance of taxa in the
@@ -212,7 +226,7 @@ dataset. Here are the available taxonomic ranks in the dataset:
 ```{r taxonomic-ranks}
 #| label: taxonomic-ranks
 #| description: List the available taxonomic ranks in the dataset.
-phyloseq::rank_names(nov_2023_phyloseq_obj)
+phyloseq::rank_names(nov_2023_phyloseq_obj_merged)
 ```
 
 ### By Phylum
