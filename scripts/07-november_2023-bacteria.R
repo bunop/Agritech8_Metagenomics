@@ -32,7 +32,8 @@ tar_option_set(
     "ampvis2",
     "forcats",
     "FSA",
-    "pairwiseAdonis"
+    "pairwiseAdonis",
+    "purrr"
   ), # Packages that your targets need for their tasks.
   # format = "qs", # Optionally set the default storage format. qs is fast.
   #
@@ -207,6 +208,15 @@ list(
     name = nov_2023_bray_distance_matrix,
     command = as.dist(
       Reduce("+", nov_2023_bray_distance_matrices) / length(nov_2023_bray_distance_matrices)
+    )
+  ),
+  # calculate distances between technical replicates
+  tar_target(
+    name = nov_2023_tech_rep_distances,
+    command = calculate_technical_replicate_distances(
+      nov_2023_bray_distance_matrix,
+      nov_2023_metadata,
+      group_column = "sample_group"
     )
   ),
   # a permanova to test if technical replicates are different

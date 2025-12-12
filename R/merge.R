@@ -1,3 +1,97 @@
+#' Calculate Spearman correlations for technical replicates
+#'
+#' @param phyloseq_obj A phyloseq object
+#' @param metadata A data frame with sample metadata
+#' @param group_column Column name identifying biological replicates
+#' @return A data frame with correlation statistics per group
+calculate_technical_replicate_correlations <- function(phyloseq_obj, metadata, group_column = "sample_group") {
+
+  otu_mat <- as(phyloseq::otu_table(phyloseq_obj), "matrix")
+  if (!phyloseq::taxa_are_rows(phyloseq_obj)) {
+    otu_mat <- t(otu_mat)
+  }
+
+  # calculate correlations per group
+  unique_groups <- unique(metadata[[group_column]])
+
+  purrr::map_dfr(unique_groups, function(grp) {
+    sample_ids <- metadata |>
+      dplyr::filter(.data[[group_column]] == grp) |>
+      dplyr::pull(sampleID)
+
+    if (length(sample_ids) < 2) {
+      return(tibble::tibble(
+        sample_group = grp,
+        n_replicates = length(sample_ids),
+        mean_spearman = NA_real_,
+        min_spearman = NA_real_,
+        max_spearman = NA_real_
+      ))
+    }
+
+    # Correlation matrix
+    cor_mat <- cor(otu_mat[, sample_ids, drop = FALSE], method = "spearman")
+
+    # Extract upper triangle values (pairwise correlations)
+    cor_values <- cor_mat[upper.tri(cor_mat)]
+
+    tibble::tibble(
+      sample_group = grp,
+      n_replicates = length(sample_ids),
+      mean_spearman = mean(cor_values),
+      min_spearman = min(cor_values),
+      max_spearman = max(cor_values),
+      sd_spearman = sd(cor_values)
+    )
+  })
+}
+
+#' Calculate within-group distances for technical replicates
+#'
+#' @param distance_matrix A distance matrix object
+#' @param metadata A data frame with sample metadata
+#' @param group_column Column identifying biological replicates
+#' @return A data frame with distance statistics per group
+calculate_technical_replicate_distances <- function(distance_matrix, metadata, group_column = "sample_group") {
+
+  dist_mat <- as.matrix(distance_matrix)
+
+  unique_groups <- unique(metadata[[group_column]])
+
+  purrr::map_dfr(unique_groups, function(grp) {
+    sample_ids <- metadata |>
+      dplyr::filter(.data[[group_column]] == grp) |>
+      dplyr::pull(sampleID)
+
+    if (length(sample_ids) < 2) {
+      return(tibble::tibble(
+        sample_group = grp,
+        n_replicates = length(sample_ids),
+        mean_distance = NA_real_,
+        median_distance = NA_real_,
+        min_distance = NA_real_,
+        max_distance = NA_real_
+      ))
+    }
+
+    # Subset distance matrix for the group
+    group_dist <- dist_mat[sample_ids, sample_ids]
+
+    # Extract upper triangle values (pairwise distances)
+    dist_values <- group_dist[upper.tri(group_dist)]
+
+    tibble::tibble(
+      sample_group = grp,
+      n_replicates = length(sample_ids),
+      mean_distance = mean(dist_values),
+      median_distance = median(dist_values),
+      min_distance = min(dist_values),
+      max_distance = max(dist_values),
+      sd_distance = sd(dist_values)
+    )
+  })
+}
+
 ## merge metadata relying on technical replicates
 merge_metadata <- function(metadata) {
   # merging those columns make no sense

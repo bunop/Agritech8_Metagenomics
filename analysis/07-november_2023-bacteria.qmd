@@ -92,8 +92,8 @@ depth_plot <- ggplot2::ggplot(
        y = "Number of Reads",
        fill = "Group") + # legend name for fill color
   theme(axis.text.x = element_text(
-    angle = 90, 
-    hjust = 1, 
+    angle = 90,
+    hjust = 1,
     vjust = 0.5,
     margin = ggplot2::margin(b = 7)
   ))
@@ -122,6 +122,87 @@ print(nov_2023_tech_rep_permanova)
 The bad score given by grouping samples by technical replicates should not explain
 biological variability, discarding the hypothesis that biological replicates are
 different.
+
+### Technical Replicate Similarity (Bray-Curtis distances)
+
+Check how similar technical replicates are within each biological group using Bray-Curtis distances:
+
+```{r tech-rep-distances}
+#| label: tech-rep-distances
+tar_load(nov_2023_tech_rep_distances, store = store_path)
+
+nov_2023_tech_rep_distances |>
+  dplyr::arrange(desc(mean_distance))
+```
+
+**Low mean distance** (<0.2–0.3) indicates technical replicates are highly similar and can be merged.
+**High mean distance** (>0.5) suggests technical variability or issues.
+
+### Technical Replicate Similarity
+
+Check how similar technical replicates are within each biological replicate using beta-dispersion on Bray-Curtis distances:
+
+```{r tech-rep-beta-dispersion}
+#| label: tech-rep-beta-dispersion
+tar_load(nov_2023_bray_sample_name_beta_dispersion, store = store_path)
+
+# Summary statistics per biological replicate
+tech_rep_summary <- nov_2023_bray_sample_name_beta_dispersion$beta_disp_df |>
+  group_by(Group) |>
+  summarise(
+    n_tech_reps = n(),
+    mean_distance = mean(Distance),
+    max_distance = max(Distance),
+    .groups = "drop"
+  ) |>
+  arrange(desc(mean_distance))
+
+tech_rep_summary
+```
+
+**ANOVA on Beta Dispersion:**
+
+```{r tech-rep-anova}
+#| label: tech-rep-anova
+# ANOVA tests if technical variability differs across biological replicates
+print(nov_2023_bray_sample_name_beta_dispersion$anova_result)
+```
+
+**Interpretation:**
+- **Non-significant ANOVA** (p > 0.05): technical variability is homogeneous across biological replicates → good, proceed with merging
+- **Significant ANOVA** (p < 0.05): some biological replicates have more technical variability than others → investigate which ones before merging
+
+**Overall Assessment:**
+- **Low mean distance** (<0.2) + **non-significant ANOVA**: ✅ safe to merge all technical replicates
+- **Low mean distance** + **significant ANOVA**: ⚠️ merge only replicates with low dispersion
+- **High mean distance** (>0.4): ❌ investigate issues before merging
+
+Display the beta-dispersion plot:
+
+```{r tech-rep-dispersion-plot}
+#| label: tech-rep-dispersion-plot
+#| fig-width: 12
+#| fig-height: 8
+
+ggplot(
+  nov_2023_bray_sample_name_beta_dispersion$beta_disp_df,
+  aes(x = Group, y = Distance, fill = Group)
+) +
+  geom_boxplot(alpha = 0.7) +
+  geom_jitter(width = 0.2, alpha = 0.6, size = 3) +
+  geom_hline(yintercept = 0.2, linetype = "dashed", color = "red") +
+  labs(
+    title = "Technical Replicate Dispersion (Bray-Curtis)",
+    subtitle = "Lower values indicate more similar technical replicates",
+    x = "Biological Replicate (sample_name)",
+    y = "Distance to Centroid"
+  ) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "none"
+  )
+```
 
 ## Barplots
 
@@ -163,9 +244,9 @@ ggplot2::ggplot(nov_2023_melted_phylum, ggplot2::aes(x = sampleID, y = Abundance
   ) +
   ggplot2::theme_bw() +
   ggplot2::theme(axis.text.x = ggplot2::element_text(
-    angle = 90, 
+    angle = 90,
     hjust = -1,
-    vjust = 0.5, 
+    vjust = 0.5,
     margin = ggplot2::margin(b = 10)
   ))
 ```
@@ -1080,7 +1161,7 @@ and [Weighted UniFrac - NMDS plot by sample names](#wunifrac-nmds-sample-names)
 
 ##### NMDS plot by labels (sample replicates)
 
-Now, let's visualize the NMDS plot but grouping with labels
+Now, let's visualize the NMDS plot but grouping by labels
 (which should group sample replicates)
 
 ::: {.callout-warning}
