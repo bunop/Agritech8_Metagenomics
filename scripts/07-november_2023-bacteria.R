@@ -322,7 +322,7 @@ list(
   # collect otu table
   tar_target(
     name = nov_2023_otu_table_matrix,
-    command = get_otu_table(nov_2023_phyloseq_obj)
+    command = get_otu_table(nov_2023_phyloseq_obj_merged)
   ),
   # deal with rarefaction curves
   tar_target(
@@ -334,57 +334,19 @@ list(
   tar_target(
     name = nov_2023_samples_rarefaction,
     command = rarefy_alpha(
-      nov_2023_phyloseq_obj_rarefied,
+      nov_2023_phyloseq_obj_merged_rarefied,
       measures = c("Observed", "Shannon", "Simpson", "InvSimpson", "Fisher", "FaithPD")),
-    pattern = map(nov_2023_phyloseq_obj_rarefied)
+    pattern = map(nov_2023_phyloseq_obj_merged_rarefied)
   ),
   # now transform rarefaction in a summary table
   tar_target(
     name = nov_2023_rarefaction_results,
-    command = summarize_rarefactions(nov_2023_samples_rarefaction, metadata)
-  ),
-  # pivot data and group by sample name
-  tar_target(
-    name = nov_2023_rarefaction_by_sample_name,
-    command = reshape_rarefaction_data(
-      nov_2023_rarefaction_results,
-      by_column = "sample_name"
+    command = summarize_rarefactions(
+      nov_2023_samples_rarefaction,
+      nov_2023_metadata_merged
     )
   ),
-  # make plots for alpha diversity
-  tar_target(
-    name = nov_2023_alpha_diversity_by_sample_name,
-    command = plot_alpha_diversity(
-      data = nov_2023_rarefaction_by_sample_name,
-      x = "sample_name",
-      y = "mean",
-      fill = "sample_name",
-      facet = "Metric",
-      title = "Alpha Diversity Metrics Across Groups",
-      xlab = "Sample Name",
-      ylab = "Alpha Diversity Measure",
-      custom_order = custom_order_sample_names
-    )
-  ),
-  # do the Kruskall-Wallis test
-  tar_target(
-    name = nov_2023_kruscal_shannon_sample_name,
-    command = calculate_kruskal_wallis(
-      nov_2023_rarefaction_results,
-      "Shannon_mean",
-      "sample_name"
-    )
-  ),
-  # do the post-hoc tests
-  tar_target(
-    name = nov_2023_dunn_shannon_sample_name,
-    command = calculate_dunn_test(
-      nov_2023_rarefaction_results,
-      "Shannon_mean",
-      "sample_name"
-    )
-  ),
-  # pivot data and group by labels
+  # pivot data by label
   tar_target(
     name = nov_2023_rarefaction_by_labels,
     command = reshape_rarefaction_data(
@@ -392,9 +354,9 @@ list(
       by_column = "label"
     )
   ),
-  # make plots
+  # deal with alpha diversity plots
   tar_target(
-    name = nov_2023_alpha_diversity_by_labels,
+    name = nov_2023_alpha_diversity,
     command = plot_alpha_diversity(
       data = nov_2023_rarefaction_by_labels,
       x = "label",
@@ -409,7 +371,7 @@ list(
   ),
   # do the Kruskall-Wallis test
   tar_target(
-    name = nov_2023_kruscal_shannon_labels,
+    name = nov_2023_kruscal_shannon,
     command = calculate_kruskal_wallis(
       nov_2023_rarefaction_results,
       "Shannon_mean",
@@ -418,7 +380,7 @@ list(
   ),
   # do the post-hoc tests
   tar_target(
-    name = nov_2023_dunn_shannon_labels,
+    name = nov_2023_dunn_shannon,
     command = calculate_dunn_test(
       nov_2023_rarefaction_results,
       "Shannon_mean",

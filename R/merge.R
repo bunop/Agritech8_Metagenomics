@@ -117,7 +117,10 @@ merge_metadata <- function(metadata, column = "sample_group") {
     as.data.frame()
 
   # Set rownames
-  rownames(merged_metadata) <- merged_metadata$sample_name
+  rownames(merged_metadata) <- merged_metadata[[column]]
+
+  # override sampleID column
+  merged_metadata$sampleID <- merged_metadata[[column]]
 
   return(merged_metadata)
 }
