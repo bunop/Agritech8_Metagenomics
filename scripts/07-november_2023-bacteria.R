@@ -232,17 +232,25 @@ list(
   # first update metadata for merged samples
   tar_target(
     name = nov_2023_metadata_merged,
-    command = merge_metadata(
-      nov_2023_metadata,
-      column = "sample_group"
-    )
+    command = {
+      tmp <- merge_metadata(
+        nov_2023_metadata,
+        column = "sample_name"
+      )
+      sort_by_factor_column(
+        tmp,
+        "label",
+        custom_order_labels
+      )
+    }
   ),
   # then merge phyloseq object
   tar_target(
     name = nov_2023_phyloseq_obj_merged,
     command = merge_technical_replicates(
       nov_2023_phyloseq_obj,
-      nov_2023_metadata_merged
+      nov_2023_metadata_merged,
+      column = "sample_name"
     )
   ),
   # determine rarefaction depth for merged data
@@ -273,23 +281,23 @@ list(
   tar_target(
     name = nov_2023_melted_phylum,
     command = agglomerate_by_taxa(
-      nov_2023_phyloseq_obj,
+      nov_2023_phyloseq_obj_merged,
       taxrank = "Phylum",
-      sample_order = nov_2023_metadata$sampleID
+      sample_order = nov_2023_metadata_merged$sample_name
     )
   ),
   tar_target(
     name = nov_2023_melted_class,
     command = agglomerate_by_taxa(
-      nov_2023_phyloseq_obj,
+      nov_2023_phyloseq_obj_merged,
       taxrank = "Class",
-      sample_order = nov_2023_metadata$sampleID
+      sample_order = nov_2023_metadata_merged$sample_name
     )
   ),
   # and here the heatmaps
   tar_target(
     name = nov_2023_ampvis2_object,
-    command = phyloseq_to_ampvis2(nov_2023_phyloseq_obj)
+    command = phyloseq_to_ampvis2(nov_2023_phyloseq_obj_merged)
   ),
   tar_target(
     name = nov_2023_heatmap_phylum,

@@ -124,32 +124,25 @@ merge_metadata <- function(metadata, column = "sample_group") {
 
 # merge samples by replicate group, summing ASV abundances
 # and divide the ASV abundances by the number of replicates to get the mean
-merge_technical_replicates <- function(phyloseq_object, merged_metadata) {
-  # Merge samples by replicate group, summing ASV abundances
-  merged_phyloseq_object <- phyloseq::merge_samples(phyloseq_object, group = "sample_name")
+merge_technical_replicates <- function(phyloseq_object, merge_metadata, column = "sample_names") {
+  # Merge samples by replicate group, calculating mean ASV abundances
+  merged_phyloseq_object <- phyloseq::merge_samples(phyloseq_object, group = column, fun = mean)
 
-  # replace the metadata
-  phyloseq::sample_data(merged_phyloseq_object) <- phyloseq::sample_data(merged_metadata)
+  # Update sample metadata ensuring rownames match
+  # phyloseq uses rownames to match samples to metadata
+  merge_metadata_aligned <- merge_metadata[sample_names(merged_phyloseq_object), ]
+  rownames(merge_metadata_aligned) <- sample_names(merged_phyloseq_object)
 
-  # Count the number of replicates in each group
-  replicate_counts <- table(sample_data(phyloseq_object)$sample_name)
+  # Add sampleID column with same values as the grouping column
+  merge_metadata_aligned$sampleID <- merge_metadata_aligned[[column]]
 
-  # Divide the ASV abundances by the number of replicates to get the mean
-  otu_mat <- t(phyloseq::otu_table(merged_phyloseq_object))
-  otu_mat <- sweep(otu_mat, 2, replicate_counts, FUN = "/")
-  otu_mat_floored <- floor(otu_mat)
+  sample_data(merged_phyloseq_object) <- phyloseq::sample_data(merge_metadata_aligned)
 
-  # Convert the matrix back to an otu_table object
-  phyloseq::otu_table(merged_phyloseq_object) <- phyloseq::otu_table(
-    otu_mat_floored,
-    taxa_are_rows = phyloseq::taxa_are_rows(
-      phyloseq::otu_table(phyloseq_object)
-    )
-  )
-
-  # prune empty taxa
+  # Prune empty taxa
   merged_phyloseq_object <- phyloseq::prune_taxa(
-    phyloseq::taxa_sums(merged_phyloseq_object) > 0, merged_phyloseq_object)
+    phyloseq::taxa_sums(merged_phyloseq_object) > 0,
+    merged_phyloseq_object
+  )
 
   return(merged_phyloseq_object)
 }
