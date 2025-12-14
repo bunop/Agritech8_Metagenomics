@@ -387,11 +387,24 @@ list(
       "label"
     )
   ),
+  # I need to recalculate distance matrices on rarefied merged data
+  tar_target(
+    name = nov_2023_bray_distance_matrices_merged,
+    command = calculate_distance_matrix(nov_2023_phyloseq_obj_merged_rarefied, method = "bray"),
+    pattern = map(nov_2023_phyloseq_obj_merged_rarefied),
+    iteration = "list"
+  ),
+  tar_target(
+    name = nov_2023_bray_distance_matrix_merged,
+    command = as.dist(
+      Reduce("+", nov_2023_bray_distance_matrices_merged) / length(nov_2023_bray_distance_matrices_merged)
+    )
+  ),
   # calculate other distance metrics
   tar_target(
     name = nov_2023_jaccard_distance_matrices,
-    command = calculate_distance_matrix(nov_2023_phyloseq_obj_rarefied, method = "jaccard"),
-    pattern = map(nov_2023_phyloseq_obj_rarefied),
+    command = calculate_distance_matrix(nov_2023_phyloseq_obj_merged_rarefied, method = "jaccard"),
+    pattern = map(nov_2023_phyloseq_obj_merged_rarefied),
     iteration = "list"
   ),
   tar_target(
@@ -403,10 +416,10 @@ list(
   tar_target(
     name = nov_2023_wunifrac_distance_matrices,
     command = phyloseq::distance(
-      nov_2023_phyloseq_obj_rarefied,
+      nov_2023_phyloseq_obj_merged_rarefied,
       method = "wunifrac"
     ),
-    pattern = map(nov_2023_phyloseq_obj_rarefied),
+    pattern = map(nov_2023_phyloseq_obj_merged_rarefied),
     iteration = "list"
   ),
   tar_target(
@@ -418,10 +431,10 @@ list(
   tar_target(
     name = nov_2023_unifrac_distance_matrices,
     command = phyloseq::distance(
-      nov_2023_phyloseq_obj_rarefied,
+      nov_2023_phyloseq_obj_merged_rarefied,
       method = "unifrac"
     ),
-    pattern = map(nov_2023_phyloseq_obj_rarefied),
+    pattern = map(nov_2023_phyloseq_obj_merged_rarefied),
     iteration = "list"
   ),
   tar_target(
@@ -434,56 +447,44 @@ list(
   # PCoA
   tar_target(
     name = nov_2023_bray_pcoa_object,
-    command = calculate_pcoa(nov_2023_bray_distance_matrix, nov_2023_metadata)
+    command = calculate_pcoa(nov_2023_bray_distance_matrix_merged, nov_2023_metadata_merged)
   ),
   tar_target(
     name = nov_2023_jaccard_pcoa_object,
-    command = calculate_pcoa(nov_2023_jaccard_distance_matrix, nov_2023_metadata)
+    command = calculate_pcoa(nov_2023_jaccard_distance_matrix, nov_2023_metadata_merged)
   ),
   tar_target(
     name = nov_2023_wunifrac_pcoa_object,
-    command = calculate_pcoa(nov_2023_wunifrac_distance_matrix, nov_2023_metadata)
+    command = calculate_pcoa(nov_2023_wunifrac_distance_matrix, nov_2023_metadata_merged)
   ),
   tar_target(
     name = nov_2023_unifrac_pcoa_object,
-    command = calculate_pcoa(nov_2023_unifrac_distance_matrix, nov_2023_metadata)
+    command = calculate_pcoa(nov_2023_unifrac_distance_matrix, nov_2023_metadata_merged)
   ),
   # NMDS
   tar_target(
     name = nov_2023_bray_nmds_object,
-    command = calculate_nmds(nov_2023_bray_distance_matrix, nov_2023_metadata)
+    command = calculate_nmds(nov_2023_bray_distance_matrix_merged, nov_2023_metadata_merged)
   ),
   tar_target(
     name = nov_2023_jaccard_nmds_object,
-    command = calculate_nmds(nov_2023_jaccard_distance_matrix, nov_2023_metadata)
+    command = calculate_nmds(nov_2023_jaccard_distance_matrix, nov_2023_metadata_merged)
   ),
   tar_target(
     name = nov_2023_wunifrac_nmds_object,
-    command = calculate_nmds(nov_2023_wunifrac_distance_matrix, nov_2023_metadata)
+    command = calculate_nmds(nov_2023_wunifrac_distance_matrix, nov_2023_metadata_merged)
   ),
   tar_target(
     name = nov_2023_unifrac_nmds_object,
-    command = calculate_nmds(nov_2023_unifrac_distance_matrix, nov_2023_metadata)
+    command = calculate_nmds(nov_2023_unifrac_distance_matrix, nov_2023_metadata_merged)
   ),
   # calculate distances with and between groups
   # bray
   tar_target(
-    name = nov_2023_bray_distance_by_sample_name,
-    command = get_distances(
-      nov_2023_bray_distance_matrix,
-      nov_2023_metadata,
-      column = "sample_name"
-    )
-  ),
-  tar_target(
-    name = nov_2023_bray_distance_by_sample_name_plot,
-    command = plot_distances(nov_2023_bray_distance_by_sample_name, column = "sample_name")
-  ),
-  tar_target(
     name = nov_2023_bray_distance_by_labels,
     command = get_distances(
-      nov_2023_bray_distance_matrix,
-      nov_2023_metadata,
+      nov_2023_bray_distance_matrix_merged,
+      nov_2023_metadata_merged,
       column = "label"
     )
   ),
@@ -493,22 +494,10 @@ list(
   ),
   # unifrac
   tar_target(
-    name = nov_2023_unifrac_distance_by_sample_name,
-    command = get_distances(
-      nov_2023_unifrac_distance_matrix,
-      nov_2023_metadata,
-      column = "sample_name"
-    )
-  ),
-  tar_target(
-    name = nov_2023_unifrac_distance_by_sample_name_plot,
-    command = plot_distances(nov_2023_unifrac_distance_by_sample_name, column = "sample_name")
-  ),
-  tar_target(
     name = nov_2023_unifrac_distance_by_labels,
     command = get_distances(
       nov_2023_unifrac_distance_matrix,
-      nov_2023_metadata,
+      nov_2023_metadata_merged,
       column = "label"
     )
   ),
@@ -518,40 +507,20 @@ list(
   ),
   # calculate beta dispersion
   tar_target(
-    name = nov_2023_bray_sample_name_beta_dispersion,
-    command = calculate_beta_dispersion(
-      nov_2023_bray_distance_matrix,
-      nov_2023_metadata,
-      column = "sample_name",
-      bias.adjust = TRUE,
-      levels = custom_order_sample_names
-    )
-  ),
-  tar_target(
     name = nov_2023_bray_labels_beta_dispersion,
     command = calculate_beta_dispersion(
-      nov_2023_bray_distance_matrix,
-      nov_2023_metadata,
+      nov_2023_bray_distance_matrix_merged,
+      nov_2023_metadata_merged,
       column = "label",
       bias.adjust = TRUE,
       levels = custom_order_labels
     )
   ),
   tar_target(
-    name = nov_2023_unifrac_sample_name_beta_dispersion,
-    command = calculate_beta_dispersion(
-      nov_2023_unifrac_distance_matrix,
-      nov_2023_metadata,
-      column = "sample_name",
-      bias.adjust = TRUE,
-      levels = custom_order_sample_names
-    )
-  ),
-  tar_target(
     name = nov_2023_unifrac_labels_beta_dispersion,
     command = calculate_beta_dispersion(
       nov_2023_unifrac_distance_matrix,
-      nov_2023_metadata,
+      nov_2023_metadata_merged,
       column = "label",
       bias.adjust = TRUE,
       levels = custom_order_labels
@@ -560,59 +529,27 @@ list(
   # permanova on distance matrix
   ## Bray
   tar_target(
-    name = nov_2023_bray_sample_name_permanova,
-    command = calculate_permanova(
-      nov_2023_bray_distance_matrix,
-      nov_2023_metadata,
-      columns = c("sample_name")
-    )
-  ),
-  tar_target(
-    name = nov_2023_pairwise_bray_sample_name_permanova,
-    command = calculate_pairwise_permanova(
-      nov_2023_bray_distance_matrix,
-      nov_2023_metadata,
-      columns = c("sample_name")
-    )
-  ),
-  tar_target(
     name = nov_2023_bray_labels_permanova,
     command = calculate_permanova(
-      nov_2023_bray_distance_matrix,
-      nov_2023_metadata,
+      nov_2023_bray_distance_matrix_merged,
+      nov_2023_metadata_merged,
       columns = c("label")
     )
   ),
   tar_target(
     name = nov_2023_pairwise_bray_labels_permanova,
     command = calculate_pairwise_permanova(
-      nov_2023_bray_distance_matrix,
-      nov_2023_metadata,
+      nov_2023_bray_distance_matrix_merged,
+      nov_2023_metadata_merged,
       columns = c("label")
     )
   ),
   ## unifrac
   tar_target(
-    name = nov_2023_unifrac_sample_name_permanova,
-    command = calculate_permanova(
-      nov_2023_unifrac_distance_matrix,
-      nov_2023_metadata,
-      columns = c("sample_name")
-    )
-  ),
-  tar_target(
-    name = nov_2023_pairwise_unifrac_sample_name_permanova,
-    command = calculate_pairwise_permanova(
-      nov_2023_unifrac_distance_matrix,
-      nov_2023_metadata,
-      columns = c("sample_name")
-    )
-  ),
-  tar_target(
     name = nov_2023_unifrac_labels_permanova,
     command = calculate_permanova(
       nov_2023_unifrac_distance_matrix,
-      nov_2023_metadata,
+      nov_2023_metadata_merged,
       columns = c("label")
     )
   ),
@@ -620,7 +557,7 @@ list(
     name = nov_2023_pairwise_unifrac_labels_permanova,
     command = calculate_pairwise_permanova(
       nov_2023_unifrac_distance_matrix,
-      nov_2023_metadata,
+      nov_2023_metadata_merged,
       columns = c("label")
     )
   ),

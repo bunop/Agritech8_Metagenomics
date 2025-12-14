@@ -542,55 +542,6 @@ similar Shannon diversity levels.
 
 Since the overall test is not significant, a post-hoc Dunn's test is not appropriate.
 :::
-# write the full table for dunn_shannon_sample_name
-write.xlsx(nov_2023_dunn_shannon_sample_name$res, file = here(data_path, "nov_2023-bacteria_dunn_shannon_sample_name.xlsx"))
-
-nov_2023_dunn_shannon_sample_name$res %>%
-  dplyr::filter(P.adj < 0.05) %>%
-  dplyr::arrange(P.adj)
-```
-
-Download the full [nov_2023-bacteria_dunn_shannon_sample_name.xlsx](07-november_2023-bacteria/nov_2023-bacteria_dunn_shannon_sample_name.xlsx) table.
-
-### By label
-
-```{r alpha-diversity_labels}
-#| label: alpha-diversity_labels
-#| description: Calculate and visualize alpha diversity metrics for labels.
-#| fig-caption: "Alpha diversity metrics for label"
-tar_load(nov_2023_alpha_diversity_by_labels, store = store_path)
-print(nov_2023_alpha_diversity_by_labels)
-```
-
-#### Shannon
-
-Perform Kruskal-Wallis tests to determine if the alpha diversity metrics are
-significantly different between the groups. Run on shannon metric:
-
-```{r kruscal_shannon_labels}
-#| label: kruscal_shannon_labels
-#| description: Perform Kruskal-Wallis tests on the Shannon ~ label
-tar_load(nov_2023_kruscal_shannon_labels, store = store_path)
-print(nov_2023_kruscal_shannon_labels)
-```
-
-This means that *at least* one group is significantly different in terms of
-Shannon diversity. Let's do a post-hoc test with Dunn's test to find significant
-differences between pairs:
-
-```{r dunn_shannon_labels}
-#| label: dunn_shannon_labels
-tar_load(nov_2023_dunn_shannon_labels, store = store_path)
-
-# write the full table for dunn_shannon_labels
-write.xlsx(nov_2023_dunn_shannon_labels$res, file = here(data_path, "nov_2023-bacteria_dunn_shannon_labels.xlsx"))
-
-nov_2023_dunn_shannon_labels$res %>%
-  dplyr::filter(P.adj < 0.05) %>%
-  dplyr::arrange(P.adj)
-```
-
-Download the full [nov_2023-bacteria_dunn_shannon_labels.xlsx](07-november_2023-bacteria/nov_2023-bacteria_dunn_shannon_labels.xlsx) table.
 
 ## Beta Diversity Metrics
 
@@ -614,11 +565,6 @@ Let's represent each metric in a section
 
 **Principal Coordinates Analysis (PCoA)** is an ordination technique used to visualize patterns in complex, high-dimensional data by projecting samples into a lower-dimensional space based on a distance matrix.
 
-##### PCoA plot by sample names
-
-Now we will plot a Bray-Curtis PCoA plot to visualize the technical replicates. See
-[CC186](https://www.youtube.com/watch?v=G5Qckqq5Erw) for more information.
-
 ```{r bray-pcoa}
 #| label: bray-pcoa
 # retrieve the PCoA object from targets
@@ -629,43 +575,8 @@ percent_explained <- nov_2023_bray_pcoa_object$percent_explained
 pcoa_df <- nov_2023_bray_pcoa_object$pcoa_df
 ```
 
-In the following pictures we are grouping by technical replicates
-
-```{r bray-pcoa-plot}
-#| label: bray-pcoa-plot
-# count the number of levels in the group column
-num_levels <- length(unique(nov_2023_metadata$sample_group))
-
-# Get the color palette
-color_palette <- Polychrome::palette36.colors(num_levels)
-names(color_palette) <- NULL  # Remove any names from the color palette
-
-# try to annotate plot
-pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
-labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
-            glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
-
-# plot the PCoA
-pcoa_plot_rep <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = sample_name)) +
-  ggplot2::geom_point(size = 4, alpha = 0.5) +
-  ggplot2::theme_minimal() +
-  ggplot2::ggtitle("PCoA Plot on Distance Metrics (Bray-Curtis)") +
-  ggplot2::labs(title = "PCoA of Bray-Curtis Distance Matrix",
-       color = NULL,
-       x = labels[1],
-       y = labels[2]) +
-  ggplot2::scale_color_manual(values = color_palette) +
-  ggplot2::theme(
-    legend.position = "bottom",       # Position the legend at the bottom
-    legend.box = "horizontal",        # Arrange legend items horizontally without a title
-  )
-
-print(pcoa_plot_rep)
-```
-
-##### PCoA plot by labels (sample replicates)
-
-Visualize the same plot but grouping by labels (which should group sample replicates)
+Display the PCoA plot form distinct samples. See
+[CC186](https://www.youtube.com/watch?v=G5Qckqq5Erw) for more information.
 
 ```{r bray-pcoa-labels}
 #| label: bray-pcoa-labels
@@ -742,61 +653,10 @@ targets::tar_load(nov_2023_bray_nmds_object, store = store_path)
 nmds_tb <- nov_2023_bray_nmds_object$nmds_tb
 jitter <- 0.05
 ```
-##### NMDS plot by sample names
-
-Let's plot the NMDS plot focusing on the technical replicates.
-see [CC187](https://www.youtube.com/watch?v=h7OrVmT7Ja8&ab_channel=RiffomonasProject)
-for more information.
-
-::: {.callout-warning}
-I've received a warning regarding the stress
-value, which is close to 0 and this can be determined by having not enough data,
-even if this value means a good fit for the NMDS.
-I've applied `0.05` of jitter (random noise) to points in order
-to clearly see them in the image.
-:::
-
-```{r bray-nmds-plot}
-#| label: bray-nmds-plot
-#| fig.width: 10
-#| fig.height: 8
-
-# count the number of levels in the group column
-num_levels <- length(unique(nov_2023_metadata$sample_group))
-
-# Get the color palette
-color_palette <- Polychrome::palette36.colors(num_levels)
-names(color_palette) <- NULL  # Remove any names from the color palette
-
-# Use palette36 from Polychrome, which supports up to 36 colors
-nmds_plot_rep <- ggplot2::ggplot(
-    nmds_tb,
-    ggplot2::aes(x = NMDS1, y = NMDS2, color = sample_name, shape = condition)) +
-  ggplot2::geom_jitter(size = 4, alpha = 0.5, width = jitter, height = jitter) +
-  ggplot2::theme_minimal() +
-  ggplot2::labs(
-    title = "NMDS Plot on distance metrics (Bray-Curtis)",
-    color = NULL,
-    shape = NULL) +
-  ggplot2::scale_color_manual(values = color_palette) +
-  ggplot2::theme(
-    legend.position = "bottom",       # Position the legend at the bottom
-    legend.box = "horizontal",        # Arrange legend items horizontally without a title
-  )
-
-print(nmds_plot_rep)
-```
-
-::: {.callout-tip}
-This type of graph is more informative with indexes which use phylogenetic information:
-take a look at [Unweighted UniFrac - NMDS plot by sample names](#unifrac-nmds-sample-names)
-and [Weighted UniFrac - NMDS plot by sample names](#wunifrac-nmds-sample-names)
-:::
-
-##### NMDS plot by labels (sample replicates)
 
 Now, let's visualize the NMDS plot but grouping by labels
-(which should group sample replicates)
+(which should group sample replicates). See [CC187](https://www.youtube.com/watch?v=h7OrVmT7Ja8&ab_channel=RiffomonasProject)
+for more information.
 
 ::: {.callout-warning}
 I've received a warning regarding the stress
@@ -835,28 +695,6 @@ and [Weighted UniFrac - NMDS plot by labels](#wunifrac-nmds-labels)
 
 #### Between group distances
 
-##### sample_name distances
-
-Plot distances by sample names:
-
-```{r bray-sample_name_distances}
-#| label: bray-sample_name_distances
-#| title: Distance matrix by sample names
-#| description: Plot the distance matrix by sample names
-#| fig.width: 10
-#| fig.height: 8
-#| fig.align: center
-tar_load(nov_2023_bray_distance_by_sample_name, store = store_path)
-write.xlsx(nov_2023_bray_distance_by_sample_name, file = here(data_path, "nov_2023-bacteria_bray_distance_by_sample_name.xlsx"))
-
-tar_load(nov_2023_bray_distance_by_sample_name_plot, store = store_path)
-print(nov_2023_bray_distance_by_sample_name_plot)
-```
-
-Download the full [nov_2023-bacteria_bray_distance_by_sample_name.xlsx](07-november_2023-bacteria/nov_2023-bacteria_bray_distance_by_sample_name.xlsx) table.
-
-##### labels distances
-
 Plot distances by labels:
 
 ```{r bray-labels_distances}
@@ -887,76 +725,7 @@ ecological patterns present in your data. For unbalanced designs PERMANOVA and A
 2. too conservative if the larger group had greater dispersion.
 
 This result was especially so for ANOSIM (see [here](https://stats.stackexchange.com/a/316386/451801)
-for more information)
-
-##### sample_name permanova
-
-Calculate beta dispersion for *sample_name* column:
-
-```{r bray-sample_name_beta_dispersion}
-#| label: bray-sample_name_beta_dispersion
-#| title: Beta dispersion by sample names
-#| description: Calculate beta dispersion by sample names
-tar_load(nov_2023_bray_sample_name_beta_dispersion, store = store_path)
-print(nov_2023_bray_sample_name_beta_dispersion$anova_result)
-```
-
-Since we don't see any significant differences in dispersion, we can proceed
-with the PERMANOVA analysis. Plot beta dispersion:
-
-```{r bray-sample_name_beta_dispersion_plot}
-#| label: bray-sample_name_beta_dispersion_plot
-#| title: Beta dispersion plot by sample names
-#| description: Plot beta dispersion by sample names
-#| fig.width: 10
-#| fig.height: 8
-#| fig.align: center
-# Create the boxplot
-ggplot(
-    nov_2023_bray_sample_name_beta_dispersion$beta_disp_df,
-    aes(x = Group, y = Distance, fill = Group)
-  ) +
-  geom_boxplot() +
-  geom_jitter(width = 0.2, alpha = 0.5) +  # Adds individual data points
-  labs(
-    title = "Bray-Curtis Beta Dispersion by Group",
-    x = "Group",
-    y = "Distance to Centroid"
-  ) +
-  theme_minimal() +
-  ggplot2::theme(
-    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
-  )
-```
-
-Do permanova with *bray-curtis* on *sample_name* column:
-
-```{r bray-sample_name_permanova}
-#| label: bray-sample_name_permanova
-# load the permanova with targets
-targets::tar_load(nov_2023_bray_sample_name_permanova, store = store_path)
-print(nov_2023_bray_sample_name_permanova)
-```
-
-Load the *pairwise* permanova on the same columns and filter only significant
-values (P.adj < 0.05):
-
-```{r bray-pairwise_sample_name_permanova}
-#| label: bray-pairwise_sample_name_permanova
-# load the permanova with targets
-targets::tar_load(nov_2023_pairwise_bray_sample_name_permanova, store = store_path)
-write.xlsx(nov_2023_pairwise_bray_sample_name_permanova, file = here(data_path, "nov_2023-bacteria_pairwise_bray_sample_name_permanova.xlsx"))
-
-nov_2023_pairwise_bray_sample_name_permanova %>%
-  dplyr::filter(P.adj < 0.05) %>%
-  dplyr::arrange(P.adj) %>%
-  dplyr::select(Comparison, P.adj, everything())
-```
-
-No comparison has been filtered for *sample_name* column.
-Download the full [nov_2023-bacteria_pairwise_bray_sample_name_permanova.xlsx](07-november_2023-bacteria/nov_2023-bacteria_pairwise_bray_sample_name_permanova.xlsx) table.
-
-##### labels permanova
+for more information).
 
 Calculate beta dispersion for *labels* column:
 
@@ -1026,9 +795,7 @@ Download the full [nov_2023-bacteria_pairwise_bray_labels_permanova.xlsx](07-nov
 
 ### Jaccard {#jaccard}
 
-#### PCoA plot by sample names
-
-Now we will plot a Jaccard PCoA plot to visualize the technical replicates. See
+Now we will plot a Jaccard PCoA plot to visualize samples. See
 [CC186](https://www.youtube.com/watch?v=G5Qckqq5Erw) for more information.
 
 ```{r jaccard-pcoa}
@@ -1040,42 +807,6 @@ pcoa_results <- nov_2023_jaccard_pcoa_object$pcoa_results
 percent_explained <- nov_2023_jaccard_pcoa_object$percent_explained
 pcoa_df <- nov_2023_jaccard_pcoa_object$pcoa_df
 ```
-
-In the following pictures we are grouping by technical replicates
-
-```{r jaccard-pcoa-plot}
-#| label: jaccard-pcoa-plot
-# count the number of levels in the group column
-num_levels <- length(unique(nov_2023_metadata$sample_group))
-
-# Get the color palette
-color_palette <- Polychrome::palette36.colors(num_levels)
-names(color_palette) <- NULL  # Remove any names from the color palette
-
-# try to annotate plot
-pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
-labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
-            glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
-
-# plot the PCoA
-pcoa_plot_rep <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = sample_name)) +
-  ggplot2::geom_point(size = 4, alpha = 0.5) +
-  ggplot2::theme_minimal() +
-  ggplot2::ggtitle("PCoA Plot on Distance Metrics (Jaccard)") +
-  ggplot2::labs(title = "PCoA of Jaccard Distance Matrix",
-       color = NULL,
-       x = labels[1],
-       y = labels[2]) +
-  ggplot2::scale_color_manual(values = color_palette) +
-  ggplot2::theme(
-    legend.position = "bottom",       # Position the legend at the bottom
-    legend.box = "horizontal",        # Arrange legend items horizontally without a title
-  )
-
-print(pcoa_plot_rep)
-```
-
-#### PCoA plot by labels (sample replicates)
 
 Visualize the same plot but grouping with labels (which should group sample replicates)
 
@@ -1155,58 +886,6 @@ targets::tar_load(nov_2023_jaccard_nmds_object, store = store_path)
 nmds_tb <- nov_2023_jaccard_nmds_object$nmds_tb
 jitter <- 0.05
 ```
-##### NMDS plot by sample names
-
-Let's plot the NMDS plot focusing on the technical replicates.
-see [CC187](https://www.youtube.com/watch?v=h7OrVmT7Ja8&ab_channel=RiffomonasProject)
-for more information.
-
-::: {.callout-warning}
-I've received a warning regarding the stress
-value, which is close to 0 and this can be determined by having not enough data,
-even if this value means a good fit for the NMDS.
-I've applied `0.05` of jitter (random noise) to points in order
-to clearly see them in the image.
-:::
-
-```{r jaccard-nmds-plot}
-#| label: jaccard-nmds-plot
-#| fig.width: 10
-#| fig.height: 8
-
-# count the number of levels in the group column
-num_levels <- length(unique(nov_2023_metadata$sample_group))
-
-# Get the color palette
-color_palette <- Polychrome::palette36.colors(num_levels)
-names(color_palette) <- NULL  # Remove any names from the color palette
-
-# Use palette36 from Polychrome, which supports up to 36 colors
-nmds_plot_rep <- ggplot2::ggplot(
-    nmds_tb,
-    ggplot2::aes(x = NMDS1, y = NMDS2, color = sample_name, shape = condition)) +
-  ggplot2::geom_jitter(size = 4, alpha = 0.5, width = jitter, height = jitter) +
-  ggplot2::theme_minimal() +
-  ggplot2::labs(
-    title = "NMDS Plot on distance metrics (Jaccard)",
-    color = NULL,
-    shape = NULL) +
-  ggplot2::scale_color_manual(values = color_palette) +
-  ggplot2::theme(
-    legend.position = "bottom",       # Position the legend at the bottom
-    legend.box = "horizontal",        # Arrange legend items horizontally without a title
-  )
-
-print(nmds_plot_rep)
-```
-
-::: {.callout-tip}
-This type of graph is more informative with indexes which use phylogenetic information:
-take a look at [Unweighted UniFrac - NMDS plot by sample names](#unifrac-nmds-sample-names)
-and [Weighted UniFrac - NMDS plot by sample names](#wunifrac-nmds-sample-names)
-:::
-
-##### NMDS plot by labels (sample replicates)
 
 Now, let's visualize the NMDS plot but grouping by labels
 (which should group sample replicates)
@@ -1248,8 +927,6 @@ and [Weighted UniFrac - NMDS plot by labels](#wunifrac-nmds-labels)
 
 ### Unweighted UniFrac {#unifrac}
 
-#### PCoA plot by sample names
-
 Now we will plot a Unweighted Unifrac PCoA plot to visualize the technical replicates. See
 [CC186](https://www.youtube.com/watch?v=G5Qckqq5Erw) for more information.
 
@@ -1263,43 +940,7 @@ percent_explained <- nov_2023_unifrac_pcoa_object$percent_explained
 pcoa_df <- nov_2023_unifrac_pcoa_object$pcoa_df
 ```
 
-In the following pictures we are grouping by technical replicates
-
-```{r unifrac-pcoa-plot}
-#| label: unifrac-pcoa-plot
-# count the number of levels in the group column
-num_levels <- length(unique(nov_2023_metadata$sample_group))
-
-# Get the color palette
-color_palette <- Polychrome::palette36.colors(num_levels)
-names(color_palette) <- NULL  # Remove any names from the color palette
-
-# try to annotate plot
-pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
-labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
-            glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
-
-# plot the PCoA
-pcoa_plot_rep <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = sample_name)) +
-  ggplot2::geom_point(size = 4, alpha = 0.5) +
-  ggplot2::theme_minimal() +
-  ggplot2::ggtitle("PCoA Plot on Distance Metrics (Unweighted Unifrac)") +
-  ggplot2::labs(title = "PCoA of Unweighted Unifrac Distance Matrix",
-       color = NULL,
-       x = labels[1],
-       y = labels[2]) +
-  ggplot2::scale_color_manual(values = color_palette) +
-  ggplot2::theme(
-    legend.position = "bottom",       # Position the legend at the bottom
-    legend.box = "horizontal",        # Arrange legend items horizontally without a title
-  )
-
-print(pcoa_plot_rep)
-```
-
-#### PCoA plot by labels (sample replicates)
-
-Visualize the same plot but grouping with labels (which should group sample replicates)
+Visualize a plot but grouping with labels (which should group sample replicates)
 
 ```{r unifrac-pcoa-labels}
 #| label: unifrac-pcoa-labels
@@ -1377,45 +1018,6 @@ targets::tar_load(nov_2023_unifrac_nmds_object, store = store_path)
 nmds_tb <- nov_2023_unifrac_nmds_object$nmds_tb
 ```
 
-##### NMDS plot by sample names {#unifrac-nmds-sample-names}
-
-Let's plot the NMDS plot focusing on the technical replicates.
-see [CC187](https://www.youtube.com/watch?v=h7OrVmT7Ja8&ab_channel=RiffomonasProject)
-for more information.
-
-```{r unifrac-nmds-plot}
-#| label: unifrac-nmds-plot
-#| fig.width: 10
-#| fig.height: 8
-
-# count the number of levels in the group column
-num_levels <- length(unique(nov_2023_metadata$sample_group))
-
-# Get the color palette
-color_palette <- Polychrome::palette36.colors(num_levels)
-names(color_palette) <- NULL  # Remove any names from the color palette
-
-# Use palette36 from Polychrome, which supports up to 36 colors
-nmds_plot_rep <- ggplot2::ggplot(
-    nmds_tb,
-    ggplot2::aes(x = NMDS1, y = NMDS2, color = sample_name, shape = condition)) +
-  ggplot2::geom_point(size = 4, alpha = 0.5) +
-  ggplot2::theme_minimal() +
-  ggplot2::labs(
-    title = "NMDS Plot on distance metrics (Unweigthed Unifrac)",
-    color = NULL,
-    shape = NULL) +
-  ggplot2::scale_color_manual(values = color_palette) +
-  ggplot2::theme(
-    legend.position = "bottom",       # Position the legend at the bottom
-    legend.box = "horizontal",        # Arrange legend items horizontally without a title
-  )
-
-print(nmds_plot_rep)
-```
-
-##### NMDS plot by labels (sample replicates) {#unifrac-nmds-labels}
-
 Now, let's visualize the NMDS plot but grouping with labels
 (which should group sample replicates)
 
@@ -1441,28 +1043,6 @@ print(nmds_plot)
 ```
 
 #### Between group distances
-
-##### sample_name distances
-
-Plot distances by sample names:
-
-```{r unifrac-sample_name_distances}
-#| label: unifrac-sample_name_distances
-#| title: Distance matrix by sample names
-#| description: Plot the distance matrix by sample names
-#| fig.width: 10
-#| fig.height: 8
-#| fig.align: center
-tar_load(nov_2023_unifrac_distance_by_sample_name, store = store_path)
-write.xlsx(nov_2023_unifrac_distance_by_sample_name, file = here(data_path, "nov_2023-bacteria_unifrac_distance_by_sample_name.xlsx"))
-
-tar_load(nov_2023_unifrac_distance_by_sample_name_plot, store = store_path)
-print(nov_2023_unifrac_distance_by_sample_name_plot)
-```
-
-Download the full [nov_2023-bacteria_unifrac_distance_by_sample_name.xlsx](07-november_2023-bacteria/nov_2023-bacteria_unifrac_distance_by_sample_name.xlsx) table.
-
-##### labels distances
 
 Plot distances by labels:
 
@@ -1495,75 +1075,6 @@ ecological patterns present in your data. For unbalanced designs PERMANOVA and A
 
 This result was especially so for ANOSIM (see [here](https://stats.stackexchange.com/a/316386/451801)
 for more information)
-
-##### sample_name permanova
-
-Calculate beta dispersion for *sample_name* column:
-
-```{r unifrac-sample_name_beta_dispersion}
-#| label: unifrac-sample_name_beta_dispersion
-#| title: Beta dispersion by sample names
-#| description: Calculate beta dispersion by sample names
-tar_load(nov_2023_unifrac_sample_name_beta_dispersion, store = store_path)
-print(nov_2023_unifrac_sample_name_beta_dispersion$anova_result)
-```
-
-Since we don't see any significant differences in dispersion, we can proceed
-with the PERMANOVA analysis. Plot beta dispersion:
-
-```{r unifrac-sample_name_beta_dispersion_plot}
-#| label: unifrac-sample_name_beta_dispersion_plot
-#| title: Beta dispersion plot by sample names
-#| description: Plot beta dispersion by sample names
-#| fig.width: 10
-#| fig.height: 8
-#| fig.align: center
-# Create the boxplot
-ggplot(
-    nov_2023_unifrac_sample_name_beta_dispersion$beta_disp_df,
-    aes(x = Group, y = Distance, fill = Group)
-  ) +
-  geom_boxplot() +
-  geom_jitter(width = 0.2, alpha = 0.5) +  # Adds individual data points
-  labs(
-    title = "unifrac-Curtis Beta Dispersion by Group",
-    x = "Group",
-    y = "Distance to Centroid"
-  ) +
-  theme_minimal() +
-  ggplot2::theme(
-    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
-  )
-```
-
-Do permanova with *unifrac-curtis* on *sample_name* column:
-
-```{r unifrac-sample_name_permanova}
-#| label: unifrac-sample_name_permanova
-# load the permanova with targets
-targets::tar_load(nov_2023_unifrac_sample_name_permanova, store = store_path)
-print(nov_2023_unifrac_sample_name_permanova)
-```
-
-Load the *pairwise* permanova on the same columns and filter only significant
-values (P.adj < 0.05):
-
-```{r unifrac-pairwise_sample_name_permanova}
-#| label: unifrac-pairwise_sample_name_permanova
-# load the permanova with targets
-targets::tar_load(nov_2023_pairwise_unifrac_sample_name_permanova, store = store_path)
-write.xlsx(nov_2023_pairwise_unifrac_sample_name_permanova, file = here(data_path, "nov_2023-bacteria_pairwise_unifrac_sample_name_permanova.xlsx"))
-
-nov_2023_pairwise_unifrac_sample_name_permanova %>%
-  dplyr::filter(P.adj < 0.05) %>%
-  dplyr::arrange(P.adj) %>%
-  dplyr::select(Comparison, P.adj, everything())
-```
-
-No comparison has been filtered for *sample_name* column.
-Download the full [nov_2023-bacteria_pairwise_unifrac_sample_name_permanova.xlsx](07-november_2023-bacteria/nov_2023-bacteria_pairwise_unifrac_sample_name_permanova.xlsx) table.
-
-##### labels permanova
 
 Calculate beta dispersion for *labels* column:
 
@@ -1633,11 +1144,6 @@ Download the full [nov_2023-bacteria_pairwise_unifrac_labels_permanova.xlsx](07-
 
 ### Weighted UniFrac {#wunifrac}
 
-#### PCoA plot by sample names
-
-Now we will plot a Weighted Unifrac PCoA plot to visualize the technical replicates. See
-[CC186](https://www.youtube.com/watch?v=G5Qckqq5Erw) for more information.
-
 ```{r wunifrac-pcoa}
 #| label: wunifrac-pcoa
 # retrieve the PCoA object from targets
@@ -1648,43 +1154,7 @@ percent_explained <- nov_2023_wunifrac_pcoa_object$percent_explained
 pcoa_df <- nov_2023_wunifrac_pcoa_object$pcoa_df
 ```
 
-In the following pictures we are grouping by technical replicates
-
-```{r wunifrac-pcoa-plot}
-#| label: wunifrac-pcoa-plot
-# count the number of levels in the group column
-num_levels <- length(unique(nov_2023_metadata$sample_group))
-
-# Get the color palette
-color_palette <- Polychrome::palette36.colors(num_levels)
-names(color_palette) <- NULL  # Remove any names from the color palette
-
-# try to annotate plot
-pretty_pe <- format(round(percent_explained, digits = 1), nsmall = 1, trim = TRUE)
-labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
-            glue::glue("PCo Axis 2 ({pretty_pe[2]}%)"))
-
-# plot the PCoA
-pcoa_plot_rep <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = sample_name)) +
-  ggplot2::geom_point(size = 4, alpha = 0.5) +
-  ggplot2::theme_minimal() +
-  ggplot2::ggtitle("PCoA Plot on Distance Metrics (Weighted Unifrac)") +
-  ggplot2::labs(title = "PCoA of Weighted Unifrac Distance Matrix",
-       color = NULL,
-       x = labels[1],
-       y = labels[2]) +
-  ggplot2::scale_color_manual(values = color_palette) +
-  ggplot2::theme(
-    legend.position = "bottom",       # Position the legend at the bottom
-    legend.box = "horizontal",        # Arrange legend items horizontally without a title
-  )
-
-print(pcoa_plot_rep)
-```
-
-#### PCoA plot by labels (sample replicates)
-
-Visualize the same plot but grouping with labels (which should group sample replicates)
+Visualize a plot but grouping with labels (which should group sample replicates)
 
 ```{r wunifrac-pcoa-labels}
 #| label: wunifrac-pcoa-labels
@@ -1761,44 +1231,6 @@ targets::tar_load(nov_2023_wunifrac_nmds_object, store = store_path)
 # get the tibble object
 nmds_tb <- nov_2023_wunifrac_nmds_object$nmds_tb
 ```
-##### NMDS plot by sample names {#wunifrac-nmds-sample-names}
-
-Let's plot the NMDS plot focusing on the technical replicates.
-see [CC187](https://www.youtube.com/watch?v=h7OrVmT7Ja8&ab_channel=RiffomonasProject)
-for more information.
-
-```{r wunifrac-nmds-plot}
-#| label: wunifrac-nmds-plot
-#| fig.width: 10
-#| fig.height: 8
-
-# count the number of levels in the group column
-num_levels <- length(unique(nov_2023_metadata$sample_group))
-
-# Get the color palette
-color_palette <- Polychrome::palette36.colors(num_levels)
-names(color_palette) <- NULL  # Remove any names from the color palette
-
-# Use palette36 from Polychrome, which supports up to 36 colors
-nmds_plot_rep <- ggplot2::ggplot(
-    nmds_tb,
-    ggplot2::aes(x = NMDS1, y = NMDS2, color = sample_name, shape = condition)) +
-  ggplot2::geom_point(size = 4, alpha = 0.5) +
-  ggplot2::theme_minimal() +
-  ggplot2::labs(
-    title = "NMDS Plot on distance metrics (Weigthed Unifrac)",
-    color = NULL,
-    shape = NULL) +
-  ggplot2::scale_color_manual(values = color_palette) +
-  ggplot2::theme(
-    legend.position = "bottom",       # Position the legend at the bottom
-    legend.box = "horizontal",        # Arrange legend items horizontally without a title
-  )
-
-print(nmds_plot_rep)
-```
-
-##### NMDS plot by labels (sample replicates) {#wunifrac-nmds-labels}
 
 Now, let's visualize the NMDS plot but grouping with labels
 (which should group sample replicates)
