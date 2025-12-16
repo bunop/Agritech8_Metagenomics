@@ -150,10 +150,10 @@ using beta-dispersion on Bray-Curtis distances:
 
 ```{r tech-rep-beta-dispersion}
 #| label: tech-rep-beta-dispersion
-tar_load(nov_2023_bray_sample_name_beta_dispersion, store = store_path)
+tar_load(nov_2023_bray_tech_rep_beta_dispersion, store = store_path)
 
 # Summary statistics per biological replicate
-tech_rep_summary <- nov_2023_bray_sample_name_beta_dispersion$beta_disp_df |>
+tech_rep_summary <- nov_2023_bray_tech_rep_beta_dispersion$beta_disp_df |>
   group_by(Group) |>
   summarise(
     n_tech_reps = n(),
@@ -171,7 +171,7 @@ tech_rep_summary
 ```{r tech-rep-anova}
 #| label: tech-rep-anova
 # ANOVA tests if technical variability differs across biological replicates
-print(nov_2023_bray_sample_name_beta_dispersion$anova_result)
+print(nov_2023_bray_tech_rep_beta_dispersion$anova_result)
 ```
 
 **Interpretation:**
@@ -192,7 +192,7 @@ Display the beta-dispersion plot:
 #| fig-width: 12
 #| fig-height: 8
 ggplot(
-  nov_2023_bray_sample_name_beta_dispersion$beta_disp_df,
+  nov_2023_bray_tech_rep_beta_dispersion$beta_disp_df,
   aes(x = Group, y = Distance, fill = Group)
 ) +
   geom_boxplot(alpha = 0.7) +

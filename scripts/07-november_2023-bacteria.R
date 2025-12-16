@@ -109,21 +109,13 @@ list(
       custom_order_labels
     )
   ),
-  # extract the sample names from the metadata in the same order
-  # of custom labels
-  tar_target(
-    name = custom_order_sample_names,
-    command = nov_2023_metadata %>%
-      dplyr::distinct(sample_name) %>%
-      dplyr::pull(sample_name) %>%
-      as.character()
-  ),
   # open the phyloseq object
   tar_target(
     name = phyloseq_path,
     command = here::here("results-bacteria", "phyloseq", "dada2_phyloseq.rds"),
     format = "file"
   ),
+  # this phyloseq object has no trees and hasn't be selected for the samples I want
   tar_target(
     name = phyloseq_obj,
     command = load_phyloseq(metadata, phyloseq_path)
@@ -161,6 +153,7 @@ list(
     )
   ),
   # now order the samples in the phyloseq object using the sorted_metadata
+  # this will be the phyloseq object used to merge replicates
   tar_target(
     name = nov_2023_phyloseq_obj,
     command = sort_phyloseq(
@@ -199,33 +192,44 @@ list(
   ),
   # calculate bray distances to perform a permanova on technical replicates
   tar_target(
-    name = nov_2023_bray_distance_matrices,
+    name = nov_2023_bray_distance_matrices_replicates,
     command = calculate_distance_matrix(nov_2023_phyloseq_obj_rarefied, method = "bray"),
     pattern = map(nov_2023_phyloseq_obj_rarefied),
     iteration = "list"
   ),
   tar_target(
-    name = nov_2023_bray_distance_matrix,
+    name = nov_2023_bray_distance_matrix_replicates,
     command = as.dist(
-      Reduce("+", nov_2023_bray_distance_matrices) / length(nov_2023_bray_distance_matrices)
-    )
-  ),
-  # calculate distances between technical replicates
-  tar_target(
-    name = nov_2023_tech_rep_distances,
-    command = calculate_technical_replicate_distances(
-      nov_2023_bray_distance_matrix,
-      nov_2023_metadata,
-      group_column = "sample_group"
+      Reduce("+", nov_2023_bray_distance_matrices_replicates) / length(nov_2023_bray_distance_matrices_replicates)
     )
   ),
   # a permanova to test if technical replicates are different
   tar_target(
     name = nov_2023_tech_rep_permanova,
     command = calculate_permanova(
-      nov_2023_bray_distance_matrix,
+      nov_2023_bray_distance_matrix_replicates,
       nov_2023_metadata,
       columns = c("sample_group", "technical_rep")
+    )
+  ),
+  # calculate distances between technical replicates
+  tar_target(
+    name = nov_2023_tech_rep_distances,
+    command = calculate_technical_replicate_distances(
+      nov_2023_bray_distance_matrix_replicates,
+      nov_2023_metadata,
+      group_column = "sample_group"
+    )
+  ),
+  # calculate beta dispersion between technical replicates
+  tar_target(
+    name = nov_2023_bray_tech_rep_beta_dispersion,
+    command = calculate_beta_dispersion(
+      nov_2023_bray_distance_matrix_replicates,
+      nov_2023_metadata,
+      column = "label",
+      bias.adjust = TRUE,
+      levels = custom_order_labels
     )
   ),
   # merge technical replicates
@@ -244,7 +248,8 @@ list(
       )
     }
   ),
-  # then merge phyloseq object
+  # then merge phyloseq object: this will be the phyloseq object used in all
+  # remaining analyses
   tar_target(
     name = nov_2023_phyloseq_obj_merged,
     command = merge_technical_replicates(
@@ -324,7 +329,7 @@ list(
     name = nov_2023_otu_table_matrix,
     command = get_otu_table(nov_2023_phyloseq_obj_merged)
   ),
-  # deal with rarefaction curves
+  # deal with rarefaction curves (tables comes from merged objects)
   tar_target(
     name = nov_2023_rarecurve_df,
     command = calculate_rarecurve(nov_2023_otu_table_matrix)
@@ -389,15 +394,15 @@ list(
   ),
   # I need to recalculate distance matrices on rarefied merged data
   tar_target(
-    name = nov_2023_bray_distance_matrices_merged,
+    name = nov_2023_bray_distance_matrices,
     command = calculate_distance_matrix(nov_2023_phyloseq_obj_merged_rarefied, method = "bray"),
     pattern = map(nov_2023_phyloseq_obj_merged_rarefied),
     iteration = "list"
   ),
   tar_target(
-    name = nov_2023_bray_distance_matrix_merged,
+    name = nov_2023_bray_distance_matrix,
     command = as.dist(
-      Reduce("+", nov_2023_bray_distance_matrices_merged) / length(nov_2023_bray_distance_matrices_merged)
+      Reduce("+", nov_2023_bray_distance_matrices) / length(nov_2023_bray_distance_matrices)
     )
   ),
   # calculate other distance metrics
@@ -447,7 +452,7 @@ list(
   # PCoA
   tar_target(
     name = nov_2023_bray_pcoa_object,
-    command = calculate_pcoa(nov_2023_bray_distance_matrix_merged, nov_2023_metadata_merged)
+    command = calculate_pcoa(nov_2023_bray_distance_matrix, nov_2023_metadata_merged)
   ),
   tar_target(
     name = nov_2023_jaccard_pcoa_object,
@@ -464,7 +469,7 @@ list(
   # NMDS
   tar_target(
     name = nov_2023_bray_nmds_object,
-    command = calculate_nmds(nov_2023_bray_distance_matrix_merged, nov_2023_metadata_merged)
+    command = calculate_nmds(nov_2023_bray_distance_matrix, nov_2023_metadata_merged)
   ),
   tar_target(
     name = nov_2023_jaccard_nmds_object,
@@ -483,7 +488,7 @@ list(
   tar_target(
     name = nov_2023_bray_distance_by_labels,
     command = get_distances(
-      nov_2023_bray_distance_matrix_merged,
+      nov_2023_bray_distance_matrix,
       nov_2023_metadata_merged,
       column = "label"
     )
@@ -509,7 +514,7 @@ list(
   tar_target(
     name = nov_2023_bray_labels_beta_dispersion,
     command = calculate_beta_dispersion(
-      nov_2023_bray_distance_matrix_merged,
+      nov_2023_bray_distance_matrix,
       nov_2023_metadata_merged,
       column = "label",
       bias.adjust = TRUE,
@@ -531,7 +536,7 @@ list(
   tar_target(
     name = nov_2023_bray_labels_permanova,
     command = calculate_permanova(
-      nov_2023_bray_distance_matrix_merged,
+      nov_2023_bray_distance_matrix,
       nov_2023_metadata_merged,
       columns = c("label")
     )
@@ -539,7 +544,7 @@ list(
   tar_target(
     name = nov_2023_pairwise_bray_labels_permanova,
     command = calculate_pairwise_permanova(
-      nov_2023_bray_distance_matrix_merged,
+      nov_2023_bray_distance_matrix,
       nov_2023_metadata_merged,
       columns = c("label")
     )
