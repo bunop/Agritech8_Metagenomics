@@ -1,14 +1,14 @@
 #!/bin/bash
-#SBATCH --job-name=november_2023-fungi
+#SBATCH --job-name=november_2023-bacteria
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32gb
-#SBATCH --output=november_2023-fungi-%j.out
+#SBATCH --output=november_2023-bacteria-%j.out
 
 eval "$(conda shell.bash hook)"
 conda activate R-4.5
 
-export TAR_PROJECT="november_2023-fungi"
+export TAR_PROJECT="november_2023-bacteria"
 
 # execute the tar_make command
 if ! Rscript -e "targets::tar_make()"; then
@@ -21,3 +21,5 @@ if ! Rscript -e "targets::tar_prune()"; then
     echo "Error: tar_prune command failed."
     exit 1
 fi
+
+echo "November 2023 bacteria completed successfully."

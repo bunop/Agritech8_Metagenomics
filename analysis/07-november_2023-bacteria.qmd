@@ -4,7 +4,7 @@ author: "Paolo Cozzi"
 date: today
 toc: true
 number-sections: true
-cache: true
+cache: false
 format:
   html:
     code-line-numbers: true
@@ -92,8 +92,8 @@ depth_plot <- ggplot2::ggplot(
        y = "Number of Reads",
        fill = "Group") + # legend name for fill color
   theme(axis.text.x = element_text(
-    angle = 90, 
-    hjust = 1, 
+    angle = 90,
+    hjust = 1,
     vjust = 0.5,
     margin = ggplot2::margin(b = 7)
   ))
@@ -163,9 +163,9 @@ ggplot2::ggplot(nov_2023_melted_phylum, ggplot2::aes(x = sampleID, y = Abundance
   ) +
   ggplot2::theme_bw() +
   ggplot2::theme(axis.text.x = ggplot2::element_text(
-    angle = 90, 
+    angle = 90,
     hjust = -1,
-    vjust = 0.5, 
+    vjust = 0.5,
     margin = ggplot2::margin(b = 10)
   ))
 ```
