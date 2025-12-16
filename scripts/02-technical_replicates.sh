@@ -1,14 +1,14 @@
 #!/bin/bash
-#SBATCH --job-name=duckweed_and_box
+#SBATCH --job-name=technical_replicates
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --mem=32gb
-#SBATCH --output=duckweed_and_box-%j.out
+#SBATCH --output=technical_replicates-%j.out
 
 eval "$(conda shell.bash hook)"
 conda activate R-4.5
 
-export TAR_PROJECT="duckweed_and_box"
+export TAR_PROJECT="technical_replicates"
 
 # execute the tar_make command
 if ! Rscript -e "targets::tar_make()"; then
@@ -21,3 +21,5 @@ if ! Rscript -e "targets::tar_prune()"; then
     echo "Error: tar_prune command failed."
     exit 1
 fi
+
+echo "Technical replicates completed successfully."

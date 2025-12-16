@@ -85,27 +85,42 @@ list(
     format = "file"
   ),
   tar_target(
-    name = phyloseq_object,
+    name = phyloseq_obj,
     command = load_phyloseq(metadata, phyloseq_path)
   ),
   tar_target(
     name = otu_table_matrix,
-    command = get_otu_table(phyloseq_object)
+    command = get_otu_table(phyloseq_obj)
   ),
   tar_target(
     name = samples_data,
-    command = get_samples_data(phyloseq_object)
+    command = get_samples_data(phyloseq_obj)
   ),
   tar_target(
     name = coverage_stats,
     command = calculate_coverage_stats(otu_table_matrix)
   ),
+  # Perform rarefaction across multiple iterations
+  tar_target(
+    name = phyloseq_obj_rarefied,
+    command = rarefy_phyloseq_object(
+      phyloseq_obj,
+      rarefaction_depth,
+    ),
+    pattern = map(thousand_iterations),
+    iteration = "list"
+  ),
+  # calculate bray distances to perform a permanova on technical replicates
+  tar_target(
+    name = bray_distance_matrices,
+    command = calculate_distance_matrix(phyloseq_obj_rarefied, method = "bray"),
+    pattern = map(phyloseq_obj_rarefied),
+    iteration = "list"
+  ),
   tar_target(
     name = bray_distance_matrix,
-    command = calculate_distance_matrix(
-      otu_table_matrix,
-      min_sequencing_depth = rarefaction_depth,
-      dmethod = "bray"
+    command = as.dist(
+      Reduce("+", bray_distance_matrices) / length(bray_distance_matrices)
     )
   ),
   tar_target(
@@ -120,7 +135,7 @@ list(
   tar_target(
     name = melted_phylum,
     command = agglomerate_by_taxa(
-      phyloseq_object,
+      phyloseq_obj,
       taxrank = "Phylum",
       sample_order = metadata$sampleID
     )
@@ -128,14 +143,14 @@ list(
   tar_target(
     name = melted_class,
     command = agglomerate_by_taxa(
-      phyloseq_object,
+      phyloseq_obj,
       taxrank = "Class",
       sample_order = metadata$sampleID
     )
   ),
   tar_target(
     name = ampvis2_object,
-    command = phyloseq_to_ampvis2(phyloseq_object)
+    command = phyloseq_to_ampvis2(phyloseq_obj)
   ),
   tar_target(
     name = heatmap_phylum,
@@ -158,7 +173,7 @@ list(
   # deal with rarefaction curves
   tar_target(
     rarefaction_depth,
-    min(sample_sums(phyloseq_object))
+    min(sample_sums(phyloseq_obj))
   ),
   tar_target(
     name = rarecurve_df,
@@ -232,7 +247,7 @@ list(
   tar_target(
     name = samples_rarefaction,
     command = rarefy_alpha(
-      phyloseq_object,
+      phyloseq_obj,
       rarefaction_depth,
       measures = c("Observed", "Shannon", "Simpson", "InvSimpson", "Fisher")),
     pattern = map(thousand_iterations)
@@ -418,7 +433,7 @@ list(
     command = merge_metadata(metadata)
   ),
   tar_target(
-    name = merged_phyloseq_object,
-    command = merge_technical_replicates(phyloseq_object, merged_metadata)
+    name = merged_phyloseq_obj,
+    command = merge_technical_replicates(phyloseq_obj, merged_metadata)
   )
 )
