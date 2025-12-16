@@ -86,7 +86,7 @@ list(
     format = "file"
   ),
   tar_target(
-    name = phyloseq_object,
+    name = phyloseq_obj,
     command = load_phyloseq(metadata, phyloseq_path)
   ),
   tar_target(
@@ -106,7 +106,7 @@ list(
   ),
   tar_target(
     name = phyloseq_subset,
-    command = subset_phyloseq(phyloseq_object, samples_to_keep)
+    command = subset_phyloseq(phyloseq_obj, samples_to_keep)
   ),
   tar_target(
     name = otu_table_matrix,
@@ -246,13 +246,27 @@ list(
     name = dunn_shannon_date_condition,
     command = calculate_dunn_test(rarefaction_results, "Shannon_mean", "date_condition")
   ),
+  # Perform rarefaction across multiple iterations
+  tar_target(
+    name = phyloseq_obj_rarefied,
+    command = rarefy_phyloseq_object(
+      phyloseq_subset,
+      rarefaction_depth,
+    ),
+    pattern = map(thousand_iterations),
+    iteration = "list"
+  ),
   # calculate distance metrics
   tar_target(
+    name = bray_distance_matrices,
+    command = calculate_distance_matrix(phyloseq_obj_rarefied, method = "bray"),
+    pattern = map(phyloseq_obj_rarefied),
+    iteration = "list"
+  ),
+  tar_target(
     name = bray_distance_matrix,
-    command = calculate_distance_matrix(
-      otu_table_matrix,
-      min_sequencing_depth = rarefaction_depth,
-      dmethod = "bray"
+    command = as.dist(
+      Reduce("+", bray_distance_matrices) / length(bray_distance_matrices)
     )
   ),
   # ordinations
