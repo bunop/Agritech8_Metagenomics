@@ -115,7 +115,7 @@ list(
     command = here::here("results-bacteria", "phyloseq", "dada2_phyloseq.rds"),
     format = "file"
   ),
-  # this phyloseq object has no trees and hasn't be selected for the samples I want
+  # this phyloseq object has no trees and hasn't been selected for the samples I want
   tar_target(
     name = phyloseq_obj,
     command = load_phyloseq(metadata, phyloseq_path)
@@ -268,7 +268,7 @@ list(
     name = nov_2023_phyloseq_obj_merged_rarefied,
     command = rarefy_phyloseq_object(
       nov_2023_phyloseq_obj_merged,
-      nov_2023_merged_rarefaction_depth,
+      nov_2023_merged_rarefaction_depth
     ),
     pattern = map(thousand_iterations),
     iteration = "list"

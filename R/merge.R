@@ -20,13 +20,15 @@ calculate_technical_replicate_correlations <- function(phyloseq_obj, metadata, g
       dplyr::pull(sampleID)
 
     if (length(sample_ids) < 2) {
-      return(tibble::tibble(
-        sample_group = grp,
+      result <- tibble::tibble(
+        group = grp,
         n_replicates = length(sample_ids),
         mean_spearman = NA_real_,
         min_spearman = NA_real_,
         max_spearman = NA_real_
-      ))
+      )
+      names(result)[1] <- group_column
+      return(result)
     }
 
     # Correlation matrix
@@ -35,14 +37,16 @@ calculate_technical_replicate_correlations <- function(phyloseq_obj, metadata, g
     # Extract upper triangle values (pairwise correlations)
     cor_values <- cor_mat[upper.tri(cor_mat)]
 
-    tibble::tibble(
-      sample_group = grp,
+    result <- tibble::tibble(
+      group = grp,
       n_replicates = length(sample_ids),
       mean_spearman = mean(cor_values),
       min_spearman = min(cor_values),
       max_spearman = max(cor_values),
       sd_spearman = sd(cor_values)
     )
+    names(result)[1] <- group_column
+    result
   })
 }
 
@@ -64,14 +68,16 @@ calculate_technical_replicate_distances <- function(distance_matrix, metadata, g
       dplyr::pull(sampleID)
 
     if (length(sample_ids) < 2) {
-      return(tibble::tibble(
-        sample_group = grp,
+      result <- tibble::tibble(
+        group = grp,
         n_replicates = length(sample_ids),
         mean_distance = NA_real_,
         median_distance = NA_real_,
         min_distance = NA_real_,
         max_distance = NA_real_
-      ))
+      )
+      names(result)[1] <- group_column
+      return(result)
     }
 
     # Subset distance matrix for the group
@@ -80,8 +86,8 @@ calculate_technical_replicate_distances <- function(distance_matrix, metadata, g
     # Extract upper triangle values (pairwise distances)
     dist_values <- group_dist[upper.tri(group_dist)]
 
-    tibble::tibble(
-      sample_group = grp,
+    result <- tibble::tibble(
+      group = grp,
       n_replicates = length(sample_ids),
       mean_distance = mean(dist_values),
       median_distance = median(dist_values),
@@ -89,6 +95,8 @@ calculate_technical_replicate_distances <- function(distance_matrix, metadata, g
       max_distance = max(dist_values),
       sd_distance = sd(dist_values)
     )
+    names(result)[1] <- group_column
+    result
   })
 }
 
@@ -102,8 +110,8 @@ merge_metadata <- function(metadata, column = "sample_group") {
   numeric_cols <- names(tmp)[sapply(tmp, is.numeric)]
   non_numeric_cols <- names(tmp)[!sapply(tmp, is.numeric)]
 
-  # Remove _column_ from non-numeric columns since will be
-  # removed when grouping by 'sample_group'
+  # Remove column from non-numeric columns since it will be
+  # removed when grouping by the specified 'column'
   non_numeric_cols <- setdiff(non_numeric_cols, column)
 
   merged_metadata <- tmp %>%
@@ -125,9 +133,8 @@ merge_metadata <- function(metadata, column = "sample_group") {
   return(merged_metadata)
 }
 
-# merge samples by replicate group, summing ASV abundances
-# and divide the ASV abundances by the number of replicates to get the mean
-merge_technical_replicates <- function(phyloseq_object, merge_metadata, column = "sample_names") {
+# Merge samples by replicate group, calculating mean ASV abundances for each group
+merge_technical_replicates <- function(phyloseq_object, merge_metadata, column = "sample_name") {
   # Merge samples by replicate group, calculating mean ASV abundances
   merged_phyloseq_object <- phyloseq::merge_samples(phyloseq_object, group = column, fun = mean)
 

@@ -212,7 +212,7 @@ ggplot(
 ```
 
 :::{.callout-important}
-from the analysis of technical replicates similarity, we can conclude that
+From the analysis of technical replicates similarity, we can conclude that
 merging technical replicates into biological replicates is appropriate for
 this dataset. From now on, we will work with merged biological replicates.
 :::
