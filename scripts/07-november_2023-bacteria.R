@@ -218,7 +218,7 @@ list(
     command = calculate_technical_replicate_distances(
       nov_2023_bray_distance_matrix_replicates,
       nov_2023_metadata,
-      group_column = "sample_group"
+      group_column = "sample_name"
     )
   ),
   # calculate beta dispersion between technical replicates
@@ -227,7 +227,7 @@ list(
     command = calculate_beta_dispersion(
       nov_2023_bray_distance_matrix_replicates,
       nov_2023_metadata,
-      column = "label",
+      column = "sample_name",
       bias.adjust = TRUE,
       levels = custom_order_labels
     )
@@ -509,62 +509,6 @@ list(
   tar_target(
     name = nov_2023_unifrac_distance_by_labels_plot,
     command = plot_distances(nov_2023_unifrac_distance_by_labels, column = "label")
-  ),
-  # calculate beta dispersion
-  tar_target(
-    name = nov_2023_bray_labels_beta_dispersion,
-    command = calculate_beta_dispersion(
-      nov_2023_bray_distance_matrix,
-      nov_2023_metadata_merged,
-      column = "label",
-      bias.adjust = TRUE,
-      levels = custom_order_labels
-    )
-  ),
-  tar_target(
-    name = nov_2023_unifrac_labels_beta_dispersion,
-    command = calculate_beta_dispersion(
-      nov_2023_unifrac_distance_matrix,
-      nov_2023_metadata_merged,
-      column = "label",
-      bias.adjust = TRUE,
-      levels = custom_order_labels
-    )
-  ),
-  # permanova on distance matrix
-  ## Bray
-  tar_target(
-    name = nov_2023_bray_labels_permanova,
-    command = calculate_permanova(
-      nov_2023_bray_distance_matrix,
-      nov_2023_metadata_merged,
-      columns = c("label")
-    )
-  ),
-  tar_target(
-    name = nov_2023_pairwise_bray_labels_permanova,
-    command = calculate_pairwise_permanova(
-      nov_2023_bray_distance_matrix,
-      nov_2023_metadata_merged,
-      columns = c("label")
-    )
-  ),
-  ## unifrac
-  tar_target(
-    name = nov_2023_unifrac_labels_permanova,
-    command = calculate_permanova(
-      nov_2023_unifrac_distance_matrix,
-      nov_2023_metadata_merged,
-      columns = c("label")
-    )
-  ),
-  tar_target(
-    name = nov_2023_pairwise_unifrac_labels_permanova,
-    command = calculate_pairwise_permanova(
-      nov_2023_unifrac_distance_matrix,
-      nov_2023_metadata_merged,
-      columns = c("label")
-    )
   ),
   # render november 2023 quarto document
   tar_quarto(

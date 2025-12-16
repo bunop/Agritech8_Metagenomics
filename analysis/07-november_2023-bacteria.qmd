@@ -4,7 +4,7 @@ author: "Paolo Cozzi"
 date: today
 toc: true
 number-sections: true
-cache: false
+cache: true
 format:
   html:
     code-line-numbers: true
@@ -142,8 +142,11 @@ nov_2023_tech_rep_distances |>
 **Low mean distance** (<0.2–0.3) indicates technical replicates are highly similar
 and can be merged. **High mean distance** (>0.5) suggests technical variability
 or issues. For those data distance is low enough to proceed with merging.
+Samples have low distances, however the distance within `BTPQ2` seems to be higher
+than other samples: *should this sample be removed* or *can I esclude the most
+problematic technical replicate*?
 
-### Technical Replicate Similarity
+### Technical Replicate Beta dispersion (Bray-Curtis distances)
 
 Check how similar technical replicates are within each biological replicate
 using beta-dispersion on Bray-Curtis distances:
@@ -166,24 +169,13 @@ tech_rep_summary <- nov_2023_bray_tech_rep_beta_dispersion$beta_disp_df |>
 tech_rep_summary
 ```
 
-**ANOVA on Beta Dispersion:**
+#### ANOVA on Beta Dispersion:
 
 ```{r tech-rep-anova}
 #| label: tech-rep-anova
 # ANOVA tests if technical variability differs across biological replicates
 print(nov_2023_bray_tech_rep_beta_dispersion$anova_result)
 ```
-
-**Interpretation:**
-- **Non-significant ANOVA** (p > 0.05): technical variability is homogeneous
-across biological replicates → good, proceed with merging
-- **Significant ANOVA** (p < 0.05): some biological replicates have more technical
-variability than others → investigate which ones before merging
-
-**Overall Assessment:**
-- **Low mean distance** (<0.2) + **non-significant ANOVA**: ✅ safe to merge all technical replicates
-- **Low mean distance** + **significant ANOVA**: ⚠️ merge only replicates with low dispersion
-- **High mean distance** (>0.4): ❌ investigate issues before merging
 
 Display the beta-dispersion plot:
 
@@ -210,6 +202,10 @@ ggplot(
     legend.position = "none"
   )
 ```
+
+We have seen *non significant ANOVA/PERMANOVA* when considering technical replicates
+belonging to the same biological sample and the distances between biological samples
+are generally low.
 
 :::{.callout-important}
 From the analysis of technical replicates similarity, we can conclude that
@@ -587,7 +583,7 @@ labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
 
 # plot the PCoA
 pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = label)) +
-  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::geom_point(size = 4, alpha = 0.9) +
   ggplot2::theme_minimal() +
   ggplot2::ggtitle("PCoA Plot on Distance Metrics (Bray-Curtis)") +
   ggplot2::labs(title = "PCoA of Bray-Curtis Distance Matrix",
@@ -603,8 +599,8 @@ pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = label)) 
 pcoa_plot
 ```
 
-In this image there's a clear separation from *reactor samples* from *default*.
-*Box* samples are closer togheter but distant from *reactor* conditions.
+In this image there's a clear separation from *reactor samples* from *default* and
+*box* samples. *box* and *box+dw* samples are quite distant.
 
 #### Scree plot
 
@@ -633,6 +629,7 @@ plot_data <- tibble(
 ggplot(plot_data, aes(x = axis, y = pe)) +
   geom_line() +
   geom_vline(xintercept = 2, color = "red") +
+  scale_x_continuous(breaks = seq(2, nrow(plot_data), by = 2)) +
   labs(
     x = "Principal Coordinate Axis",
     y = "Cumulative Percentage of Variance Explained",
@@ -651,19 +648,12 @@ targets::tar_load(nov_2023_bray_nmds_object, store = store_path)
 
 # get the tibble object
 nmds_tb <- nov_2023_bray_nmds_object$nmds_tb
-jitter <- 0.05
+jitter <- 0.02
 ```
 
-Now, let's visualize the NMDS plot but grouping by labels
-(which should group sample replicates). See [CC187](https://www.youtube.com/watch?v=h7OrVmT7Ja8&ab_channel=RiffomonasProject)
-for more information.
-
 ::: {.callout-warning}
-I've received a warning regarding the stress
-value, which is close to 0 and this can be determined by having not enough data,
-even if this value means a good fit for the NMDS.
-I've applied `0.05` of jitter (random noise) to points in order
-to clearly see them in the image.
+I’ve applied `r jitter` of jitter (random noise) to points in order to clearly
+see them in the image.
 :::
 
 ```{r bray-nmds-labels}
@@ -673,7 +663,7 @@ to clearly see them in the image.
 nmds_plot <- ggplot2::ggplot(
     nmds_tb,
     ggplot2::aes(x = NMDS1, y = NMDS2, color = label)) +
-  ggplot2::geom_jitter(size = 4, alpha = 0.5, width = jitter, height = jitter) +
+  ggplot2::geom_jitter(size = 4, alpha = 0.9, width = jitter, height = jitter) +
   ggplot2::theme_minimal() +
   ggplot2::labs(
     title = "NMDS Plot on distance metrics (Bray-Curtis)",
@@ -689,13 +679,13 @@ print(nmds_plot)
 
 ::: {.callout-tip}
 This type of graph is more informative with indexes which use phylogenetic information:
-take a look at [Unweighted UniFrac - NMDS plot by labels](#unifrac-nmds-labels)
-and [Weighted UniFrac - NMDS plot by labels](#wunifrac-nmds-labels)
+take a look at [Unweighted UniFrac - NMDS plot](#unifrac-nmds)
+and [Weighted UniFrac - NMDS plot](#wunifrac-nmds)
 :::
 
 #### Between group distances
 
-Plot distances by labels:
+Plot distances within samples:
 
 ```{r bray-labels_distances}
 #| label: bray-labels_distances
@@ -713,86 +703,6 @@ print(nov_2023_bray_distance_by_labels_plot)
 
 Download the full [nov_2023-bacteria_bray_distance_by_labels.xlsx](07-november_2023-bacteria/nov_2023-bacteria_bray_distance_by_labels.xlsx) table.
 
-#### Permanova
-
-Here we will do some analyses on beta diversity. First, we evaluate beta dispersion
-which is essential to ensure the validity of statistical tests, accurately
-interpret differences in community composition, and select appropriate analytical
-methods. Neglecting this step can lead to incorrect conclusions about the
-ecological patterns present in your data. For unbalanced designs PERMANOVA and ANOSIM were
-
-1. too liberal if the smaller group had greater dispersion, and
-2. too conservative if the larger group had greater dispersion.
-
-This result was especially so for ANOSIM (see [here](https://stats.stackexchange.com/a/316386/451801)
-for more information).
-
-Calculate beta dispersion for *labels* column:
-
-```{r bray-labels_beta_dispersion}
-#| label: bray-labels_beta_dispersion
-#| title: Beta dispersion by labels
-#| description: Calculate beta dispersion by labels
-tar_load(nov_2023_bray_labels_beta_dispersion, store = store_path)
-print(nov_2023_bray_labels_beta_dispersion$anova_result)
-```
-
-I see significant differences in dispersions: should I trust the `labels`
-permanova? The point is also that groups are unbalanced (ie less elements in
-*default* group than the others). Permanova (and also ANOSIM) may suffer in
-this particular case. Plot beta dispersion:
-
-```{r bray-labels_beta_dispersion_plot}
-#| label: bray-labels_beta_dispersion_plot
-#| title: Beta dispersion plot by sample names
-#| description: Plot beta dispersion by sample names
-#| fig.width: 10
-#| fig.height: 8
-#| fig.align: center
-# Create the boxplot
-ggplot(
-    nov_2023_bray_labels_beta_dispersion$beta_disp_df,
-    aes(x = Group, y = Distance, fill = Group)
-  ) +
-  geom_boxplot() +
-  geom_jitter(width = 0.2, alpha = 0.5) +  # Adds individual data points
-  labs(
-    title = "Bray-Curtis Beta Dispersion by Group",
-    x = "Group",
-    y = "Distance to Centroid"
-  ) +
-  theme_minimal() +
-  ggplot2::theme(
-    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
-  )
-```
-
-Do permanova with *bray-curtis* on *label* column:
-
-```{r bray-labels_permanova}
-#| label: bray-labels_permanova
-# load the permanova with targets
-targets::tar_load(nov_2023_bray_labels_permanova, store = store_path)
-print(nov_2023_bray_labels_permanova)
-```
-
-Load the *pairwise* permanova on the same columns and filter only significant
-values (P.adj < 0.05):
-
-```{r bray-pairwise_labels_permanova}
-#| label: bray-pairwise_labels_permanova
-# load the permanova with targets
-targets::tar_load(nov_2023_pairwise_bray_labels_permanova, store = store_path)
-write.xlsx(nov_2023_pairwise_bray_labels_permanova, file = here(data_path, "nov_2023-bacteria_pairwise_bray_labels_permanova.xlsx"))
-
-nov_2023_pairwise_bray_labels_permanova %>%
-  dplyr::filter(P.adj < 0.05) %>%
-  dplyr::arrange(P.adj) %>%
-  dplyr::select(Comparison, P.adj, everything())
-```
-
-Download the full [nov_2023-bacteria_pairwise_bray_labels_permanova.xlsx](07-november_2023-bacteria/nov_2023-bacteria_pairwise_bray_labels_permanova.xlsx) table.
-
 ### Jaccard {#jaccard}
 
 Now we will plot a Jaccard PCoA plot to visualize samples. See
@@ -808,7 +718,7 @@ percent_explained <- nov_2023_jaccard_pcoa_object$percent_explained
 pcoa_df <- nov_2023_jaccard_pcoa_object$pcoa_df
 ```
 
-Visualize the same plot but grouping with labels (which should group sample replicates)
+Display the PCoA plot form distinct samples.
 
 ```{r jaccard-pcoa-labels}
 #| label: jaccard-pcoa-labels
@@ -819,7 +729,7 @@ labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
 
 # plot the PCoA
 pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = label)) +
-  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::geom_point(size = 4, alpha = 0.9) +
   ggplot2::theme_minimal() +
   ggplot2::ggtitle("PCoA Plot on Distance Metrics (Jaccard)") +
   ggplot2::labs(title = "PCoA of Jaccard Distance Matrix",
@@ -866,6 +776,7 @@ plot_data <- tibble(
 ggplot(plot_data, aes(x = axis, y = pe)) +
   geom_line() +
   geom_vline(xintercept = 2, color = "red") +
+  scale_x_continuous(breaks = seq(2, nrow(plot_data), by = 2)) +
   labs(
     x = "Principal Coordinate Axis",
     y = "Cumulative Percentage of Variance Explained",
@@ -884,17 +795,14 @@ targets::tar_load(nov_2023_jaccard_nmds_object, store = store_path)
 
 # get the tibble object
 nmds_tb <- nov_2023_jaccard_nmds_object$nmds_tb
-jitter <- 0.05
+jitter <- 0.02
 ```
 
 Now, let's visualize the NMDS plot but grouping by labels
 (which should group sample replicates)
 
 ::: {.callout-warning}
-I've received a warning regarding the stress
-value, which is close to 0 and this can be determined by having not enough data,
-even if this value means a good fit for the NMDS.
-I've applied `0.05` of jitter (random noise) to points in order
+I've applied `r jitter` of jitter (random noise) to points in order
 to clearly see them in the image.
 :::
 
@@ -905,7 +813,7 @@ to clearly see them in the image.
 nmds_plot <- ggplot2::ggplot(
     nmds_tb,
     ggplot2::aes(x = NMDS1, y = NMDS2, color = label)) +
-  ggplot2::geom_jitter(size = 4, alpha = 0.5, width = jitter, height = jitter) +
+  ggplot2::geom_jitter(size = 4, alpha = 0.9, width = jitter, height = jitter) +
   ggplot2::theme_minimal() +
   ggplot2::labs(
     title = "NMDS Plot on distance metrics (Jaccard)",
@@ -921,8 +829,8 @@ print(nmds_plot)
 
 ::: {.callout-tip}
 This type of graph is more informative with indexes which use phylogenetic information:
-take a look at [Unweighted UniFrac - NMDS plot by labels](#unifrac-nmds-labels)
-and [Weighted UniFrac - NMDS plot by labels](#wunifrac-nmds-labels)
+take a look at [Unweighted UniFrac - NMDS plot](#unifrac-nmds)
+and [Weighted UniFrac - NMDS plot](#wunifrac-nmds)
 :::
 
 ### Unweighted UniFrac {#unifrac}
@@ -940,7 +848,7 @@ percent_explained <- nov_2023_unifrac_pcoa_object$percent_explained
 pcoa_df <- nov_2023_unifrac_pcoa_object$pcoa_df
 ```
 
-Visualize a plot but grouping with labels (which should group sample replicates)
+Display the PCoA plot form distinct samples:
 
 ```{r unifrac-pcoa-labels}
 #| label: unifrac-pcoa-labels
@@ -951,7 +859,7 @@ labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
 
 # plot the PCoA
 pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = label)) +
-  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::geom_point(size = 4, alpha = 0.9) +
   ggplot2::theme_minimal() +
   ggplot2::ggtitle("PCoA Plot on Distance Metrics (Weigthed Unifrac)") +
   ggplot2::labs(title = "PCoA of Unweighted Unifrac Distance Matrix",
@@ -967,9 +875,8 @@ pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = label)) 
 pcoa_plot
 ```
 
-In this image there's a clear separation from *reactor samples* from *default*.
-*Box* samples are closer togheter but distant from *reactor* conditions and closer
-to *default* than reactor.
+In this image there's a clear separation from *reactor samples* from *box*.
+*default* condition seems to be in the middle of the two.
 
 #### Scree plot
 
@@ -998,6 +905,7 @@ plot_data <- tibble(
 ggplot(plot_data, aes(x = axis, y = pe)) +
   geom_line() +
   geom_vline(xintercept = 2, color = "red") +
+  scale_x_continuous(breaks = seq(2, nrow(plot_data), by = 2)) +
   labs(
     x = "Principal Coordinate Axis",
     y = "Cumulative Percentage of Variance Explained",
@@ -1006,7 +914,7 @@ ggplot(plot_data, aes(x = axis, y = pe)) +
   theme_minimal()
 ```
 
-#### NMDS plot
+#### NMDS plot {#unifrac-nmds}
 
 Non-metric Multidimensional Scaling (**NMDS**) is an ordination technique used to visualize the similarity or dissimilarity between samples in complex, multidimensional datasets. Unlike metric methods, NMDS focuses on preserving the rank order of distances rather than the actual distance values, making it particularly useful for ecological and environmental data where relationships may be non-linear.
 
@@ -1018,8 +926,7 @@ targets::tar_load(nov_2023_unifrac_nmds_object, store = store_path)
 nmds_tb <- nov_2023_unifrac_nmds_object$nmds_tb
 ```
 
-Now, let's visualize the NMDS plot but grouping with labels
-(which should group sample replicates)
+Now, let's visualize the NMDS plot:
 
 ```{r unifrac-nmds-labels}
 #| label: unifrac-nmds-labels
@@ -1028,7 +935,7 @@ Now, let's visualize the NMDS plot but grouping with labels
 nmds_plot <- ggplot2::ggplot(
     nmds_tb,
     ggplot2::aes(x = NMDS1, y = NMDS2, color = label)) +
-  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::geom_point(size = 4, alpha = 0.9) +
   ggplot2::theme_minimal() +
   ggplot2::labs(
     title = "NMDS Plot on distance metrics (Unweigthed Unifrac)",
@@ -1041,6 +948,8 @@ nmds_plot <- ggplot2::ggplot(
 
 print(nmds_plot)
 ```
+
+This type of graph is more informative with indexes which use phylogenetic information
 
 #### Between group distances
 
@@ -1062,86 +971,6 @@ print(nov_2023_unifrac_distance_by_labels_plot)
 
 Download the full [nov_2023-bacteria_unifrac_distance_by_labels.xlsx](07-november_2023-bacteria/nov_2023-bacteria_unifrac_distance_by_labels.xlsx) table.
 
-#### Permanova
-
-Here we will do some analyses on beta diversity. First, we evaluate beta dispersion
-which is essential to ensure the validity of statistical tests, accurately
-interpret differences in community composition, and select appropriate analytical
-methods. Neglecting this step can lead to incorrect conclusions about the
-ecological patterns present in your data. For unbalanced designs PERMANOVA and ANOSIM were
-
-1. too liberal if the smaller group had greater dispersion, and
-2. too conservative if the larger group had greater dispersion.
-
-This result was especially so for ANOSIM (see [here](https://stats.stackexchange.com/a/316386/451801)
-for more information)
-
-Calculate beta dispersion for *labels* column:
-
-```{r unifrac-labels_beta_dispersion}
-#| label: unifrac-labels_beta_dispersion
-#| title: Beta dispersion by sample names
-#| description: Calculate beta dispersion by sample names
-tar_load(nov_2023_unifrac_labels_beta_dispersion, store = store_path)
-print(nov_2023_unifrac_labels_beta_dispersion$anova_result)
-```
-
-I see significant differences in dispersions: should I trust the `labels`
-permanova? The point is also that groups are unbalanced (ie less elements in
-*default* group than the others). Permanova (and also ANOSIM) may suffer in
-this particular case. Plot beta dispersion:
-
-```{r unifrac-labels_beta_dispersion_plot}
-#| label: unifrac-labels_beta_dispersion_plot
-#| title: Beta dispersion plot by sample names
-#| description: Plot beta dispersion by sample names
-#| fig.width: 10
-#| fig.height: 8
-#| fig.align: center
-# Create the boxplot
-ggplot(
-    nov_2023_unifrac_labels_beta_dispersion$beta_disp_df,
-    aes(x = Group, y = Distance, fill = Group)
-  ) +
-  geom_boxplot() +
-  geom_jitter(width = 0.2, alpha = 0.5) +  # Adds individual data points
-  labs(
-    title = "Unifrac Beta Dispersion by Group",
-    x = "Group",
-    y = "Distance to Centroid"
-  ) +
-  theme_minimal() +
-  ggplot2::theme(
-    axis.text.x = ggplot2::element_text(angle = 45, hjust = 1)
-  )
-```
-
-Do permanova with *Unifrac* on *labels* column:
-
-```{r unifrac-labels_permanova}
-#| label: unifrac-labels_permanova
-# load the permanova with targets
-targets::tar_load(nov_2023_unifrac_labels_permanova, store = store_path)
-print(nov_2023_unifrac_labels_permanova)
-```
-
-Load the *pairwise* permanova on the same columns and filter only significant
-values (P.adj < 0.05):
-
-```{r unifrac-pairwise_labels_permanova}
-#| label: unifrac-pairwise_labels_permanova
-# load the permanova with targets
-targets::tar_load(nov_2023_pairwise_unifrac_labels_permanova, store = store_path)
-write.xlsx(nov_2023_pairwise_unifrac_labels_permanova, file = here(data_path, "nov_2023-bacteria_pairwise_unifrac_labels_permanova.xlsx"))
-
-nov_2023_pairwise_unifrac_labels_permanova %>%
-  dplyr::filter(P.adj < 0.05) %>%
-  dplyr::arrange(P.adj) %>%
-  dplyr::select(Comparison, P.adj, everything())
-```
-
-Download the full [nov_2023-bacteria_pairwise_unifrac_labels_permanova.xlsx](07-november_2023-bacteria/nov_2023-bacteria_pairwise_unifrac_labels_permanova.xlsx) table.
-
 ### Weighted UniFrac {#wunifrac}
 
 ```{r wunifrac-pcoa}
@@ -1154,7 +983,7 @@ percent_explained <- nov_2023_wunifrac_pcoa_object$percent_explained
 pcoa_df <- nov_2023_wunifrac_pcoa_object$pcoa_df
 ```
 
-Visualize a plot but grouping with labels (which should group sample replicates)
+Here are the PCoA plot form distinct samples:
 
 ```{r wunifrac-pcoa-labels}
 #| label: wunifrac-pcoa-labels
@@ -1165,7 +994,7 @@ labels <- c(glue::glue("PCo Axis 1 ({pretty_pe[1]}%)"),
 
 # plot the PCoA
 pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = label)) +
-  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::geom_point(size = 4, alpha = 0.9) +
   ggplot2::theme_minimal() +
   ggplot2::ggtitle("PCoA Plot on Distance Metrics (Weigthed Unifrac)") +
   ggplot2::labs(title = "PCoA of Weighted Unifrac Distance Matrix",
@@ -1181,9 +1010,9 @@ pcoa_plot <- ggplot2::ggplot(pcoa_df, aes(x = PCoA1, y = PCoA2, color = label)) 
 pcoa_plot
 ```
 
-In this image there's a clear separation from *reactor samples* from *default*.
-*Box* samples are closer togheter but distant from *reactor* conditions and closer
-to *default* than reactor.
+In this image there's a clear separation from *reactor samples* from *box*.
+*Reactor* samples are closer togheter but distant from *box* conditions. *default*
+condition is far from both.
 
 #### Scree plot
 
@@ -1212,6 +1041,7 @@ plot_data <- tibble(
 ggplot(plot_data, aes(x = axis, y = pe)) +
   geom_line() +
   geom_vline(xintercept = 2, color = "red") +
+  scale_x_continuous(breaks = seq(2, nrow(plot_data), by = 2)) +
   labs(
     x = "Principal Coordinate Axis",
     y = "Cumulative Percentage of Variance Explained",
@@ -1220,7 +1050,7 @@ ggplot(plot_data, aes(x = axis, y = pe)) +
   theme_minimal()
 ```
 
-#### NMDS plot
+#### NMDS plot {#wunifrac-nmds}
 
 Non-metric Multidimensional Scaling (**NMDS**) is an ordination technique used to visualize the similarity or dissimilarity between samples in complex, multidimensional datasets. Unlike metric methods, NMDS focuses on preserving the rank order of distances rather than the actual distance values, making it particularly useful for ecological and environmental data where relationships may be non-linear.
 
@@ -1230,10 +1060,15 @@ targets::tar_load(nov_2023_wunifrac_nmds_object, store = store_path)
 
 # get the tibble object
 nmds_tb <- nov_2023_wunifrac_nmds_object$nmds_tb
+jitter <- 0.001
 ```
 
-Now, let's visualize the NMDS plot but grouping with labels
-(which should group sample replicates)
+Now, let's visualize the NMDS plot:
+
+::: {.callout-warning}
+I've applied `r jitter` of jitter (random noise) to points in order
+to clearly see them in the image.
+:::
 
 ```{r wunifrac-nmds-labels}
 #| label: wunifrac-nmds-labels
@@ -1242,7 +1077,7 @@ Now, let's visualize the NMDS plot but grouping with labels
 nmds_plot <- ggplot2::ggplot(
     nmds_tb,
     ggplot2::aes(x = NMDS1, y = NMDS2, color = label)) +
-  ggplot2::geom_point(size = 4, alpha = 0.5) +
+  ggplot2::geom_jitter(size = 4, alpha = 0.9, width = jitter, height = jitter) +
   ggplot2::theme_minimal() +
   ggplot2::labs(
     title = "NMDS Plot on distance metrics (Weigthed Unifrac)",
