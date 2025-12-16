@@ -11,6 +11,7 @@ format:
     df-print: paged
     code-fold: true
     toc-depth: 4
+    embed-resources: true  # Embed all resources directly into the HTML file
 editor: source
 ---
 
@@ -40,7 +41,7 @@ load the combined graph
 tar_load(combined_iNEXT_results, store = store_path)
 ```
 
-create a plot 
+create a plot
 
 ```{r plot-combined}
 #| label: plot-combined

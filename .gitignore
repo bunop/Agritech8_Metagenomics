@@ -8,6 +8,7 @@ test-*/
 archives/
 *.rds
 *.png
+*.out
 
 # r output files
 *.png
