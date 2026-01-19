@@ -522,7 +522,8 @@ print(nov_2023_alpha_diversity)
 ### Shannon {#shannon}
 
 Perform Kruskal-Wallis tests to determine if the alpha diversity metrics are
-significantly different between the groups. Run on *shannon* metric:
+significantly different between the groups. We are using the *means
+of technical replicates* for the analysis*. Run on *shannon* metric:
 
 ```{r kruscal_shannon}
 #| label: kruscal_shannon
@@ -537,12 +538,35 @@ This means there is no statistical evidence that any group differs from the
 others in terms of Shannon diversity. The groups (T0, NA, NP, CS, LM) have
 similar Shannon diversity levels.
 
+There are some things to consider:
+
+1. **Sample Size**: The small sample size (n=10) limits the power of the test.
+2. **Group Balance**: The groups are unbalanced, with some having only one biological replicate.
+3. **Loss of Information**: Averaging technical replicates may obscure variability.
+4. **Statistical Power**: The low sample size makes it hard to detect real differences.
+
 Since the overall test is not significant, a post-hoc Dunn's test is not appropriate.
 :::
 
 ### Mixed Model Approach
 
-To account for the hierarchical structure of technical replicates nested within biological replicates, we employed a linear mixed-effects model.
+To account for the hierarchical structure of technical replicates nested within
+biological replicates, we employed a linear mixed-effects model.
+
+#### Model Specification
+
+Here's the model formula:
+
+```
+Shannon ~ label + (1|sample_name)
+```
+
+Where:
+- `Shannon`: is the Shannon diversity index (response variable)
+- `label`: is the experimental group (T0, NA, NP, CS, LM) - fixed effect
+- `(1|sample_name)`: is the biological replicate - random effect
+  - This term acknowledges that the 3 technical replicates of BPTQ1 are more
+    similar to each other than to the replicates of BPTQ2
 
 ```{r}
 #| label: lmm-shannon-summary
@@ -553,7 +577,21 @@ tar_load(nov_2023_lmm_shannon, store = store_path)
 summary(nov_2023_lmm_shannon)
 ```
 
+How to interpret the output:
+
+- **Random effects**: shows the variance components
+  - `sample_name (Intercept)`: variance **between** biological replicates
+  - `Residual`: variance **between** technical replicates (measurement error)
+
+- **Fixed effects**: shows the mean differences between groups
+  - `(Intercept)`: estimated mean for the reference group (T0)
+  - `labelNA`, `labelCS`, etc.: **difference** compared to T0
+  - `Pr(>|t|)`: p-value for each comparison vs T0
+
 #### ANOVA Results
+
+This test tells us whether there are significant differences in Shannon diversity
+between the experimental groups in *at least one group*.
 
 ```{r}
 #| label: lmm-shannon-anova
@@ -564,7 +602,26 @@ knitr::kable(nov_2023_lmm_shannon_anova,
              digits = 4)
 ```
 
+:::{.callout-important}
+#### Key result
+
+**P-value = 0.0060** (< 0.01) → **Highly significant!**
+
+This indicates that there are statistically significant differences in the Shannon
+index among the experimental groups.
+
+**Comparison with Kruskal-Wallis:**
+- Traditional approach (means): p = 0.08 (not significant)
+- Mixed model (all replicates): p = 0.006 (*** highly significant)
+
+The difference is due to the **greater statistical power** obtained by using
+all 30 values instead of 10 means.
+:::
+
 #### Variance Components
+
+The variance components for the mixed model indicate the proportion of total variance
+in Shannon diversity that is attributable to different sources.
 
 ```{r}
 #| label: variance-components
@@ -575,7 +632,27 @@ knitr::kable(nov_2023_variance_components,
              digits = 3)
 ```
 
+**Interpretation:**
+
+- **~99% biological variance**: Most of the differences we observe are true differences
+  between biological replicates
+- **~1% technical variance**: Measurement error (technical replicates) is very small
+
+::: {.callout-tip}
+#### What this means in practice?
+
+- Excellent technical reproducibility: Technical replicates are very consistent (technical SD ≈ 0.018)
+
+- Real biological differences: Differences between samples reflect true biological variability,
+  not experimental error (biological SD ≈ 0.168)
+
+This is a positive result because it indicates that the sequencing protocol is highly reliable.
+:::
+
 #### Pairwise Comparisons
+
+After finding a significant overall effect, we can compare **all pairs of groups**
+using post-hoc tests with Tukey correction for multiple comparisons.
 
 ```{r}
 #| label: lmm-pairwise
@@ -583,12 +660,27 @@ knitr::kable(nov_2023_variance_components,
 
 # display pairwise comparisons
 tar_load(nov_2023_lmm_shannon_pairwise, store = store_path)
-knitr::kable(as.data.frame(nov_2023_lmm_shannon_pairwise),
-             caption = "Pairwise comparisons with Tukey adjustment",
-             digits = 4)
+
+knitr::kable(
+  as.data.frame(nov_2023_lmm_shannon_pairwise) %>%
+    dplyr::arrange(p.value),
+  caption = "Pairwise comparisons with Tukey adjustment",
+  digits = 4
+)
 ```
 
+How to interpret the pairwise comparisons:
+
+- `contrast`: which groups are being compared
+- `estimate`: estimated mean difference between the two groups
+- `SE`: standard error of the difference
+- `df`: degrees of freedom
+- `t.ratio`: t statistic
+- `p.value`: p-value adjusted using Tukey's method (for multiple comparisons)
+
 #### Summary Statistics by Group
+
+descriptive statistics for each group, calculated from **all** individual technical replicates.
 
 ```{r}
 #| label: summary-stats
@@ -598,6 +690,38 @@ knitr::kable(nov_2023_shannon_summary_stats,
              caption = "Shannon diversity by treatment group",
              digits = 3)
 ```
+
+**Table columns:**
+
+- `label`: experimental group
+- `n_biological`: number of biological (experimental) replicates
+- `n_technical`: total number of measurements (technical replicates)
+- `mean_shannon`: mean Shannon index
+- `sd_shannon`: standard deviation
+- `se_shannon`: standard error of the mean
+
+:::{.callout-note}
+#### Main conclusions
+
+**Diversity order (from highest to lowest):**
+
+1. **CS** (Compost Sludge): 4.21 ± 0.03 (n=3 biological, 9 technical)
+2. **NA**: 3.90 ± 0.04 (n=3 biological, 9 technical)
+3. **LM**: 3.42 ± 0.09 (n=2 biological, 6 technical)
+4. **NP**: 3.38 ± 0.01 (n=1 biological, 3 technical)
+5. **T0** (baseline): 2.99 ± 0.01 (n=1 biological, 3 technical)
+
+**Significant differences compared to T0:**
+- CS: +1.22 (p = 0.002 **)
+- NA: +0.91 (p = 0.006 **)
+- LM: +0.43 (p = 0.093, marginally not significant)
+- NP: +0.38 (p = 0.169, not significant)
+
+**Note**: T0 and NP have only 1 biological replicate, which limits statistical
+inference for these groups. For future studies, at least 3-5 biological replicates
+per group are recommended.
+:::
+
 
 ## Beta Diversity Metrics
 
