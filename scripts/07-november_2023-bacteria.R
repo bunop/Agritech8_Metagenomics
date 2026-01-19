@@ -33,7 +33,9 @@ tar_option_set(
     "forcats",
     "FSA",
     "pairwiseAdonis",
-    "purrr"
+    "purrr",
+    "lmerTest",
+    "emmeans"
   ), # Packages that your targets need for their tasks.
   # format = "qs", # Optionally set the default storage format. qs is fast.
   #
@@ -392,6 +394,82 @@ list(
       "label"
     )
   ),
+  # a different approach, try linear mixed models. First calculate
+  # alpha diversity on the unmerged rarefied data
+  tar_target(
+    name = nov_2023_alpha_div_all_replicates,
+    command = {
+      # collect alpha diversity for all technical replicates
+      alpha_div <- rarefy_alpha(nov_2023_phyloseq_obj, measures = c("Shannon"))
+
+      # Add metadata
+      alpha_div <- alpha_div %>%
+        left_join(nov_2023_metadata %>%
+                    select(sampleID, sample_name, technical_rep, label),
+                  by = "sampleID")
+
+      alpha_div
+    }
+  ),
+  # Linear mixed models using biological replicates as random effects
+  tar_target(
+    name = nov_2023_lmm_shannon,
+    command = lmerTest:::lmer(
+      Shannon ~ label + (1|sample_name),
+      data = nov_2023_alpha_div_all_replicates
+    )
+  ),
+  # calcolare ANOVA
+  tar_target(
+    name = nov_2023_lmm_shannon_anova,
+    command = anova(nov_2023_lmm_shannon)
+  ),
+  # calculate estimated marginal means (emmeans)
+  tar_target(
+    name = nov_2023_lmm_shannon_emmeans,
+    command = emmeans::emmeans(nov_2023_lmm_shannon, ~ label)
+  ),
+  # pairwise comparisons with Tukey correction
+  tar_target(
+    name = nov_2023_lmm_shannon_pairwise,
+    command = pairs(nov_2023_lmm_shannon_emmeans, adjust = "tukey")
+  ),
+  # descriptive statistics by group
+  tar_target(
+    name = nov_2023_shannon_summary_stats,
+    command = nov_2023_alpha_div_all_replicates %>%
+      group_by(label) %>%
+      summarise(
+        n_biological = n_distinct(sample_name),
+        n_technical = n(),
+        mean_shannon = mean(Shannon),
+        sd_shannon = sd(Shannon),
+        se_shannon = sd(Shannon) / sqrt(n())
+      ) |>
+      arrange(desc(mean_shannon))
+  ),
+  # Variance components
+  tar_target(
+    name = nov_2023_variance_components,
+    command = {
+      vc <- VarCorr(nov_2023_lmm_shannon)
+      var_bio <- as.numeric(attr(vc$sample_name, "stddev"))^2
+      var_tech <- attr(vc, "sc")^2
+      var_total <- var_bio + var_tech
+
+      data.frame(
+        component = c("Biological", "Technical", "Total"),
+        variance = c(var_bio, var_tech, var_total),
+        sd = c(sqrt(var_bio), sqrt(var_tech), sqrt(var_total)),
+        percent = c(
+          100 * var_bio / var_total,
+          100 * var_tech / var_total,
+          100
+        )
+      )
+    }
+  ),
+  # end of linear mixed models stuff
   # I need to recalculate distance matrices on rarefied merged data
   tar_target(
     name = nov_2023_bray_distance_matrices,

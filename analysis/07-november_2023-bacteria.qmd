@@ -29,6 +29,7 @@ library(ggplot2)
 library(phyloseq)
 library(ampvis2)
 library(openxlsx)
+library(lmerTest)
 
 # where I can find artifacts
 store_path <- here::here("stores", "november_2023-bacteria")
@@ -538,6 +539,65 @@ similar Shannon diversity levels.
 
 Since the overall test is not significant, a post-hoc Dunn's test is not appropriate.
 :::
+
+### Mixed Model Approach
+
+To account for the hierarchical structure of technical replicates nested within biological replicates, we employed a linear mixed-effects model.
+
+```{r}
+#| label: lmm-shannon-summary
+#| echo: false
+
+# get model summary
+tar_load(nov_2023_lmm_shannon, store = store_path)
+summary(nov_2023_lmm_shannon)
+```
+
+#### ANOVA Results
+
+```{r}
+#| label: lmm-shannon-anova
+#| echo: false
+tar_load(nov_2023_lmm_shannon_anova, store = store_path)
+knitr::kable(nov_2023_lmm_shannon_anova,
+             caption = "Type III ANOVA for Shannon diversity",
+             digits = 4)
+```
+
+#### Variance Components
+
+```{r}
+#| label: variance-components
+#| echo: false
+tar_load(nov_2023_variance_components, store = store_path)
+knitr::kable(nov_2023_variance_components,
+             caption = "Variance partitioning: biological vs technical variation",
+             digits = 3)
+```
+
+#### Pairwise Comparisons
+
+```{r}
+#| label: lmm-pairwise
+#| echo: false
+
+# display pairwise comparisons
+tar_load(nov_2023_lmm_shannon_pairwise, store = store_path)
+knitr::kable(as.data.frame(nov_2023_lmm_shannon_pairwise),
+             caption = "Pairwise comparisons with Tukey adjustment",
+             digits = 4)
+```
+
+#### Summary Statistics by Group
+
+```{r}
+#| label: summary-stats
+#| echo: false
+tar_load(nov_2023_shannon_summary_stats, store = store_path)
+knitr::kable(nov_2023_shannon_summary_stats,
+             caption = "Shannon diversity by treatment group",
+             digits = 3)
+```
 
 ## Beta Diversity Metrics
 
