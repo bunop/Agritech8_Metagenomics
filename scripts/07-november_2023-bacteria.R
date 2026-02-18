@@ -17,6 +17,17 @@ library(phyloseq)
 
 # Set target options:
 tar_option_set(
+  # using AWS S3 to store data, so we need to set the bucket and the prefix for the objects
+  repository = "aws",
+  repository_meta = "aws", # Just for metadata uploads, not required.
+  resources = tar_resources(
+    aws = tar_resources_aws(
+      bucket = "r-targets-hay4l",
+      prefix = "agritech8-metagenomics/november_2023-bacteria"
+    )
+  ),
+
+  # Set packages that your targets need to run. This is required for non-base packages.
   packages = c(
     "here",
     "readr",
