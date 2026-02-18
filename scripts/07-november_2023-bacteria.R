@@ -230,24 +230,69 @@ list(
       columns = c("sample_group", "technical_rep")
     )
   ),
-  # here are barplots
+  # calculate distances between technical replicates
+  tar_target(
+    name = nov_2023_tech_rep_distances,
+    command = calculate_technical_replicate_distances(
+      nov_2023_bray_distance_matrix,
+      nov_2023_metadata,
+      group_column = "sample_name"
+    )
+  ),
+  # calculate beta dispersion between technical replicates
+  tar_target(
+    name = nov_2023_bray_tech_rep_beta_dispersion,
+    command = calculate_beta_dispersion(
+      nov_2023_bray_distance_matrix,
+      nov_2023_metadata,
+      column = "sample_name",
+      bias.adjust = TRUE,
+      levels = custom_order_labels
+    )
+  ),
+  # merge technical replicates
+  # first update metadata for merged samples
+  tar_target(
+    name = nov_2023_metadata_merged,
+    command = {
+      tmp <- merge_metadata(
+        nov_2023_metadata,
+        column = "sample_name"
+      )
+      sort_by_factor_column(
+        tmp,
+        "label",
+        custom_order_labels
+      )
+    }
+  ),
+  # then merge phyloseq object: this will be used in merged graphs
+  tar_target(
+    name = nov_2023_phyloseq_obj_merged,
+    command = merge_technical_replicates(
+      nov_2023_phyloseq_obj,
+      nov_2023_metadata_merged,
+      column = "sample_name"
+    )
+  ),
+  # here are barplots: using merged phyloseq object
   tar_target(
     name = nov_2023_melted_phylum,
     command = agglomerate_by_taxa(
-      nov_2023_phyloseq_obj,
+      nov_2023_phyloseq_obj_merged,
       taxrank = "Phylum",
-      sample_order = nov_2023_metadata$sampleID
+      sample_order = nov_2023_metadata_merged$sample_name
     )
   ),
   tar_target(
     name = nov_2023_melted_class,
     command = agglomerate_by_taxa(
-      nov_2023_phyloseq_obj,
+      nov_2023_phyloseq_obj_merged,
       taxrank = "Class",
-      sample_order = nov_2023_metadata$sampleID
+      sample_order = nov_2023_metadata_merged$sample_name
     )
   ),
-  # and here the heatmaps
+  # and here the heatmaps: this time classes will be merged using labels
   tar_target(
     name = nov_2023_ampvis2_object,
     command = phyloseq_to_ampvis2(nov_2023_phyloseq_obj)
@@ -269,7 +314,7 @@ list(
       order_x_by = custom_order_labels,
       showRemainingTaxa = TRUE,
       tax_add = "Class",
-      tax_show = 20
+      tax_show = 15
     )
   ),
   # collect otu table

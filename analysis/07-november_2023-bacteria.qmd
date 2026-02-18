@@ -132,7 +132,12 @@ dataset. Here are the available taxonomic ranks in the dataset:
 #| label: taxonomic-ranks
 #| description: List the available taxonomic ranks in the dataset.
 phyloseq::rank_names(nov_2023_phyloseq_obj)
+targets::tar_load(nov_2023_phyloseq_obj_merged, store = store_path)
+targets::tar_load(nov_2023_metadata_merged, store = store_path)
 ```
+
+The following barplot graphs are generated using the merged phyloseq object
+(merging the *technical replicates*)
 
 ### By Phylum
 
@@ -155,7 +160,7 @@ write.xlsx(nov_2023_melted_phylum, file = here(data_path, "nov_2023-bacteria_mel
 ggplot2::ggplot(nov_2023_melted_phylum, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
   ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
   # need a sorted object like the one used in agglomerate_by_taxa
-  ggplot2::scale_x_discrete(labels = nov_2023_metadata$label) +
+  ggplot2::scale_x_discrete(labels = nov_2023_metadata_merged$label) +
   ggplot2::labs(
     title = glue::glue("Microbial composition at {taxrank} level"),
     x = "Sample",
@@ -191,7 +196,7 @@ nov_2023_melted_phylum_grouped <- nov_2023_melted_phylum %>%
 ggplot2::ggplot(nov_2023_melted_phylum_grouped, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
   ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
   # need a sorted object like the one used in agglomerate_by_taxa
-  ggplot2::scale_x_discrete(labels = nov_2023_metadata$label) +
+  ggplot2::scale_x_discrete(labels = nov_2023_metadata_merged$label) +
   ggplot2::labs(
     title = glue::glue("Microbial composition at {taxrank} level grouped (>5% abundance)"),
     x = "Sample",
@@ -227,7 +232,7 @@ write.xlsx(nov_2023_melted_class, file = here(data_path, "nov_2023-bacteria_melt
 ggplot2::ggplot(nov_2023_melted_class, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
   ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
   # need a sorted object like the one used in agglomerate_by_taxa
-  ggplot2::scale_x_discrete(labels = nov_2023_metadata$label) +
+  ggplot2::scale_x_discrete(labels = nov_2023_metadata_merged$label) +
   ggplot2::labs(
     title = glue::glue("Microbial composition at {taxrank} level"),
     x = "Sample",
@@ -262,7 +267,7 @@ nov_2023_melted_class_grouped <- nov_2023_melted_class %>%
 ggplot2::ggplot(nov_2023_melted_class_grouped, ggplot2::aes(x = sampleID, y = Abundance, fill = !!rlang::sym(taxrank))) +
   ggplot2::geom_bar(stat = "identity", position = "stack", color = "black", linewidth = 0.5) +
   # need a sorted object like the one used in agglomerate_by_taxa
-  ggplot2::scale_x_discrete(labels = nov_2023_metadata$label) +
+  ggplot2::scale_x_discrete(labels = nov_2023_metadata_merged$label) +
   ggplot2::labs(
     title = glue::glue("Microbial composition at {taxrank} level grouped (>5% abundance)"),
     x = "Sample",
