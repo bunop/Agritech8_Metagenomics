@@ -199,6 +199,16 @@ list(
     pattern = map(thousand_iterations),
     iteration = "list"
   ),
+  # calculate good's coverage on each rarefaction iteration, then average per sample
+  tar_target(
+    name = nov_2023_coverage_stats_iterations,
+    command = calculate_coverage_stats(get_otu_table(nov_2023_phyloseq_obj_rarefied)),
+    pattern = map(nov_2023_phyloseq_obj_rarefied)
+  ),
+  tar_target(
+    name = nov_2023_coverage_stats,
+    command = summarize_coverage_stats(nov_2023_coverage_stats_iterations)
+  ),
   # collect sample data to plot sequencing depth
   tar_target(
     name = nov_2023_samples_data,

@@ -4,7 +4,7 @@ author: "Paolo Cozzi"
 date: today
 toc: true
 number-sections: true
-cache: false
+cache: true
 format:
   html:
     code-line-numbers: true
@@ -372,6 +372,48 @@ ggplot(nov_2023_rarecurve_df, aes(x = Sample, y = Species, color = label, group 
     color = "Group"
   ) +
   theme_bw()
+```
+
+### Good's Coverage
+
+Good's coverage estimates the fraction of the total taxa in a sample that has been
+captured by sequencing, based on the number of singleton OTUs. Here it is calculated
+on each of the 1000 rarefaction iterations and averaged per sample.
+
+```{r goods-coverage}
+#| label: goods-coverage
+tar_load(nov_2023_coverage_stats, store = store_path)
+
+nov_2023_coverage_stats %>%
+  arrange(goods) %>%
+  print(n = 10)
+```
+
+```{r goods-coverage-plot}
+#| label: goods-coverage-plot
+#| fig-width: 10
+#| fig-height: 8
+sample_order <- levels(nov_2023_samples_data$sampleID)
+
+coverage_plot <- nov_2023_samples_data %>%
+  select(sampleID, label) %>%
+  inner_join(nov_2023_coverage_stats, by = c("sampleID" = "Group")) %>%
+  mutate(sampleID = factor(sampleID, levels = sample_order)) %>%
+  ggplot(aes(x = sampleID, y = goods, fill = label)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") +
+  theme_minimal() +
+  labs(title = "Good's Coverage per Sample",
+       x = "Sample",
+       y = "Good's Coverage (%)",
+       fill = "Group") +
+  theme(axis.text.x = element_text(
+    angle = 90,
+    hjust = 1,
+    vjust = 0.5,
+    margin = ggplot2::margin(b = 7)
+  ))
+
+print(coverage_plot)
 ```
 
 ## Alpha diversity

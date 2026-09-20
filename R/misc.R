@@ -24,6 +24,13 @@ calculate_coverage_stats <- function(otu_table_matrix) {
   return(coverage_stats)
 }
 
+# average good's coverage per sample across rarefaction iterations
+summarize_coverage_stats <- function(coverage_stats) {
+  coverage_stats %>%
+    dplyr::group_by(Group) %>%
+    dplyr::summarise(dplyr::across(c(n_seqs, n_sings, goods), mean), .groups = "drop")
+}
+
 #' Agglomerate by taxa and sort by sample order
 #'
 #' @description
