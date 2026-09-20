@@ -130,12 +130,24 @@ low_coverage_text <- if (nrow(low_coverage_groups) > 0) {
   "No experimental group showed samples below the 90% coverage threshold."
 }
 
-cat(glue::glue(
-  "At the reference sequencing depth of {format(nov_2023_rarefaction_depth, big.mark = ',')} reads, ",
-  "{n_above_90} out of {n_samples} samples ({pct_above_90}%) reached at least 90% of their ",
-  "Chao1-estimated asymptotic richness, supporting the conclusion that sequencing depth was ",
-  "sufficient to characterize the majority of the detectable bacterial diversity. {low_coverage_text}"
-))
+if (n_above_90 > 0) {
+  main_text <- glue::glue(
+    "At the reference sequencing depth of {format(nov_2023_rarefaction_depth, big.mark = ',')} reads, ",
+    "{n_above_90} out of {n_samples} samples ({pct_above_90}%) reached at least 90% of their ",
+    "Chao1-estimated asymptotic richness, supporting the conclusion that sequencing depth was ",
+    "sufficient to characterize the majority of the detectable bacterial diversity."
+  )
+} else {
+  main_text <- glue::glue(
+    "At the reference sequencing depth of {format(nov_2023_rarefaction_depth, big.mark = ',')} reads, ",
+    "0 out of {n_samples} samples (0%) reached 90% of their Chao1-estimated asymptotic richness. ",
+    "This indicates that the sequencing depth was insufficient to capture the full extent of ",
+    "bacterial diversity in the samples, and substantially more sequencing effort would be needed ",
+    "to approach asymptotic richness estimates."
+  )
+}
+
+cat(glue::glue("{main_text} {low_coverage_text}"))
 ```
 
 ### Coverage plot

@@ -167,6 +167,7 @@ list(
     name = nov_2023_sampling_completeness,
     command = calculate_sampling_completeness(
       nov_2023_iNEXT_results,
+      nov_2023_abundance_list,
       names(nov_2023_abundance_list),
       nov_2023_rarefaction_depth
     ) %>%

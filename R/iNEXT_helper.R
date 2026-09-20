@@ -79,22 +79,41 @@ combine_iNEXT_results <- function(iNEXT_list, abundance_list) {
 #'   `Asymptotic_Chao1_estimate`, `Coverage_ratio`, `Flag_below_90pct`,
 #'   sorted by `Coverage_ratio`.
 #' @export
-calculate_sampling_completeness <- function(iNEXT_list, assemblages, depth_ref) {
-  results <- purrr::map2_dfr(iNEXT_list, assemblages, function(iNEXT_item, assemblage) {
-    # richness at the reference depth: closest point in the size-based curve
-    size_based <- iNEXT_item$iNextEst$size_based
-    richness_at_depth <- size_based[which.min(abs(size_based$m - depth_ref)), ]
+calculate_sampling_completeness <- function(iNEXT_list, abundance_list, assemblages, depth_ref) {
+  results <- purrr::pmap_dfr(
+    list(iNEXT_list, abundance_list, assemblages),
+    function(iNEXT_item, abundance_vec, assemblage) {
+      # use iNEXT::estimateD() for exact interpolation at the reference depth
+      # instead of rounding to the nearest knot
+      richness_at_depth <- iNEXT::estimateD(
+        abundance_vec,
+        q = 0,
+        datatype = "abundance",
+        base = "size",
+        level = depth_ref,
+        nboot = 0  # skip bootstrap for speed (already have it from iNEXT)
+      )
 
-    # asymptotic Chao1 estimate (species richness, q = 0)
-    asy_richness <- iNEXT_item$AsyEst[iNEXT_item$AsyEst$Diversity == "Species richness", ]
+      # asymptotic Chao1 estimate (species richness, q = 0)
+      asy_richness <- iNEXT_item$AsyEst[iNEXT_item$AsyEst$Diversity == "Species richness", ]
 
-    tibble::tibble(
-      Assemblage = assemblage,
-      SampleSize_used = richness_at_depth$m,
-      Observed_or_estimated_richness = richness_at_depth$qD,
-      Asymptotic_Chao1_estimate = asy_richness$Estimator
-    )
-  })
+      # extract F1 and F2 (singleton and doubleton counts) from DataInfo
+      # for diagnosing low coverage samples
+      data_info <- iNEXT_item$DataInfo
+      f1 <- data_info$f1
+      f2 <- data_info$f2
+
+      tibble::tibble(
+        Assemblage = assemblage,
+        SampleSize_used = richness_at_depth$m,
+        Observed_or_estimated_richness = richness_at_depth$qD,
+        Asymptotic_Chao1_estimate = asy_richness$Estimator,
+        F1_singletons = f1,
+        F2_doubletons = f2,
+        F1_F2_ratio = f1 / f2  # ratio for diagnostic: high = many rare species
+      )
+    }
+  )
 
   results <- results %>%
     dplyr::mutate(
