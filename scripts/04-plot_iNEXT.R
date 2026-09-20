@@ -98,7 +98,7 @@ list(
   tar_target(
     name = parallel_iNEXT_results,
     command = list(
-      iNEXT(as.numeric(abundance_list[[1]]), q = 0, datatype = "abundance", nboot = 100)
+      iNEXT(as.numeric(unlist(abundance_list)), q = 0, datatype = "abundance", nboot = 100)
     ),
     pattern = map(abundance_list)
   ),
