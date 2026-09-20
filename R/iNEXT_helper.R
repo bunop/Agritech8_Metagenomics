@@ -57,3 +57,51 @@ combine_iNEXT_results <- function(iNEXT_list, abundance_list) {
   # Return the combined iNEXT object
   return(combined_iNEXT)
 }
+
+#' Compare observed/extrapolated richness at a reference depth with the
+#' asymptotic Chao1 estimate, for a list of per-sample iNEXT results
+#'
+#' @description
+#' For each sample, extracts the richness (`qD`) at the closest available
+#' sample size to `depth_ref` from `iNextEst$size_based`, and the asymptotic
+#' Chao1 estimate (species richness, `q = 0`) from `AsyEst`. The ratio of the
+#' two gives a "sampling completeness" coverage ratio, flagged when below 90%.
+#'
+#' @param iNEXT_list A list of raw `iNEXT()` outputs, one per sample (as
+#'   produced by `pattern = map()` over a per-sample abundance list).
+#' @param assemblages Character vector of sample names, same length and order
+#'   as `iNEXT_list`.
+#' @param depth_ref Numeric reference sequencing depth (e.g. the rarefaction
+#'   depth used elsewhere in the pipeline).
+#'
+#' @return A tibble with one row per `Assemblage`, columns `Assemblage`,
+#'   `SampleSize_used`, `Observed_or_estimated_richness`,
+#'   `Asymptotic_Chao1_estimate`, `Coverage_ratio`, `Flag_below_90pct`,
+#'   sorted by `Coverage_ratio`.
+#' @export
+calculate_sampling_completeness <- function(iNEXT_list, assemblages, depth_ref) {
+  results <- purrr::map2_dfr(iNEXT_list, assemblages, function(iNEXT_item, assemblage) {
+    # richness at the reference depth: closest point in the size-based curve
+    size_based <- iNEXT_item$iNextEst$size_based
+    richness_at_depth <- size_based[which.min(abs(size_based$m - depth_ref)), ]
+
+    # asymptotic Chao1 estimate (species richness, q = 0)
+    asy_richness <- iNEXT_item$AsyEst[iNEXT_item$AsyEst$Diversity == "Species richness", ]
+
+    tibble::tibble(
+      Assemblage = assemblage,
+      SampleSize_used = richness_at_depth$m,
+      Observed_or_estimated_richness = richness_at_depth$qD,
+      Asymptotic_Chao1_estimate = asy_richness$Estimator
+    )
+  })
+
+  results <- results %>%
+    dplyr::mutate(
+      Coverage_ratio = round(Observed_or_estimated_richness / Asymptotic_Chao1_estimate, 3),
+      Flag_below_90pct = Coverage_ratio < 0.90
+    ) %>%
+    dplyr::arrange(Coverage_ratio)
+
+  return(results)
+}

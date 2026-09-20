@@ -16,3 +16,6 @@ november_2023-bacteria:
 november_2023-fungi:
   script: scripts/08-november_2023-fungi.R
   store: stores/november_2023-fungi
+november_2023-sampling_completeness:
+  script: scripts/09-november_2023-sampling_completeness.R
+  store: stores/november_2023-sampling_completeness

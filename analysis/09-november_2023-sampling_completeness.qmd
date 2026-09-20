@@ -1,0 +1,165 @@
+---
+title: "Bacteria - November 2023 Sampling Completeness"
+author: "Paolo Cozzi"
+date: today
+toc: true
+number-sections: true
+cache: false
+format:
+  html:
+    code-line-numbers: true
+    html-math-method: katex
+    df-print: paged
+    code-fold: true
+    toc-depth: 4
+    embed-resources: true  # Embed all resources directly into the HTML file
+knitr:
+  opts_chunk:
+    dpi: 300
+editor: source
+---
+
+```{r setup}
+#| label: setup
+#| output: false
+library(targets)
+library(here)
+library(tidyverse)
+library(ggplot2)
+library(gt)
+library(glue)
+library(openxlsx)
+
+# where I can find artifacts
+store_path <- here::here("stores", "november_2023-sampling_completeness")
+
+# a folder in which store data files
+data_path <- here::here("analysis", "09-november_2023-sampling_completeness")
+
+if (!dir.exists(data_path)) {
+  dir.create(data_path, recursive = TRUE)
+  cat("Directory created:", data_path, "\n")
+}
+
+theme_set(theme_bw(base_size = 14))
+```
+
+## Sampling completeness
+
+The rarefaction curves shown in the `november_2023-bacteria` report suggest that
+sequencing depth was sufficient to capture most of the bacterial diversity in each
+sample, but a visual inspection of curves flattening out is not, by itself, a
+quantitative argument. Here we use `iNEXT` (Hill number `q = 0`, i.e. species
+richness) to compare, for each sample:
+
+- the observed/extrapolated richness at the rarefaction depth actually used for the
+  diversity analyses (`nov_2023_rarefaction_depth`, the minimum sequencing depth across
+  the November 2023 samples), and
+- the asymptotic richness estimated by the Chao1 estimator, i.e. the richness expected
+  at infinite sequencing effort.
+
+The ratio of the two — the *coverage ratio* — quantifies how close each sample already
+is to its estimated total diversity. A coverage ratio below 90% flags samples for which
+a substantial share of the estimated diversity may not have been captured at the chosen
+rarefaction depth.
+
+```{r load-completeness}
+#| label: load-completeness
+targets::tar_load(nov_2023_sampling_completeness, store = store_path)
+targets::tar_load(nov_2023_completeness_group_summary, store = store_path)
+targets::tar_load(nov_2023_rarefaction_depth, store = store_path)
+
+write.xlsx(
+  nov_2023_sampling_completeness,
+  file = here(data_path, "nov_2023-sampling_completeness.xlsx")
+)
+```
+
+### Per-sample coverage table
+
+```{r completeness-table}
+#| label: completeness-table
+nov_2023_sampling_completeness %>%
+  gt::gt() %>%
+  gt::fmt_number(
+    columns = c(Observed_or_estimated_richness, Asymptotic_Chao1_estimate),
+    decimals = 1
+  ) %>%
+  gt::fmt_percent(columns = Coverage_ratio, decimals = 1) %>%
+  gt::data_color(
+    columns = Flag_below_90pct,
+    fn = function(x) ifelse(x, "#f4a3a3", "#a3d9a5")
+  ) %>%
+  gt::tab_style(
+    style = gt::cell_text(weight = "bold"),
+    locations = gt::cells_body(rows = Flag_below_90pct)
+  ) %>%
+  gt::tab_header(
+    title = "Sampling completeness per sample",
+    subtitle = glue::glue(
+      "Coverage ratio at a reference depth of {format(nov_2023_rarefaction_depth, big.mark = ',')} reads"
+    )
+  )
+```
+
+Download the full [nov_2023-sampling_completeness.xlsx](09-november_2023-sampling_completeness/nov_2023-sampling_completeness.xlsx) table.
+
+### Summary
+
+```{r completeness-summary}
+#| label: completeness-summary
+#| output: asis
+n_samples <- nrow(nov_2023_sampling_completeness)
+n_above_90 <- sum(!nov_2023_sampling_completeness$Flag_below_90pct)
+pct_above_90 <- round(100 * n_above_90 / n_samples, 1)
+
+low_coverage_groups <- nov_2023_completeness_group_summary %>%
+  dplyr::filter(n_below_90 > 0) %>%
+  dplyr::arrange(mean_coverage)
+
+low_coverage_text <- if (nrow(low_coverage_groups) > 0) {
+  groups_list <- glue::glue_collapse(
+    glue::glue(
+      "{low_coverage_groups$Group} (mean coverage {round(100 * low_coverage_groups$mean_coverage, 1)}%, ",
+      "{low_coverage_groups$n_below_90}/{low_coverage_groups$n_samples} sample(s) below 90%)"
+    ),
+    sep = "; "
+  )
+  glue::glue("The following group(s) showed lower coverage: {groups_list}.")
+} else {
+  "No experimental group showed samples below the 90% coverage threshold."
+}
+
+cat(glue::glue(
+  "At the reference sequencing depth of {format(nov_2023_rarefaction_depth, big.mark = ',')} reads, ",
+  "{n_above_90} out of {n_samples} samples ({pct_above_90}%) reached at least 90% of their ",
+  "Chao1-estimated asymptotic richness, supporting the conclusion that sequencing depth was ",
+  "sufficient to characterize the majority of the detectable bacterial diversity. {low_coverage_text}"
+))
+```
+
+### Coverage plot
+
+```{r completeness-plot}
+#| label: completeness-plot
+#| fig-width: 8
+#| fig-height: 6
+ggplot(
+  nov_2023_sampling_completeness,
+  aes(x = reorder(Assemblage, Coverage_ratio), y = Coverage_ratio, fill = Flag_below_90pct)
+) +
+  geom_col(color = "black") +
+  geom_hline(yintercept = 0.90, linetype = "dashed", color = "red") +
+  coord_flip() +
+  scale_fill_manual(
+    values = c(`FALSE` = "steelblue", `TRUE` = "firebrick"),
+    labels = c(`FALSE` = "≥ 90%", `TRUE` = "< 90%"),
+    name = "Coverage"
+  ) +
+  labs(
+    title = "Sampling completeness per sample",
+    x = "Sample",
+    y = "Coverage ratio (richness at reference depth / Chao1 estimate)"
+  ) +
+  theme_bw(base_size = 14)
+```
